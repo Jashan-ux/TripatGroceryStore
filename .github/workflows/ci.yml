@@ -98,7 +98,13 @@ jobs:
             tail -20 /tmp/pytest.txt
           else
             tail -80 /tmp/pytest.txt
-            grep -E "^(FAILED|ERROR)" /tmp/pytest.txt | head -25 | sed 's/^/::error title=pytest::/'
+            if grep -qE "^(FAILED|ERROR)" /tmp/pytest.txt; then
+              grep -E "^(FAILED|ERROR)" /tmp/pytest.txt | head -25 | sed 's/^/::error title=pytest::/'
+            else
+              # No FAILED line means the run died rather than failing a test
+              # (collection error, INTERNALERROR, crash): say what it said.
+              tail -12 /tmp/pytest.txt | sed 's/^/::error title=pytest tail::/'
+            fi
             exit 1
           fi
       - name: OpenAPI schema is in sync
