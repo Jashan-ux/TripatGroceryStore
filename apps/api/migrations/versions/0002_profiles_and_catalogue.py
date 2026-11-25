@@ -370,12 +370,12 @@ def upgrade() -> None:
         "product_variants",
         "store_settings",
     ):
+        op.execute(f"DROP TRIGGER IF EXISTS trg_{table}_updated_at ON public.{table}")
         op.execute(
             f"""
-            DROP TRIGGER IF EXISTS trg_{table}_updated_at ON public.{table};
             CREATE TRIGGER trg_{table}_updated_at
                 BEFORE UPDATE ON public.{table}
-                FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+                FOR EACH ROW EXECUTE FUNCTION set_updated_at()
             """
         )
 
@@ -398,12 +398,13 @@ def upgrade() -> None:
         $fn$;
         """
     )
+    # asyncpg runs each op.execute as a single prepared statement.
+    op.execute("DROP TRIGGER IF EXISTS trg_products_search_text ON public.products")
     op.execute(
         """
-        DROP TRIGGER IF EXISTS trg_products_search_text ON public.products;
         CREATE TRIGGER trg_products_search_text
             BEFORE INSERT OR UPDATE OF name, description, unit_label, tags ON public.products
-            FOR EACH ROW EXECUTE FUNCTION products_refresh_search_text();
+            FOR EACH ROW EXECUTE FUNCTION products_refresh_search_text()
         """
     )
     op.execute(
