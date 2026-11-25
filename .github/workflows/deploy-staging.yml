@@ -1,0 +1,75 @@
+name: Deploy · staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  api:
+    name: Migrate + deploy API (staging)
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-python@v5.3.0
+        with:
+          python-version: '3.12'
+      - name: Alembic upgrade (staging database)
+        working-directory: apps/api
+        env:
+          DATABASE_DIRECT_URL: ${{ secrets.STAGING_DATABASE_DIRECT_URL }}
+        run: |
+          pip install -e .
+          alembic upgrade head
+      - name: Trigger host deploy
+        env:
+          HOOK: ${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "::error::RENDER_STAGING_DEPLOY_HOOK is not set"; exit 1; fi
+          curl --fail --silent --show-error -X POST "$HOOK"
+      - name: Wait for readiness
+        env:
+          API_BASE: ${{ vars.STAGING_API_BASE_URL }}
+        run: |
+          for i in $(seq 1 40); do
+            if curl --fail --silent "$API_BASE/healthz/ready" > /dev/null; then
+              echo "API ready"; exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::Staging API did not become ready in 10 minutes"; exit 1
+
+  web:
+    name: Deploy web (staging)
+    runs-on: ubuntu-latest
+    needs: [api]
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-node@v4.1.0
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Render host config
+        working-directory: apps/web
+        env:
+          API_ORIGIN: ${{ vars.STAGING_API_ORIGIN }}
+        run: node scripts/render-host-config.mjs
+      - name: Deploy to Vercel (staging, preview alias)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npm i -g vercel@48
+          vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+          vercel deploy --prebuilt=false --token="$VERCEL_TOKEN" --prod=false \
+            --build-env VITE_API_BASE_URL= \
+            | tee /tmp/deploy.txt
+          echo "Preview: $(tail -n1 /tmp/deploy.txt)"

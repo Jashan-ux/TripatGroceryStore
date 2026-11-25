@@ -1,0 +1,41 @@
+# Render blueprint for the API container (always-on, no cold starts).
+# Deploy: Render Dashboard → New → Blueprint → point at this repo.
+services:
+  - type: web
+    name: tripat-msgstore-api
+    runtime: docker
+    plan: starter
+    region: singapore
+    rootDir: apps/api
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz/ready
+    autoDeploy: false
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_DIRECT_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: STORE_MAPS_URL
+        sync: false
+      - key: WEB_ORIGIN
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        value: mailto:tripatinsan029@gmail.com
