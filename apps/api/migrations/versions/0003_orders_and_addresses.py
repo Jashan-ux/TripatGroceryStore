@@ -94,8 +94,18 @@ def upgrade() -> None:
         sa.Column("latitude", sa.Numeric(9, 6), nullable=True),
         sa.Column("longitude", sa.Numeric(9, 6), nullable=True),
         sa.Column("is_default", sa.Boolean(), nullable=False, server_default=sa.text("false")),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("now()"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("now()"),
+        ),
         sa.CheckConstraint("pincode ~ '^[0-9]{6}$'", name="ck_addresses_pincode_six_digits"),
     )
     op.create_index("ix_addresses_profile", "addresses", ["profile_id"])
@@ -116,12 +126,16 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("status", order_status, nullable=False, server_default=sa.text("'processing'")),
-        sa.Column("payment_method", payment_method, nullable=False, server_default=sa.text("'cod'")),
+        sa.Column(
+            "payment_method", payment_method, nullable=False, server_default=sa.text("'cod'")
+        ),
         sa.Column(
             "payment_status", payment_status, nullable=False, server_default=sa.text("'pending'")
         ),
         sa.Column("subtotal_paise", sa.BigInteger(), nullable=False, server_default=sa.text("0")),
-        sa.Column("delivery_fee_paise", sa.BigInteger(), nullable=False, server_default=sa.text("0")),
+        sa.Column(
+            "delivery_fee_paise", sa.BigInteger(), nullable=False, server_default=sa.text("0")
+        ),
         sa.Column("discount_paise", sa.BigInteger(), nullable=False, server_default=sa.text("0")),
         sa.Column("total_paise", sa.BigInteger(), nullable=False, server_default=sa.text("0")),
         sa.Column("item_count", sa.Integer(), nullable=False, server_default=sa.text("0")),
@@ -135,13 +149,25 @@ def upgrade() -> None:
         ),
         sa.Column("delivery_days", sa.SmallInteger(), nullable=False, server_default=sa.text("1")),
         sa.Column("deliver_by", sa.Date(), nullable=True),
-        sa.Column("placed_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
+        sa.Column(
+            "placed_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")
+        ),
         sa.Column("cancelled_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("cancelled_reason", sa.Text(), nullable=False, server_default=""),
         sa.Column("customer_note", sa.Text(), nullable=False, server_default=""),
         sa.Column("idempotency_key", sa.String(64), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("now()"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("now()"),
+        ),
         sa.UniqueConstraint("order_number", name="uq_orders_order_number"),
         sa.UniqueConstraint("profile_id", "idempotency_key", name="uq_orders_profile_idempotency"),
         sa.CheckConstraint("subtotal_paise >= 0", name="ck_orders_subtotal_non_negative"),
@@ -193,9 +219,7 @@ def upgrade() -> None:
         sa.Column("line_total_paise", sa.BigInteger(), nullable=False),
         sa.Column("sort_order", sa.SmallInteger(), nullable=False, server_default=sa.text("0")),
         sa.CheckConstraint("quantity > 0", name="ck_order_items_quantity_positive"),
-        sa.CheckConstraint(
-            "unit_price_paise >= 0", name="ck_order_items_unit_price_non_negative"
-        ),
+        sa.CheckConstraint("unit_price_paise >= 0", name="ck_order_items_unit_price_non_negative"),
         sa.CheckConstraint(
             "line_total_paise = unit_price_paise * quantity",
             name="ck_order_items_line_total_multiplies",
@@ -220,7 +244,12 @@ def upgrade() -> None:
         sa.Column("status", order_status, nullable=False),
         sa.Column("actor", sa.String(16), nullable=False, server_default="system"),
         sa.Column("note", sa.Text(), nullable=False, server_default=""),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("now()"),
+        ),
     )
     op.create_index("ix_order_events_order_created", "order_events", ["order_id", "created_at"])
 
