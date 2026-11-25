@@ -46,7 +46,7 @@ venv; the `db`-marked tests run in CI, where a Postgres exists.
 | Migration round-trip (`0005`) | `alembic upgrade head` → `downgrade 0004` → `upgrade head` | ✅ three steps clean against local PostgreSQL 16; **19 tables** |
 | Live schema inventory | SQL via the Supabase connector | ✅ **19 tables** + `alembic_version`, 6 Phase 4 tables (`wallets`, `wallet_entries`, `referrals`, `scratch_cards`, `order_returns`, `return_items`), **19/19 RLS**, 16 `updated_at` triggers, 4 new enums |
 | Live seed | SQL via the Supabase connector | ✅ 41 categories (10 departments), 30 brands, 70 products (12 unbranded), 44 variants |
-| Live drift check | SQLAlchemy metadata (83 columns) vs `information_schema` | ✅ 83/83 — no missing, no extra column |
+| Live drift check | SQLAlchemy metadata (228 columns) vs `information_schema` | ✅ **228/228** — same `(table, column, nullable)` digest `3eef9765…0478` on both sides, so no missing and no extra column after `0005` |
 | Live security posture | SQL via the Supabase connector | ✅ RLS on **19/19** tables (6/6 new), 0 grants to `anon`/`authenticated`, `alembic_version` = **`0005_wallet_referrals_rewards`** |
 
 ### Two things this sandbox cannot prove, and how they are covered
