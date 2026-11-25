@@ -26,6 +26,28 @@ It prints the connection target, `alembic current`, the drift check and the
 inventory (rows per table, RLS off count, PostgREST grant count) and fails if
 any of those guards regress.
 
+## 0a. Phase 2 — done for you, three things to check
+
+I applied migration `0003_orders_and_addresses` to the **live** project through
+the Supabase connector on 2026-11-25 (drift-checked afterwards: 11 tables, RLS on
+all of them, `alembic_version` = `0003_orders_and_addresses`). So the store can
+already take orders — the four things only you can do:
+
+- ☐ **Place one real test order yourself** once the API is deployed: add two
+  items, check the ₹500 minimum message, check out with cash on delivery, then
+  open *Admin → Orders* and walk it through *Shipped → Out for delivery →
+  Delivered*. You should see the timeline fill in and the payment flip to paid.
+  (Costs you nothing: it is your own shop and your own cash.)
+- ☐ **Confirm the delivery promise.** Today it is `default_delivery_days = 1`
+  from `store_settings`, and checkouts only accept the pincodes in
+  `serviceable_pincodes` (`125104`, `125201`). Tell me if either should change —
+  it is a one-row edit, no deploy.
+- ☐ **Map pin ("use my location")**: the address form is manual entry today. A
+  map needs a Google Maps or Mapbox key (free tier is fine) plus the browser
+  geolocation permission — send a key and I will add it in the location phase.
+- ☐ 🕒 **Notifications** (red dot, email, push) are the next phase; nothing is
+  needed from you for the in-app part, but the *email* part needs section 2 below.
+
 ## 1. Supabase (database, auth, storage)
 
 - ☐ 🔑 Create **two** projects (or one now, one at staging time):
