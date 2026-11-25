@@ -1,4 +1,5 @@
 import { AdminLayout } from '@/admin/AdminLayout';
+import { AdminOrdersPage } from '@/admin/AdminOrdersPage';
 import { AdminSectionPage } from '@/admin/AdminSectionPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import { Route, Routes } from 'react-router-dom';
@@ -26,20 +27,7 @@ export default function AdminRoutes() {
             />
           }
         />
-        <Route
-          path="orders"
-          element={
-            <AdminSectionPage
-              titleKey="admin.orders"
-              summary="Monitor, deliver and handle returns."
-              bullets={[
-                'Active / Previous / All tabs, status filters and search by order number, name or phone.',
-                'Status changes write an event trail and notify the customer.',
-                'Cash collected, delivery days and returns are handled from the order detail.',
-              ]}
-            />
-          }
-        />
+        <Route path="orders" element={<AdminOrdersPage />} />
         <Route
           path="products"
           element={

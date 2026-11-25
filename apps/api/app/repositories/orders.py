@@ -16,10 +16,11 @@ from __future__ import annotations
 import uuid
 from typing import cast
 
-from sqlalchemy import delete, func, select, text, update
+from sqlalchemy import ColumnElement, delete, func, or_, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.catalogue import Product, ProductVariant, Profile
+from app.models.enums import OrderStatus
 from app.models.orders import Address, Order, OrderEvent, OrderItem
 
 
@@ -198,6 +199,61 @@ async def list_orders(
 async def count_orders(session: AsyncSession, profile_id: uuid.UUID) -> int:
     stmt = select(func.count()).select_from(Order).where(Order.profile_id == profile_id)
     return int(await session.scalar(stmt) or 0)
+
+
+async def get_order_any(session: AsyncSession, order_id: uuid.UUID) -> Order | None:
+    """Admin read: no profile filter, because the owner owns every order."""
+    stmt = select(Order).where(Order.id == order_id).execution_options(populate_existing=True)
+    return cast("Order | None", await session.scalar(stmt))
+
+
+def _admin_filters(status: str | None, search: str | None) -> list[ColumnElement[bool]]:
+    filters: list[ColumnElement[bool]] = []
+    if status:
+        filters.append(Order.status == status)
+    term = (search or "").strip()
+    if term:
+        like = f"%{term.lower()}%"
+        filters.append(
+            or_(
+                func.lower(Order.order_number).like(like),
+                func.lower(Order.customer_name).like(like),
+                Order.customer_phone.like(f"%{term}%"),
+            )
+        )
+    return filters
+
+
+async def list_all_orders(
+    session: AsyncSession,
+    *,
+    status: str | None = None,
+    search: str | None = None,
+    limit: int,
+    offset: int,
+) -> list[Order]:
+    stmt = select(Order).order_by(Order.placed_at.desc()).limit(limit).offset(offset)
+    for condition in _admin_filters(status, search):
+        stmt = stmt.where(condition)
+    return list((await session.scalars(stmt)).all())
+
+
+async def count_all_orders(
+    session: AsyncSession, *, status: str | None = None, search: str | None = None
+) -> int:
+    stmt = select(func.count()).select_from(Order)
+    for condition in _admin_filters(status, search):
+        stmt = stmt.where(condition)
+    return int(await session.scalar(stmt) or 0)
+
+
+async def count_orders_by_status(session: AsyncSession) -> dict[str, int]:
+    stmt = select(Order.status, func.count()).group_by(Order.status)
+    rows = (await session.execute(stmt)).all()
+    counts = {status.value: 0 for status in OrderStatus}
+    for status, total in rows:
+        counts[str(getattr(status, "value", status))] = int(total)
+    return counts
 
 
 async def order_number_exists(session: AsyncSession, order_number: str) -> bool:
