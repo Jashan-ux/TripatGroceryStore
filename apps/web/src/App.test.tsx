@@ -27,15 +27,24 @@ const healthResponse = {
   components: [{ name: 'api', status: 'ok', latency_ms: null }],
 };
 
+const emptyPage = { items: [], page: 1, page_size: 24, total: 0, total_pages: 0 };
+
+function json(payload: unknown) {
+  return new Response(JSON.stringify(payload), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
 function mockFetch() {
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
-    if (url.includes('/api/v1/config')) {
-      return new Response(JSON.stringify(configResponse), { status: 200 });
-    }
-    if (url.includes('/healthz')) {
-      return new Response(JSON.stringify(healthResponse), { status: 200 });
-    }
+    if (url.includes('/api/v1/config')) return json(configResponse);
+    if (url.includes('/healthz')) return json(healthResponse);
+    if (url.includes('/api/v1/products')) return json(emptyPage);
+    if (url.includes('/api/v1/categories')) return json([]);
+    if (url.includes('/api/v1/brands')) return json([]);
+    if (url.includes('/api/v1/home')) return json({ categories: [], rails: [] });
     return new Response(JSON.stringify({ error: { code: 'not_found', message: 'no' } }), {
       status: 404,
     });

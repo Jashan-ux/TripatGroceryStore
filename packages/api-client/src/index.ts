@@ -35,4 +35,7 @@ export type StatusResponse = Schemas['StatusResponse'];
 export type ErrorResponse = Schemas['ErrorResponse'];
 export type ErrorDetail = Schemas['ErrorDetail'];
 
+// Every other component schema is aliased automatically at generation time.
+export * from '../generated/aliases';
+
 export type { components, paths };

@@ -32,6 +32,10 @@ export const en = {
       'Our product list goes live with the next update. Call the store and we will take your order right away.',
     loadingCatalogue: 'Loading the catalogue',
   },
+  auth: {
+    signInTitle: 'Sign in',
+    signUpTitle: 'Create account',
+  },
   common: {
     retry: 'Try again',
     loading: 'Loading',

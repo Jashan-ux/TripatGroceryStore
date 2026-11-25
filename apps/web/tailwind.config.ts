@@ -68,6 +68,10 @@ export default {
           DEFAULT: '#1D4ED8',
           soft: '#DBEAFE',
         },
+        // Rating stars and the discount ribbon, kept as tokens so both themes
+        // stay legible and no component hard-codes a hex value.
+        rating: '#F59E0B',
+        discount: '#047857',
       },
       borderRadius: {
         xl: '0.875rem',

@@ -1,17 +1,68 @@
 import { lazy, Suspense } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Link, Route, Routes } from 'react-router-dom';
 
 import { AppShell } from '@/components/layout/AppShell';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useCategories } from '@/features/catalogue/queries';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { t } from '@/i18n';
+import CategoryPage from '@/pages/CategoryPage';
 import ComingSoonPage from '@/pages/ComingSoonPage';
 import HomePage from '@/pages/HomePage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import ProductPage from '@/pages/ProductPage';
+import ProfilePage from '@/pages/ProfilePage';
 import SearchPage from '@/pages/SearchPage';
+import AuthCallbackPage from '@/pages/auth/AuthCallbackPage';
+import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
+import SignInPage from '@/pages/auth/SignInPage';
+import SignUpPage from '@/pages/auth/SignUpPage';
+import { ProtectedRoute } from '@/routes/ProtectedRoute';
 
 // Admin code is a separate chunk: `React.lazy` + a dynamic import means the
 // customer bundle never contains admin modules.
 const AdminRoutes = lazy(() => import('@/admin/AdminRoutes'));
+
+/** `/categories` is a real index of every department, not a placeholder. */
+function CategoryIndexPage() {
+  const { data, isPending } = useCategories();
+  usePageTitle('nav.category');
+  return (
+    <div className="container py-6">
+      <h1 className="mb-4 text-xl font-extrabold tracking-tight">All categories</h1>
+      {isPending ? (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Skeleton key={index} className="h-24 w-full rounded-xl" />
+          ))}
+        </div>
+      ) : (
+        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {(data ?? []).map((category) => (
+            <li key={category.id} className="rounded-xl border border-border bg-card p-4">
+              <Link
+                to={`/categories/${category.slug}`}
+                className="flex items-center gap-2 text-base font-bold hover:text-primary-700"
+              >
+                <span aria-hidden="true">{category.emoji ?? '🛒'}</span>
+                {category.name}
+              </Link>
+              <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                {(category.children ?? []).map((child) => (
+                  <li key={child.id}>
+                    <Link to={`/categories/${child.slug}`} className="hover:text-primary-700">
+                      {child.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function RouteFallback() {
   return (
@@ -35,13 +86,26 @@ export default function App() {
           </Suspense>
         }
       />
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route element={<AppShell />}>
         <Route index element={<HomePage />} />
         <Route path="search" element={<SearchPage />} />
-        <Route path="categories" element={<ComingSoonPage titleKey="nav.category" />} />
+        <Route path="categories" element={<CategoryIndexPage />} />
+        <Route path="categories/:slug" element={<CategoryPage />} />
+        <Route path="products/:slug" element={<ProductPage />} />
+        <Route path="sign-in" element={<SignInPage />} />
+        <Route path="sign-up" element={<SignUpPage />} />
+        <Route path="forgot-password" element={<ForgotPasswordPage />} />
         <Route path="cart" element={<ComingSoonPage titleKey="nav.cart" />} />
         <Route path="orders" element={<ComingSoonPage titleKey="nav.orders" />} />
-        <Route path="profile" element={<ComingSoonPage titleKey="nav.profile" />} />
+        <Route
+          path="profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="notifications" element={<ComingSoonPage titleKey="nav.notifications" />} />
         <Route path="menu" element={<ComingSoonPage titleKey="nav.menu" />} />
         <Route path="rewards" element={<ComingSoonPage titleKey="footer.rewards" />} />

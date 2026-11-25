@@ -3,7 +3,13 @@ import { render, type RenderOptions } from '@testing-library/react';
 import type { ReactElement, ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 
-/** Test renderer: fresh QueryClient per test (no cache bleed) + a router. */
+import { AuthProvider } from '@/features/auth/AuthProvider';
+
+/**
+ * Test renderer: fresh QueryClient per test (no cache bleed), a router and the
+ * real AuthProvider. Auth resolves to "anonymous" whenever the mocked
+ * `/api/v1/config` returns empty Supabase keys, which is the default fixture.
+ */
 export function renderWithProviders(
   ui: ReactElement,
   { route = '/', ...options }: RenderOptions & { route?: string } = {},
@@ -15,7 +21,9 @@ export function renderWithProviders(
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+        <MemoryRouter initialEntries={[route]}>
+          <AuthProvider>{children}</AuthProvider>
+        </MemoryRouter>
       </QueryClientProvider>
     );
   }

@@ -6,6 +6,7 @@ import { Toaster } from 'sonner';
 
 import App from '@/App';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { AuthProvider } from '@/features/auth/AuthProvider';
 import { queryClient } from '@/lib/queryClient';
 import { registerServiceWorker } from '@/lib/serviceWorker';
 import '@/styles/globals.css';
@@ -18,7 +19,9 @@ createRoot(container).render(
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <App />
+          <AuthProvider>
+            <App />
+          </AuthProvider>
         </BrowserRouter>
         <Toaster
           position="top-center"

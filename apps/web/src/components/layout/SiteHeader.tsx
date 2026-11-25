@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { BrandMark, Wordmark } from '@/components/common/BrandMark';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/features/auth/useAuth';
 import { t } from '@/i18n';
 
 /**
@@ -15,6 +16,7 @@ import { t } from '@/i18n';
 export function SiteHeader() {
   const navigate = useNavigate();
   const [term, setTerm] = useState('');
+  const { status, profile } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
@@ -35,8 +37,13 @@ export function SiteHeader() {
               <Bell aria-hidden="true" />
             </Link>
           </Button>
-          <Button asChild variant="ghost" size="icon" aria-label={t('nav.profile')}>
-            <Link to="/profile">
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            aria-label={status === 'authenticated' ? `${profile?.name || 'My account'}` : t('nav.profile')}
+          >
+            <Link to={status === 'authenticated' ? '/profile' : '/sign-in'}>
               <User aria-hidden="true" />
             </Link>
           </Button>

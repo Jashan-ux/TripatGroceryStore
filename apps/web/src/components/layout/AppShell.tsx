@@ -5,6 +5,7 @@ import { UpdatePrompt } from '@/components/common/UpdatePrompt';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
+import { PhonePrompt } from '@/features/auth/PhonePrompt';
 import { t } from '@/i18n';
 import { cn } from '@/lib/utils';
 
@@ -37,6 +38,7 @@ export function AppShell() {
       </main>
       <SiteFooter />
       <BottomNav />
+      <PhonePrompt />
     </div>
   );
 }

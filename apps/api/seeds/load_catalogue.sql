@@ -23,9 +23,9 @@
 -- ===========================================================================
 -- STEP 1 — fetch the payload
 -- ===========================================================================
-create extension if not exists pg_net with schema extensions;
+create extension if not exists pg_net;  -- installs into the `net` schema
 
-select extensions.net.http_get(
+select net.http_get(
   'https://raw.githubusercontent.com/Jashan-ux/TripatGroceryStore/arena/660db374-tripatgrocerystore/apps/api/seeds/catalogue.json'
 ) as request_id;
 
@@ -37,17 +37,16 @@ select extensions.net.http_get(
 -- ===========================================================================
 begin;
 
-create temporary view payload as
-select content::jsonb as doc
-from extensions._http_response
-where status_code = 200
-order by id desc
-limit 1;
+-- NOTE: each statement below re-reads the payload instead of using a CTE on
+-- purpose. Data-modifying CTEs all see the same snapshot, so a variants CTE
+-- could not see the products inserted in the same statement (product_id NULL).
+-- Separate statements inside one transaction see each other's writes.
 
 -- 3a. top-level categories
 insert into public.categories (slug, name, emoji, sort_order, description, parent_id, is_active)
 select c.slug, c.name, c.emoji, c.sort_order, c.description, null, true
-from payload p,
+from (select content::jsonb as doc from net._http_response
+      where status_code = 200 order by id desc limit 1) p,
      jsonb_to_recordset(p.doc -> 'categories')
        as c(slug text, name text, emoji text, sort_order int, description text, parent_slug text)
 where c.parent_slug is null
@@ -59,7 +58,8 @@ on conflict (slug) do update
 insert into public.categories (slug, name, sort_order, description, parent_id, is_active)
 select c.slug, c.name, c.sort_order, c.description,
        (select id from public.categories parent where parent.slug = c.parent_slug), true
-from payload p,
+from (select content::jsonb as doc from net._http_response
+      where status_code = 200 order by id desc limit 1) p,
      jsonb_to_recordset(p.doc -> 'categories')
        as c(slug text, name text, emoji text, sort_order int, description text, parent_slug text)
 where c.parent_slug is not null
@@ -70,7 +70,8 @@ on conflict (slug) do update
 -- 3c. brands
 insert into public.brands (slug, name, is_active)
 select b.slug, b.name, true
-from payload p,
+from (select content::jsonb as doc from net._http_response
+      where status_code = 200 order by id desc limit 1) p,
      jsonb_to_recordset(p.doc -> 'brands') as b(slug text, name text)
 on conflict (slug) do update set name = excluded.name, is_active = true;
 
@@ -86,7 +87,8 @@ select x.slug, x.name, x.description,
        coalesce((select array_agg(tag.value) from jsonb_array_elements_text(x.tags) as tag(value)),
                 '{}'::text[]),
        x.rating, true
-from payload p,
+from (select content::jsonb as doc from net._http_response
+      where status_code = 200 order by id desc limit 1) p,
      jsonb_to_recordset(p.doc -> 'products') as x(
        slug text, name text, description text, brand_slug text, category_slug text,
        mrp_paise bigint, price_paise bigint, unit_label text, stock int,
@@ -104,12 +106,13 @@ insert into public.product_variants (
   product_id, label, mrp_paise, price_paise, stock, sort_order, is_active
 )
 select (select id from public.products product where product.slug = parent.slug),
-       x.label, x.mrp_paise, x.price_paise, x.stock, x.sort_order, true
-from payload p,
+       v.label, v.mrp_paise, v.price_paise, v.stock, v.sort_order, true
+from (select content::jsonb as doc from net._http_response
+      where status_code = 200 order by id desc limit 1) p,
      jsonb_to_recordset(p.doc -> 'products') as parent(
        slug text, variants jsonb
      ),
-     jsonb_to_recordset(parent.variants) as x(
+     jsonb_to_recordset(parent.variants) as v(
        label text, mrp_paise bigint, price_paise bigint, stock int, sort_order int
      )
 on conflict (product_id, label) do update

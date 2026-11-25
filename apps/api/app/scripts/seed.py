@@ -18,6 +18,7 @@ import argparse
 import asyncio
 import sys
 from decimal import Decimal
+from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
@@ -204,7 +205,7 @@ def build_settings_sql() -> str:
     )
 
 
-def catalogue_payload() -> dict[str, object]:
+def catalogue_payload() -> dict[str, Any]:
     """The whole catalogue as JSON — the form the database loader consumes.
 
     Committed at ``seeds/catalogue.json`` so a hosted database can load it without

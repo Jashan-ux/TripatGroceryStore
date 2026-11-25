@@ -3,14 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Tripat Pansari · MSG Store — customer storefront and admin PWA",
+  "description": "Tripat Pansari \u00b7 MSG Store \u2014 customer storefront and admin PWA",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "build:only": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --max-warnings 0",
-    "typecheck": "tsc -b --noEmit false --emitDeclarationOnly false",
+    "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -21,6 +21,7 @@
   "dependencies": {
     "@radix-ui/react-dialog": "1.1.4",
     "@radix-ui/react-slot": "1.1.1",
+    "@supabase/supabase-js": "^2.47.10",
     "@tanstack/react-query": "5.62.7",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
@@ -40,6 +41,7 @@
     "@testing-library/jest-dom": "6.6.3",
     "@testing-library/react": "16.3.3",
     "@testing-library/user-event": "14.5.2",
+    "@types/node": "24.10.1",
     "@types/react": "18.3.17",
     "@types/react-dom": "18.3.5",
     "@vitejs/plugin-react": "5.2.0",
@@ -59,7 +61,6 @@
     "typescript-eslint": "8.18.1",
     "vite": "7.3.8",
     "vite-plugin-pwa": "2.0.0",
-    "vitest": "5.1.1",
-    "@types/node": "24.10.1"
+    "vitest": "5.1.1"
   }
 }
