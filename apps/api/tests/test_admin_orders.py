@@ -15,7 +15,7 @@ import pytest
 from app.db.session import get_sessionmaker
 from httpx import AsyncClient
 from sqlalchemy import text
-from tests.support import ADDRESS, cart, place, stock_of
+from tests.support import ADDRESS, place, product_detail, stock_of
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("use_local_keys")]
 
@@ -37,10 +37,24 @@ async def order(
     customer: dict[str, Any],
     catalogue: dict[str, Any],
 ) -> dict[str, Any]:
-    """One real order with two lines, placed through the customer API."""
-    ghee = (await async_client.get(f"/api/v1/products/{catalogue['ghee_slug']}")).json()
-    loose = (await async_client.get(f"/api/v1/products/{catalogue['loose_slug']}")).json()
-    placed = await place(async_client, customer, cart((ghee, 2), (loose, 3)))
+    """One real order with two lines: a plain product and a specific variant.
+
+    The variant line has to name its variant — the loose product carries stock on
+    its packs, not on the product row — which is also what the storefront does.
+    """
+    ghee = await product_detail(async_client, catalogue["ghee_slug"])
+    loose = await product_detail(async_client, catalogue["loose_slug"])
+    variant = next(entry for entry in loose["variants"] if entry["stock"] >= 3)
+    placed = await place(
+        async_client,
+        customer,
+        {
+            "items": [
+                {"product_id": ghee["id"], "variant_id": None, "quantity": 2},
+                {"product_id": loose["id"], "variant_id": variant["id"], "quantity": 3},
+            ]
+        },
+    )
     assert placed.status_code == 201, placed.text
     return placed.json()
 
@@ -292,19 +306,31 @@ async def test_a_customer_cancellation_and_a_shop_cancellation_agree(
     assert (await _set_status(async_client, admin, order["id"], "shipped")).status_code == 409
 
 
+async def _variant_stock(async_client: AsyncClient, slug: str, variant_id: str) -> int:
+    detail = await product_detail(async_client, slug)
+    return int(next(item["stock"] for item in detail["variants"] if item["id"] == variant_id))
+
+
 async def test_stock_is_restored_exactly_once_even_for_two_lines(
     async_client: AsyncClient,
     admin: dict[str, Any],
     order: dict[str, Any],
     catalogue: dict[str, Any],
 ) -> None:
+    """Two lines, two different stock paths: product-level and per-variant."""
     ghee_before = await stock_of(async_client, catalogue["ghee_slug"])
-    loose_before = await stock_of(async_client, catalogue["loose_slug"])
+    loose_item = next(item for item in order["items"] if item["variant_id"])
+    loose_before = await _variant_stock(
+        async_client, catalogue["loose_slug"], loose_item["variant_id"]
+    )
 
     assert (await _set_status(async_client, admin, order["id"], "cancelled")).status_code == 200
 
     assert await stock_of(async_client, catalogue["ghee_slug"]) == ghee_before + 2
-    assert await stock_of(async_client, catalogue["loose_slug"]) == loose_before + 3
+    assert (
+        await _variant_stock(async_client, catalogue["loose_slug"], loose_item["variant_id"])
+        == loose_before + 3
+    )
 
     sessionmaker = get_sessionmaker()
     async with sessionmaker() as session:
