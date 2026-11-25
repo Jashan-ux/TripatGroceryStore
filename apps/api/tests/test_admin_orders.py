@@ -15,7 +15,7 @@ import pytest
 from app.db.session import get_sessionmaker
 from httpx import AsyncClient
 from sqlalchemy import text
-from tests.test_orders import ADDRESS, cart, place, stock_of
+from tests.support import ADDRESS, cart, place, stock_of
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("use_local_keys")]
 

@@ -14,7 +14,7 @@ platform can check the container without auth.
 |---|---|
 | Money | integer **paise** (`bigint`). `₹500.00` ⇄ `50000`. No floats anywhere. |
 | Time | ISO-8601 with `Z`, always UTC. The UI renders in `Asia/Kolkata`. |
-| IDs | UUID v4 for rows; order numbers are `TP-000123`. |
+| IDs | UUID v4 for rows; order numbers are `MSG-YYMMDD-XXXXX` (5 random chars, unique per day). |
 | Pagination | `?page=1&page_size=20` → `{items: [...], pagination: {page, page_size, total, total_pages}}`. `page_size` max 100. |
 | Filtering | explicit query params (`category`, `brand`, `min_price_paise`, `max_price_paise`, `tags`, `in_stock`, `sort`, `q`). |
 | Idempotency | `Idempotency-Key: <uuid>` **required** on `POST /orders`; also used on every credit (returns, referral payout). Replaying returns the original result, never a duplicate. |
@@ -41,11 +41,11 @@ failures return `code: "validation_error"` with
 
 | Status | code examples |
 |---|---|
-| 400 | `bad_request`, `pincode_not_serviceable`, `below_minimum_order` |
+| 400 | `bad_request` |
 | 401 | `unauthenticated` |
-| 403 | `forbidden` (not an admin, not the owner) |
-| 404 | `not_found` |
-| 409 | `conflict`, `duplicate_order`, `invalid_transition`, `already_credited` |
+| 403 | `admin_only`, `forbidden` (not an admin, not the owner) |
+| 404 | `not_found`, `order_not_found`, `address_not_found` |
+| 409 | `insufficient_stock`, `minimum_order_not_met`*, `phone_required`, `order_not_cancellable`, `invalid_status_transition`, `already_credited` |
 | 422 | `validation_error` |
 | 429 | `rate_limited` (with `Retry-After`) |
 | 500 | `internal_error` (no stack trace in production) |
@@ -57,14 +57,14 @@ failures return `code: "validation_error"` with
 | system | `GET /healthz`, `GET /healthz/ready`, `GET /api/v1/status`, `GET /api/v1/config` | 0 ✅ |
 | me | `GET/PATCH /me`, `POST /me/phone`, `POST /me/export`, `DELETE /me` | 1 |
 | catalogue | `GET /categories`, `GET /brands`, `GET /products`, `GET /products/{slug}` (public read) | 1 |
-| cart | `GET/POST/PATCH/DELETE /cart`, `POST /cart/merge` | 2 |
-| addresses | `GET/POST/PATCH/DELETE /addresses`, `POST /geo/reverse` (Nominatim proxy) | 2 |
-| orders | `POST /orders` (Idempotency-Key), `GET /orders`, `GET /orders/{order_no}`, `POST /orders/{order_no}/cancel`, `POST /orders/{order_no}/returns` | 2–4 |
+| cart | **not built on purpose** — the basket lives on the device; `POST /checkout/quote` prices it | 2 ✅ |
+| addresses | `GET /addresses`, `POST /addresses`, `PUT/DELETE /addresses/{id}` | 2 ✅ (map pin in Phase 7) |
+| checkout & orders | `POST /checkout/quote` (public), `POST /orders` (`Idempotency-Key`), `GET /orders`, `GET /orders/{id}`, `POST /orders/{id}/cancel` | 2 ✅ (returns in Phase 4) |
 | wallet & rewards | `GET /wallet`, `GET /rewards`, `POST /rewards/scratch/{id}/reveal`, `POST /referrals/apply` | 4 |
 | returns | `GET /returns`, `GET /returns/{id}` | 4 |
 | notifications | `GET /notifications`, `POST /notifications/{id}/ack`, `POST /push/subscribe`, `DELETE /push/subscribe` | 3 |
 | feedback | `POST /feedback` | 5 |
-| admin | `GET /admin/analytics/*`, `GET/PATCH /admin/orders/*`, `GET/POST/PATCH/DELETE /admin/products/*`, `POST /admin/products/bulk/preview`, `POST /admin/products/bulk/commit`, `/admin/categories`, `/admin/brands`, `/admin/customers`, `/admin/offers`, `/admin/settings`, `/admin/feedback`, `/admin/audit` | 3–6 |
+| admin | `GET /admin/whoami` ✅, `GET /admin/orders`, `GET /admin/orders/{id}`, `POST /admin/orders/{id}/status` ✅; products/categories/brands/customers/offers/settings/analytics/audit | 3–6 |
 
 Every admin route sits behind **one** dependency (`require_admin`) and is the only
 place admin code exists on the server.
@@ -103,6 +103,70 @@ curl -s http://localhost:8000/api/v1/config | jq
 `/api/v1/config` is intentionally public and excludes the service-role key,
 database URL and every other secret (tested:
 `apps/api/tests/test_health.py::test_public_config_exposes_store_contact_but_no_secrets`).
+
+## Phase 2 — cart, checkout and orders
+
+The client never sends money. A quote or an order carries **ids and quantities**;
+every price, total and availability flag is computed from the catalogue. A payload
+that includes `price_paise`, `total_paise` or any other money key is rejected with
+`422 validation_error` (`APIModel` forbids unknown keys).
+
+```bash
+# Price a basket (public — works for a guest who has not signed in)
+curl -s -X POST http://localhost:8000/api/v1/checkout/quote \
+  -H 'Content-Type: application/json' \
+  -d '{"items":[{"product_id":"<uuid>","variant_id":null,"quantity":2}],"pincode":"125104"}' | jq
+{
+  "lines": [
+    { "product_id": "…", "name": "Palak", "unit_price_paise": 3000,
+      "line_total_paise": 6000, "available_stock": 12, "issue": null }
+  ],
+  "subtotal_paise": 6000, "delivery_fee_paise": 0, "discount_paise": 0,
+  "total_paise": 6000, "item_count": 2,
+  "minimum_order_paise": 50000, "shortfall_paise": 44000,
+  "deliver_by": "2026-11-26", "pincode_serviceable": true,
+  "blocking_issues": [
+    { "code": "minimum_order", "message": "Add ₹440 more to reach the ₹500 minimum order." }
+  ],
+  "can_checkout": false
+}
+```
+
+`blocking_issues[].code` ∈ `empty_cart | minimum_order | pincode | stock`.
+`lines[].issue` ∈ `out_of_stock | partially_available | unavailable` (null when
+fine). The UI shows the message verbatim and disables the CTA while any issue is
+present — the same rules are enforced again by `POST /orders`.
+
+```bash
+# Place the order (auth required; the key makes replays free)
+curl -s -X POST http://localhost:8000/api/v1/orders \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{"address_id":"<uuid>","items":[{"product_id":"<uuid>","variant_id":null,"quantity":2}],
+       "customer_note":"Ring twice"}'
+```
+
+`201` returns the order with `order_number`, `status: "processing"`,
+`payment_method: "cod"`, `payment_status: "pending"`, a **snapshot** of the address
+and of every line's name/price, `deliver_by`, `items[]` and `events[]`. Replaying
+the same `Idempotency-Key` returns the original order — never a second one — and
+`GET /orders/{id}` is scoped to the caller, so anyone else's id is a `404`.
+
+| Rule | Behaviour |
+|---|---|
+| Minimum order | `minimum_order_not_met` (`422`) with `details.shortfall_paise`; the quote reports it first. |
+| Pincode | `pincode_not_serviceable` (`422`); serviceable pincodes come from `store_settings`. |
+| Phone | `phone_required` (`409`) — the delivery partner has to be able to call. |
+| Stock | `insufficient_stock` (`409`) with `details.items`. Stock is taken with `UPDATE … WHERE stock >= :n`, so concurrent checkouts cannot oversell. |
+| Cancel | Only while `processing`; restores stock, writes an event. After dispatch: `409 order_not_cancellable`. |
+
+Admin side (all behind `require_admin`):
+
+| Route | Purpose |
+|---|---|
+| `GET /admin/orders?status=&q=&page=&page_size=` | The queue: newest first, per-status `counts` for the tabs. |
+| `GET /admin/orders/{id}` | Full order, address snapshot and event trail. |
+| `POST /admin/orders/{id}/status` | `{"status": "shipped", "note": "…"}`. Allowed moves: `processing → shipped | cancelled`, `shipped → out_for_delivery`, `out_for_delivery → delivered`, `delivered → returned`. Anything else is `409 invalid_status_transition` with `details.allowed`. Cancelling restores stock; `delivered` settles the COD payment. |
 
 ## Regenerating the typed client
 

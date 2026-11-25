@@ -7,8 +7,8 @@ status board; `docs/ACCEPTANCE_REPORT.md` carries the scenario-level evidence.
 |---|---|---|
 | 0 | Monorepo, CI, Supabase local config, Alembic baseline, design tokens, PWA shell, health checks | ✅ **done** — awaiting go-ahead |
 | 1 | Auth + profile + catalogue (public pages, categories, brands, search/filters, realistic seed) | ✅ **done** — CI 5/5 green, live seed loaded |
-| 2 | Cart, addresses, checkout, COD orders, stock, min-order + pincode rules, customer order pages | ⬜ **next** |
-| 3 | Admin orders, notifications (in-app, email, red dot), per-order delivery days, customer cancel | ⬜ |
+| 2 | Cart, addresses, checkout, COD orders, stock, min-order + pincode rules, customer order pages | ✅ **done** — 0003 applied live, CI green |
+| 3 | Admin orders, notifications (in-app, email, red dot), per-order delivery days, customer cancel | 🟡 **partly done** — the order queue, status transitions and customer cancel shipped with Phase 2; notifications/email/red dot are **next** |
 | 4 | Wallet, referrals, scratch cards, returns, loyalty badges | ⬜ |
 | 5 | Admin catalogue tools (inline add, bulk add, categories, brands), offers, settings, feedback | ⬜ |
 | 6 | Analytics with drill-downs, customer profiles | ⬜ |

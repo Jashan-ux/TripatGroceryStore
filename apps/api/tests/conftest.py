@@ -24,6 +24,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
+from tests.support import new_customer, product_detail
 
 os.environ.setdefault("ENVIRONMENT", "test")
 os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
@@ -299,3 +300,52 @@ def make_token(signing_key: tuple[Any, Any]) -> Callable[..., str]:
         )
 
     return _make
+
+
+# --------------------------------------------------------------------------- #
+# Order fixtures, shared by the customer and admin suites
+# --------------------------------------------------------------------------- #
+@pytest.fixture()
+async def customer(async_client: AsyncClient, make_token: Callable[..., str]) -> dict[str, Any]:
+    """A signed-in customer with a phone number and one saved address."""
+    return await new_customer(async_client, make_token)
+
+
+@pytest.fixture()
+async def products(async_client: AsyncClient, catalogue: dict[str, Any]) -> dict[str, Any]:
+    """The catalogue fixture's products as the API returns them."""
+    ghee = await product_detail(async_client, catalogue["ghee_slug"])
+    loose = await product_detail(async_client, catalogue["loose_slug"])
+    return {"ghee": ghee, "loose": loose}
+
+
+@pytest.fixture()
+async def big_ticket(
+    async_client: AsyncClient, catalogue: dict[str, Any]
+) -> AsyncIterator[dict[str, Any]]:
+    """A ₹600 product with 3 units: above the ₹500 minimum, so quantity 1 works."""
+    sessionmaker = get_sessionmaker()
+    slug = f"test-big-{uuid.uuid4().hex[:8]}"
+    async with sessionmaker() as session:
+        category_id = await session.scalar(
+            text("SELECT id FROM categories WHERE slug = :slug"), {"slug": catalogue["child_slug"]}
+        )
+        product_id = await session.scalar(
+            text(
+                "INSERT INTO products (slug, name, description, category_id, mrp_paise, "
+                "price_paise, unit_label, stock) VALUES (:slug, 'Test Atta 10 kg', '', "
+                ":category, 70000, 60000, '10 kg', 3) RETURNING id"
+            ),
+            {"slug": slug, "category": category_id},
+        )
+        await session.commit()
+
+    yield await product_detail(async_client, slug)
+
+    async with sessionmaker() as session:
+        await session.execute(text("DELETE FROM orders"))
+        await session.execute(
+            text("DELETE FROM order_items WHERE product_id = :id"), {"id": product_id}
+        )
+        await session.execute(text("DELETE FROM products WHERE id = :id"), {"id": product_id})
+        await session.commit()

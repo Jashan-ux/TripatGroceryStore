@@ -87,6 +87,10 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 addopts = "-q --strict-markers --strict-config"
 testpaths = ["tests"]
+# So a test module may import another (tests.test_orders holds the shared order
+# helpers) no matter how pytest is invoked — `pytest` alone does not put the
+# working directory on sys.path the way `python -m pytest` does.
+pythonpath = ["."]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 markers = [

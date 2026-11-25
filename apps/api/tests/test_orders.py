@@ -11,139 +11,18 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from collections.abc import AsyncIterator, Callable
+from collections.abc import Callable
 from typing import Any
 
 import pytest
 from app.db.session import get_sessionmaker
 from httpx import AsyncClient
 from sqlalchemy import text
+from tests.support import ADDRESS, cart, new_customer, place, product_detail, stock_of
 
 # Orders need a signed-in customer, so every test verifies tokens against the
 # local key set instead of the project's JWKS.
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("use_local_keys")]
-
-ADDRESS = {
-    "label": "Home",
-    "recipient_name": "Jashan Preet",
-    "phone": "+91 98765-43210",
-    "line1": "House 42, near Sabji Mandi",
-    "line2": "Ward 7",
-    "landmark": "Opposite Gyani Achhar Bhandaar",
-    "pincode": "125104",
-    "city": "Mandi Dabwali",
-    "state": "Haryana",
-}
-
-
-# --------------------------------------------------------------------------- #
-# Fixtures
-# --------------------------------------------------------------------------- #
-async def _product(async_client: AsyncClient, slug: str) -> dict[str, Any]:
-    response = await async_client.get(f"/api/v1/products/{slug}")
-    assert response.status_code == 200, response.text
-    return response.json()
-
-
-async def _new_customer(
-    async_client: AsyncClient, make_token: Callable[..., str], *, prefix: str = "buyer"
-) -> dict[str, Any]:
-    """A signed-in customer with a phone number and one saved address."""
-    email = f"{prefix}-{uuid.uuid4().hex[:10]}@example.com"
-    headers = {"Authorization": f"Bearer {make_token(email)}"}
-
-    profile = (await async_client.get("/api/v1/me", headers=headers)).json()
-    phone = "9" + str(uuid.uuid4().int)[:9]
-    saved = await async_client.post("/api/v1/me/phone", json={"phone": phone}, headers=headers)
-    assert saved.status_code == 200, saved.text
-    address = await async_client.post("/api/v1/addresses", json=ADDRESS, headers=headers)
-    assert address.status_code == 201, address.text
-    return {
-        "email": email,
-        "headers": headers,
-        "profile": profile,
-        "address": address.json(),
-        "phone": phone,
-    }
-
-
-@pytest.fixture()
-async def customer(async_client: AsyncClient, make_token: Callable[..., str]) -> dict[str, Any]:
-    return await _new_customer(async_client, make_token)
-
-
-@pytest.fixture()
-async def products(async_client: AsyncClient, catalogue: dict[str, Any]) -> dict[str, Any]:
-    """The catalogue fixture's products as the API returns them."""
-    ghee = await _product(async_client, catalogue["ghee_slug"])
-    loose = await _product(async_client, catalogue["loose_slug"])
-    return {"ghee": ghee, "loose": loose}
-
-
-@pytest.fixture()
-async def big_ticket(
-    async_client: AsyncClient, catalogue: dict[str, Any]
-) -> AsyncIterator[dict[str, Any]]:
-    """A ₹600 product with 3 units: above the ₹500 minimum, so quantity 1 works."""
-    sessionmaker = get_sessionmaker()
-    slug = f"test-big-{uuid.uuid4().hex[:8]}"
-    async with sessionmaker() as session:
-        category_id = await session.scalar(
-            text("SELECT id FROM categories WHERE slug = :slug"), {"slug": catalogue["child_slug"]}
-        )
-        product_id = await session.scalar(
-            text(
-                "INSERT INTO products (slug, name, description, category_id, mrp_paise, "
-                "price_paise, unit_label, stock) VALUES (:slug, 'Test Atta 10 kg', '', "
-                ":category, 70000, 60000, '10 kg', 3) RETURNING id"
-            ),
-            {"slug": slug, "category": category_id},
-        )
-        await session.commit()
-
-    yield await _product(async_client, slug)
-
-    async with sessionmaker() as session:
-        await session.execute(text("DELETE FROM orders"))
-        await session.execute(
-            text("DELETE FROM order_items WHERE product_id = :id"), {"id": product_id}
-        )
-        await session.execute(text("DELETE FROM products WHERE id = :id"), {"id": product_id})
-        await session.commit()
-
-
-def cart(*lines: tuple[dict[str, Any], int]) -> dict[str, Any]:
-    return {
-        "items": [
-            {
-                "product_id": product["id"],
-                "variant_id": product.get("variant_id"),
-                "quantity": quantity,
-            }
-            for product, quantity in lines
-        ]
-    }
-
-
-async def stock_of(async_client: AsyncClient, slug: str) -> int:
-    return int((await _product(async_client, slug))["stock"])
-
-
-async def place(
-    async_client: AsyncClient,
-    customer: dict[str, Any],
-    payload: dict[str, Any],
-    *,
-    key: str | None = None,
-) -> Any:
-    headers = dict(customer["headers"])
-    if key is not None:
-        headers["Idempotency-Key"] = key
-    return await async_client.post(
-        "/api/v1/orders",
-        json={**payload, "address_id": customer["address"]["id"]},
-        headers=headers,
-    )
 
 
 # --------------------------------------------------------------------------- #
@@ -178,7 +57,7 @@ async def test_address_crud_and_default_handling(
 async def test_addresses_are_invisible_to_other_customers(
     async_client: AsyncClient, customer: dict[str, Any], make_token: Callable[..., str]
 ) -> None:
-    other = await _new_customer(async_client, make_token, prefix="other")
+    other = await new_customer(async_client, make_token, prefix="other")
     listed = (await async_client.get("/api/v1/addresses", headers=other["headers"])).json()
     # The other customer has an address of their own — and only that one.
     assert [row["id"] for row in listed] == [other["address"]["id"]]
@@ -348,7 +227,7 @@ async def test_variant_stock_is_decremented_on_the_variant(
     )
     assert response.status_code == 201, response.text
 
-    detail = await _product(async_client, loose["slug"])
+    detail = await product_detail(async_client, loose["slug"])
     after = next(entry for entry in detail["variants"] if entry["id"] == variant["id"])
     assert after["stock"] == variant["stock"] - quantity
     assert response.json()["items"][0]["variant_label"] == variant["label"]
@@ -461,7 +340,7 @@ async def test_the_last_units_have_exactly_one_winner_each(
     big_ticket: dict[str, Any],
 ) -> None:
     """S-04: seven different customers race for a product with three units."""
-    customers = [await _new_customer(async_client, make_token, prefix="race") for _ in range(7)]
+    customers = [await new_customer(async_client, make_token, prefix="race") for _ in range(7)]
 
     responses = await asyncio.gather(
         *[
@@ -502,7 +381,7 @@ async def test_orders_are_listed_and_scoped_to_the_owner(
     assert detail.status_code == 200
     assert detail.json()["items"][0]["quantity"] == 2
 
-    other = await _new_customer(async_client, make_token, prefix="other")
+    other = await new_customer(async_client, make_token, prefix="other")
     assert (await async_client.get("/api/v1/orders", headers=other["headers"])).json()["total"] == 0
     assert (
         await async_client.get(f"/api/v1/orders/{order_id}", headers=other["headers"])
