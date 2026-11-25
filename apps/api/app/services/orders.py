@@ -389,7 +389,10 @@ async def place_order(
     if idempotency_key:
         existing = await repo.get_order_by_idempotency(session, profile.id, idempotency_key)
         if existing is not None:
-            await session.rollback()
+            # Commit releases the profile lock; the session is configured with
+            # expire_on_commit=False, so the loaded order stays readable (a
+            # rollback would expire it and make serialisation do lazy IO).
+            await session.commit()
             logger.info("order_replayed", order_id=str(existing.id))
             return existing
 
@@ -492,11 +495,13 @@ async def place_order(
         else:
             ok = await repo.take_product_stock(session, line.product.id, line.quantity)
         if not ok:
+            # Read what the message needs *before* the rollback expires the rows.
+            name = line.product.name
             await session.rollback()
             raise ConflictError(
-                f"Only a few left of {line.product.name}. Please adjust your cart.",
+                f"Only a few left of {name}. Please adjust your cart.",
                 code="insufficient_stock",
-                details={"items": [line.product.name]},
+                details={"items": [name]},
             )
         taken.append((line.variant_id, line.product.id, line.quantity, line.product.name))
 
