@@ -37,6 +37,7 @@ venv; the `db`-marked tests run in CI, where a Postgres exists.
 | Node dependency audit | `npm audit` | ✅ **0 vulnerabilities** |
 | Secret scan | `gitleaks detect --log-opts=--all` (CI) | ✅ clean across all history |
 | Schema/type sync | `python -m app.scripts.dump_openapi` + `npm run api:types` | ✅ **28 paths, 36 aliases**, no drift (CI diff-gates it) |
+| CI run (Phase 5 head) | [45653953209](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45653953209) | ✅ **5/5 jobs green** at `b47e53f` — Web (80 tests + build + bundle budget), API (397 tests, **171** of them against a Postgres service container, plus the `0006` up/down/up round-trip and the OpenAPI diff gate), API container, Security (gitleaks, pip-audit, npm audit, no secrets in the bundle), E2E (Playwright at 360×800 and 1280×800) |
 | CI run (Phase 4 head) | [45643376432](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45643376432) | ✅ **5/5 jobs green** at `4eb84e2` — Web (61 tests + build), API (320 tests, **94** of them against a Postgres service container), API container, Security, E2E (Playwright at 360×800 and 1280×800) |
 | CI run (Phase 3 head) | [45636378146](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45636378146) | ✅ **5/5 jobs green** — Web (44 tests), API (298 tests incl. all 72 db tests against Postgres), API container, Security, E2E (guest-cart journey included) |
 | API tests after Phase 4 | `pytest` (real PostgreSQL 16) | ✅ **320 passed, 1 skipped** — the Phase 4 additions are 23 tests in `tests/test_rewards.py` |
