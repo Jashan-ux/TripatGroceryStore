@@ -3,34 +3,17 @@
 from __future__ import annotations
 
 import json
-import logging
 
-import pytest
 import structlog
 from app.core.logging import _redact, _scrub_text, configure_logging
-
-
-@pytest.fixture()
-def captured(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, object]]:
-    """Capture structlog output as parsed JSON events."""
-    events: list[dict[str, object]] = []
-
-    class _Collector(logging.Handler):
-        def emit(self, record: logging.LogRecord) -> None:
-            try:
-                events.append(json.loads(record.getMessage()))
-            except json.JSONDecodeError:
-                events.append({"raw": record.getMessage()})
-
-    configure_logging("INFO", json_logs=True)
-    handler = _Collector()
-    logging.getLogger().addHandler(handler)
-    logging.getLogger().setLevel(logging.INFO)
-    return events
+from pytest import CaptureFixture
 
 
 def test_jwt_is_scrubbed_from_messages() -> None:
-    token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dBjftJeZ4CVPmB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+    token = (
+        "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0"
+        ".dBjftJeZ4CVPmB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+    )
     scrubbed = _scrub_text(f"auth header was Bearer {token}")
     assert token not in scrubbed
     assert "eyJ" not in scrubbed
