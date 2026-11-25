@@ -78,7 +78,7 @@ jobs:
             if "$@" > /tmp/alembic.txt 2>&1; then
               echo "ok: $*"
             else
-              tail -25 /tmp/alembic.txt | while IFS= read -r line; do
+              grep -iE "error|exception|fatal" /tmp/alembic.txt | tail -12 | while IFS= read -r line; do
                 echo "::error title=alembic $*::$line"
               done
               return 1
