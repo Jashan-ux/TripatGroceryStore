@@ -85,14 +85,22 @@ def upgrade() -> None:
         ),
         sa.Column("read_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("now()"),
         ),
         sa.Column(
-            "updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")
+            "updated_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("now()"),
         ),
         sa.PrimaryKeyConstraint("id", name="pk_notifications"),
     )
-    op.create_index("ix_notifications_profile_created", "notifications", ["profile_id", "created_at"])
+    op.create_index(
+        "ix_notifications_profile_created", "notifications", ["profile_id", "created_at"]
+    )
     op.create_index("ix_notifications_unread", "notifications", ["profile_id", "read_at"])
 
     op.create_table(
@@ -114,10 +122,16 @@ def upgrade() -> None:
         sa.Column("dedupe_key", sa.String(length=200), nullable=True),
         sa.Column("sent_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("now()"),
         ),
         sa.Column(
-            "updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")
+            "updated_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("now()"),
         ),
         sa.PrimaryKeyConstraint("id", name="pk_email_messages"),
         sa.UniqueConstraint("dedupe_key", name="uq_email_messages_dedupe_key"),

@@ -168,6 +168,46 @@ Admin side (all behind `require_admin`):
 | `GET /admin/orders/{id}` | Full order, address snapshot and event trail. |
 | `POST /admin/orders/{id}/status` | `{"status": "shipped", "note": "…"}`. Allowed moves: `processing → shipped | cancelled`, `shipped → out_for_delivery`, `out_for_delivery → delivered`, `delivered → returned`. Anything else is `409 invalid_status_transition` with `details.allowed`. Cancelling restores stock; `delivered` settles the COD payment. |
 
+## Phase 3 — notifications and the email outbox
+
+Both sides of the shop get told what happened, without a push service.
+
+| Route | Purpose |
+|---|---|
+| `GET /notifications?page=&page_size=1..50` | Newest first. Returns `items[]` (`id, kind, title, body, href, order_id, read, created_at`), plus `unread_count`, `total`, `page`, `page_size`, `total_pages`. |
+| `GET /notifications/unread-count` | `{"unread_count": n}` — the red dot. Polled every 60 s while the tab is visible. |
+| `POST /notifications/{id}/ack` | Marks one read. Idempotent; another profile's id is `404 notification_not_found`, never `403`. |
+| `POST /notifications/read-all` | `{"marked": n}` — 0 when there is nothing unread. |
+
+All four require a bearer token (`401` otherwise) and only ever see their own rows.
+
+**What is written, and when.** Notifications are inserted **inside the order
+transaction**, so a checkout that fails on stock (or any other 409/500) notifies
+nobody. Kinds and copy:
+
+| Trigger | Recipient | Kind | `href` |
+|---|---|---|---|
+| Customer places an order | customer | `order_placed` — "Order MSG-… confirmed" + items/total/COD line | `/orders/{id}` |
+| Same order | every profile in `ADMIN_EMAILS` | `new_order` — "New order MSG-…" + name, phone, items, total | `/admin/orders` |
+| Status move by the shop, or a customer cancel | customer | `order_status` — "MSG-…: Packed and shipped" / `order_cancelled` with the reason as `body` | `/orders/{id}` |
+
+**Email.** `email_messages` is an outbox, not a mail call inline with the request:
+a row is queued in the same transaction, and a background task flushes it with its
+own session after the response is committed. `dedupe_key` (`order:{id}:placed`,
+`order:{id}:new:{email}`, `order:{id}:status-{status}:{email}`) makes a replay
+harmless; the unique index is the backstop.
+
+| Situation | Row status | `last_error` |
+|---|---|---|
+| `RESEND_API_KEY` empty | `skipped` | `No email provider configured (RESEND_API_KEY is empty)` |
+| Resend returns 200/201/202 | `sent`, `sent_at` set | — |
+| Resend errors, times out or returns 4xx/5xx | `failed` | `HTTP 500: …` / `ConnectError: …` |
+
+Nothing is retried automatically — a `failed` row stays put with its `attempts`
+count so the reason is visible, and `skipped` means "queued but no provider", which
+is the correct state for a shop that has not set up Resend yet. Mail never breaks a
+request: the flush is wrapped and logged.
+
 ## Regenerating the typed client
 
 ```bash

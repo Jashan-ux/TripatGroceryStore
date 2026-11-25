@@ -45,8 +45,12 @@ already take orders — the four things only you can do:
 - ☐ **Map pin ("use my location")**: the address form is manual entry today. A
   map needs a Google Maps or Mapbox key (free tier is fine) plus the browser
   geolocation permission — send a key and I will add it in the location phase.
-- ☐ 🕒 **Notifications** (red dot, email, push) are the next phase; nothing is
-  needed from you for the in-app part, but the *email* part needs section 2 below.
+- ☐ **Notifications are now in** (Phase 3): a bell in the header with a red dot,
+  a `/notifications` page, and a red count on *Admin → Orders* that updates every
+  minute. Nothing is needed from you to use it — but the **emails will be recorded
+  as `skipped`** until you send me a Resend key (section 2 below), because there is
+  deliberately no fake mail provider. That is visible, not silent: every skipped row
+  carries the reason.
 
 ## 1. Supabase (database, auth, storage)
 
@@ -75,6 +79,22 @@ already take orders — the four things only you can do:
 - ☐ 🔑 Send me the API key and the verified From address, e.g.
   `Tripat Pansari <orders@yourdomain.in>`.
 - ☐ Add DMARC (`v=DMARC1; p=quarantine; rua=mailto:tripatinsan029@gmail.com`).
+
+## 2a. Phase 3 — done for you, two things to check
+
+Migration `0004_notifications_and_email` is applied to the **live** project
+(verified 2026-11-25: 13 tables, RLS on 13/13, `alembic_version` =
+`0004_notifications_and_email`). Two things worth a minute:
+
+- ☐ **Check the bell says the right thing.** Place a test order, then look at the
+  header: you should have one unread notification as the customer *and* one as the
+  shop (add your own email to `ADMIN_EMAILS` if you have not — that list decides
+  who gets "New order"). Move the order to *Shipped* and the customer's bell should
+  gain a second line.
+- ☐ **Decide whether you want email at all.** If yes, section 2 (Resend) — one key
+  and one verified From address and the queued confirmations start going out. If
+  no, say so and I will leave the outbox switched off; the bell alone still covers
+  "your order shipped".
 
 ## 3. Domain
 
