@@ -15,7 +15,8 @@
 ### Running the database tests on your own machine
 
 `pgserver` gives you a real, throwaway PostgreSQL without Docker. That is how the
-Phase 3 migration and the 67 database tests were checked before CI:
+Phase 4 migration (and its `0005` round-trip) and the 94 database tests were
+checked before CI:
 
 ```bash
 cd apps/api && pip install pgserver
@@ -37,7 +38,7 @@ done
 export DATABASE_URL="postgresql+asyncpg://postgres@/tripat_test?host=/tmp/pgdata"
 export TEST_DATABASE_URL="$DATABASE_URL"
 alembic upgrade head && alembic downgrade base && alembic upgrade head
-pytest            # 292 passed, 1 skipped
+pytest            # 320 passed, 1 skipped
 ```
 
 One test skips there on purpose: the `anon`-role RLS probe needs Supabase's roles,

@@ -96,6 +96,19 @@ Migration `0004_notifications_and_email` is applied to the **live** project
   no, say so and I will leave the outbox switched off; the bell alone still covers
   "your order shipped".
 
+## 2b. Phase 4 — done for you, one thing to try
+
+Migration `0005_wallet_referrals_rewards` is applied to the **live** project
+(verified 2026-11-25: 19 tables, RLS on 19/19, `alembic_version` =
+`0005_wallet_referrals_rewards`). The customer app now has **Rewards** (wallet
+statement, referral code, scratch cards, badge) and an order can be returned from
+its own page; the owner gets a new **Returns** tab.
+
+- ☐ **Try the two-tap promise.** Open a delivered order as the customer, ask to
+  return one item, then go to *Admin → Returns*. Approve it: the customer's wallet
+  must stay unchanged. Tap *Goods received · credit wallet*: the money appears,
+  once. That second tap is the only thing that pays a customer back.
+
 ## 3. Domain
 
 - ☐ 🔑 Buy the domain (suggest `tripatpansari.in` / `msgstore.in`).

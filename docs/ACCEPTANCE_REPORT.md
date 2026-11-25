@@ -6,9 +6,9 @@ Everything else is `NOT RUN` (with the phase that will exercise it) or
 `PARTIAL`.
 
 - Report date: **2026-11-25**
-- Phases closed: **0, 1, 2**. Phase 2 (cart, addresses, COD checkout, customer
-  orders, owner order queue) is delivered and tested; Phase 3 (notifications,
-  email, red dot) is next.
+- Phases closed: **0, 1, 2, 3, 4**. Phase 4 (wallet, referrals, scratch cards,
+  returns, loyalty badges) is delivered and tested; Phase 5 (admin catalogue
+  tools, offers, settings) is next.
 - Branch: `arena/660db374-tripatgrocerystore`
 - Environment of record: this sandbox (Node 22.22, Python 3.11, no Docker, no
   browser, no Postgres, **no outbound Postgres to Supabase**) plus GitHub
@@ -37,11 +37,17 @@ venv; the `db`-marked tests run in CI, where a Postgres exists.
 | Node dependency audit | `npm audit` | ✅ **0 vulnerabilities** |
 | Secret scan | `gitleaks detect --log-opts=--all` (CI) | ✅ clean across all history |
 | Schema/type sync | `python -m app.scripts.dump_openapi` + `npm run api:types` | ✅ **28 paths, 36 aliases**, no drift (CI diff-gates it) |
+| CI run (Phase 4 head) | [45643376432](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45643376432) | ✅ **5/5 jobs green** at `4eb84e2` — Web (61 tests + build), API (320 tests, **94** of them against a Postgres service container), API container, Security, E2E (Playwright at 360×800 and 1280×800) |
 | CI run (Phase 3 head) | [45636378146](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45636378146) | ✅ **5/5 jobs green** — Web (44 tests), API (298 tests incl. all 72 db tests against Postgres), API container, Security, E2E (guest-cart journey included) |
-| Live schema inventory | SQL via the Supabase connector | ✅ **13 tables** + `alembic_version`, 2 Phase 3 tables (10 + 11 columns), 3 indexes on them, 2 new triggers, 5 enums |
+| API tests after Phase 4 | `pytest` (real PostgreSQL 16) | ✅ **320 passed, 1 skipped** — the Phase 4 additions are 23 tests in `tests/test_rewards.py` |
+| Web unit tests after Phase 4 | `npm test` | ✅ `10 files, 61 tests passed` (17 new: rewards hub 5, checkout wallet 4, returns panel 4, admin returns queue 4) |
+| Bundle after Phase 4 | `node apps/web/scripts/check-bundle-size.mjs` | ✅ **180.0 KB / 200 KB** gzip — the rewards page is a lazy chunk |
+| Schema/type sync after Phase 4 | `python -m app.scripts.dump_openapi` + `npm run api:types` | ✅ **38 paths, 56 aliases**, no drift |
+| Migration round-trip (`0005`) | `alembic upgrade head` → `downgrade 0004` → `upgrade head` | ✅ three steps clean against local PostgreSQL 16; **19 tables** |
+| Live schema inventory | SQL via the Supabase connector | ✅ **19 tables** + `alembic_version`, 6 Phase 4 tables (`wallets`, `wallet_entries`, `referrals`, `scratch_cards`, `order_returns`, `return_items`), **19/19 RLS**, 16 `updated_at` triggers, 4 new enums |
 | Live seed | SQL via the Supabase connector | ✅ 41 categories (10 departments), 30 brands, 70 products (12 unbranded), 44 variants |
 | Live drift check | SQLAlchemy metadata (83 columns) vs `information_schema` | ✅ 83/83 — no missing, no extra column |
-| Live security posture | SQL via the Supabase connector | ✅ RLS on **13/13** tables (2/2 new), 0 grants to `anon`/`authenticated`, `alembic_version` = **`0004_notifications_and_email`** |
+| Live security posture | SQL via the Supabase connector | ✅ RLS on **19/19** tables (6/6 new), 0 grants to `anon`/`authenticated`, `alembic_version` = **`0005_wallet_referrals_rewards`** |
 
 ### Two things this sandbox cannot prove, and how they are covered
 
@@ -72,11 +78,11 @@ venv; the `db`-marked tests run in CI, where a Postgres exists.
 | C-10 | Order page shows items × qty, total, "Deliver by <date>", timeline | **PASS (API + page)** | `deliver_by` is computed from `store_settings.default_delivery_days` and asserted in the quote/order tests; the timeline is built from `order_events`, not from `status` (`test_the_timeline_records_events_not_the_current_status`); `OrderDetailPage` renders items, totals, address snapshot, expected date and the event trail. |
 | C-11 | Admin sets Shipped/Out for delivery/Delivered; customer sees updates | **PASS** | `test_the_happy_path_settles_the_cash_on_delivery` walks all three steps and flips `payment_status` to `paid` on delivery; the customer's order page shows the new status and events, and each move writes a bell line + a queued email (`test_shop_transitions_ring_the_customer`, `test_cancellation_and_its_reason_reach_the_customer`). Push arrives in Phase 7. |
 | C-12 | Cancel in Processing only; stock restored | **PASS** | Customer path: `test_cancelling_restores_stock_and_cannot_be_repeated`, `test_an_order_cannot_be_cancelled_once_it_has_shipped`. Owner path: `test_cancelling_from_the_queue_puts_the_stock_back`, `test_a_dispatched_order_can_no_longer_be_cancelled`, `test_stock_is_restored_exactly_once_even_for_two_lines`. |
-| C-13 | Referral: 10% first order only, ₹20 after delivery, self-referral rejected | **NOT RUN** (Phase 4) | Referral codes (6 chars, `23456789ABCDEFGHJKMNPQRSTUVWXYZ`) are allocated on first login. |
-| C-14 | ₹2,000+ creates locked card; unlocks on delivery; server reveal ₹50–100; single use | **NOT RUN** (Phase 4) | |
-| C-15 | Wallet applies, cannot exceed total, ledger correct | **NOT RUN** (Phase 4) | |
-| C-16 | No credit until approved + received; card removed | **NOT RUN** (Phase 4) | |
-| C-17 | Badge at ₹20,000 delivered spend with notification, email, progress bar | **NOT RUN** (Phase 4) | |
+| C-13 | Referral: 10% first order only, ₹20 after delivery, self-referral rejected | **PASS** | `test_a_friend_gets_ten_percent_off_their_first_order` (the discount appears as `discount_reason="Referral 10% off"` and only on the first order), `test_the_referrer_is_paid_only_after_delivery` (nothing at placement, ₹2,000 in the referrer's wallet when the order reaches `delivered`, plus a bell line), `test_a_referral_is_refused_when_it_would_be_a_lie` (own code → 409 `self_referral`, already joined → 409 `referral_already_joined`, after a first order → 409 `referral_after_first_order`, unknown code → 404), `test_a_cancelled_first_order_pays_no_referral_bonus` (cancel voids it). Web: the rewards hub shows the code, a copy link and the friend list; `RewardsPage.test.tsx` › "sends a friend code in upper case". |
+| C-14 | ₹2,000+ creates locked card; unlocks on delivery; server reveal ₹50–100; single use | **PASS** | `test_a_big_order_earns_a_locked_card`, `test_a_small_order_earns_no_card`, `test_the_card_unlocks_on_delivery_and_pays_exactly_once` (a locked card is a 409 `scratch_card_locked`; a reveal returns ₹50–₹100, moves it to `revealed`, credits once and a second reveal is 409 `scratch_card_used`; expiry is the settings window), `test_a_card_belongs_to_one_customer` (someone else's card → 404). The amount is chosen by the server and never sent before the reveal. Web: `RewardsPage.test.tsx` › the scratch section shows ready/locked states and posts to `/reveal`. |
+| C-15 | Wallet applies, cannot exceed total, ledger correct | **PASS** | `test_the_wallet_pays_part_of_an_order_and_the_rest_is_cash` (₹100 in the wallet against a ₹600 order → ₹500 cash, `payment_status='paid'` only when cash due is 0), `test_the_wallet_cannot_pay_more_than_the_order_costs` (asking for everything clamps to the total; `wallet_paise <= subtotal + fee − discount` is also a database check), `test_a_wallet_is_private`, and every reward test asserts `wallets.balance_paise == Σ wallet_entries.delta_paise`. The single-credit columns (`referrals.credited_entry_id`, `scratch_cards.credited_entry_id`, `order_returns.credited_entry_id`) are `UNIQUE`, so a double credit fails in the database, not just in the service. Web: `CheckoutPage.test.tsx` (4 tests) proves the balance probe, the switch, the "From your wallet" line and the `use_wallet_paise` on the order. |
+| C-16 | No credit until approved + received; card removed | **PASS** | `test_a_return_waits_for_approval_and_receipt_before_it_pays` walks `requested` → `approved` (still no money) → `received_credited` (wallet credited once, stock back +1, second receive idempotent), `test_a_rejected_return_pays_nobody`, `test_a_return_needs_a_delivered_order`, `test_a_return_cannot_ask_for_more_than_was_ordered`, `test_the_return_window_closes`, `test_an_order_id_that_is_not_yours_cannot_be_returned`. A cancelled or returned order voids its scratch card and referral in `rewards_service.on_order_reversed`. Web: `ReturnPanel.test.tsx` keeps the promise in the copy ("once we approve the return") and disables a second request while one is open. |
+| C-17 | Badge at ₹20,000 delivered spend with notification, email, progress bar | **PASS** | `test_delivered_spend_earns_a_badge_and_a_message` (crossing ₹20,000 on delivery sets `gold`, rings the bell with "Gold member" and queues the email), `test_the_badge_progress_bar_moves` (0–100 % towards the next tier, exact remaining), `test_a_return_takes_the_spend_back` (spend is net of returns). Thresholds live in `store_settings`. Web: `RewardsPage.test.tsx` › the badge section renders the tier, `aria-valuenow` and "₹25,000 more for Platinum member". |
 | C-18 | Contact page: info, tel link, Maps link, feedback form emails + admin inbox | **NOT RUN** (Phase 5) | Store address, phone and maps URL already come from the database. |
 | C-19 | Install banner after signup (Android) and iOS instructions; standalone launch | **NOT RUN** (Phase 7) | Manifest + icons are in place and asserted against the built app. |
 | C-20 | Offline shell + browsed catalogue; ordering blocked offline; update prompt after deploy | **PARTIAL** | `NetworkOnly` for `/api/*` and Supabase origins is asserted in `e2e/pwa.spec.ts` against a production build; the offline *catalogue* view needs Phase 2's cache strategy. |
@@ -97,7 +103,7 @@ venv; the `db`-marked tests run in CI, where a Postgres exists.
 | A-09 | Edit product/category/subcategory; delete with products blocked or reassigned | **NOT RUN** (Phase 5) | |
 | A-10 | Analytics cards drill down; empty range safe; figures reconcile | **NOT RUN** (Phase 6) | |
 | A-11 | Low-stock row opens product edit; saving updates the count | **NOT RUN** (Phase 6) | |
-| A-12 | Return approve + mark received credits exactly once | **NOT RUN** (Phase 4) | |
+| A-12 | Return approve + mark received credits exactly once | **PASS** | `POST /admin/returns/{id}/decision` then `POST /admin/returns/{id}/received`: `test_a_return_waits_for_approval_and_receipt_before_it_pays` proves the first call pays nothing, the second credits exactly once (a repeat is idempotent, `credited_entry_id` is unique), and `test_only_the_owner_can_decide_a_return` proves a customer gets 403. Web: the new **Returns** admin tab (`AdminReturnsPage.test.tsx`, 4 tests) offers approve/refuse on `requested` and only "Goods received · credit wallet" on `approved`. |
 | A-13 | Customers list, tier filter, profile with past orders, top-customer flag | **NOT RUN** (Phase 6) | |
 | A-14 | Offer to all / one tier reaches bell, banner, push | **NOT RUN** (Phase 5) | |
 | A-15 | Settings changes apply on next checkout without redeploy, audit-logged | **NOT RUN** (Phase 5) | `/api/v1/config` already serves the live `store_settings` row. |

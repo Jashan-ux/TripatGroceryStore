@@ -59,9 +59,9 @@ failures return `code: "validation_error"` with
 | catalogue | `GET /categories`, `GET /brands`, `GET /products`, `GET /products/{slug}` (public read) | 1 |
 | cart | **not built on purpose** — the basket lives on the device; `POST /checkout/quote` prices it | 2 ✅ |
 | addresses | `GET /addresses`, `POST /addresses`, `PUT/DELETE /addresses/{id}` | 2 ✅ (map pin in Phase 7) |
-| checkout & orders | `POST /checkout/quote` (public), `POST /orders` (`Idempotency-Key`), `GET /orders`, `GET /orders/{id}`, `POST /orders/{id}/cancel` | 2 ✅ (returns in Phase 4) |
-| wallet & rewards | `GET /wallet`, `GET /rewards`, `POST /rewards/scratch/{id}/reveal`, `POST /referrals/apply` | 4 |
-| returns | `GET /returns`, `GET /returns/{id}` | 4 |
+| checkout & orders | `POST /checkout/quote` (public), `POST /orders` (`Idempotency-Key`), `GET /orders`, `GET /orders/{id}`, `POST /orders/{id}/cancel`, `POST /orders/{id}/return` | 2 ✅ + 4 ✅ |
+| wallet & rewards | `GET /rewards`, `GET /rewards/wallet`, `POST /rewards/referral`, `GET /rewards/scratch-cards`, `POST /rewards/scratch-cards/{id}/reveal` | 4 ✅ |
+| returns | `GET /returns`, `POST /orders/{id}/return`; admin: `GET /admin/returns`, `POST /admin/returns/{id}/decision`, `POST /admin/returns/{id}/received` | 4 ✅ |
 | notifications | `GET /notifications`, `POST /notifications/{id}/ack`, `POST /push/subscribe`, `DELETE /push/subscribe` | 3 |
 | feedback | `POST /feedback` | 5 |
 | admin | `GET /admin/whoami` ✅, `GET /admin/orders`, `GET /admin/orders/{id}`, `POST /admin/orders/{id}/status` ✅; products/categories/brands/customers/offers/settings/analytics/audit | 3–6 |
@@ -210,6 +210,54 @@ Nothing is retried automatically — a `failed` row stays put with its `attempts
 count so the reason is visible, and `skipped` means "queued but no provider", which
 is the correct state for a shop that has not set up Resend yet. Mail never breaks a
 request: the flush is wrapped and logged.
+
+## Phase 4 — wallet, referrals, scratch cards, returns, badges
+
+Money is integer paise everywhere, and every credit is a row in `wallet_entries`
+with the balance it produced. `wallets.balance_paise` is kept equal to the sum of
+its entries, and the three credits that could fire twice (referral, card, refund)
+store the ledger entry they made in a **unique** column — the database refuses a
+second credit even if a service check were wrong.
+
+### Customer routes (all need a bearer token; none takes a profile id)
+
+| Route | Purpose |
+|---|---|
+| `GET /rewards` | The hub in one call: `wallet` (balance + statement), `referrals` (code, share link, friend list, the code *you* joined with), `scratch` (cards + `ready`/`locked`/`revealed` counts), `tier` (`tier`, `spend_paise`, `next_tier`, `next_tier_at_paise`, `remaining_paise`, `progress_pct`). |
+| `GET /rewards/wallet?page=&page_size=` | Balance and the paged statement (`delta_paise`, `reason`, `note`, `order_id`, `created_at`). |
+| `POST /rewards/referral` | `{"code": "ABCDEF"}` — joins a friend's programme. `409 self_referral`, `409 referral_already_joined`, `409 referral_after_first_order`, `404 referral_code_not_found`. The 10 % discount lands on the **first** order only. |
+| `GET /rewards/scratch-cards` | Cards newest first. `amount_paise` is `null` until revealed — the prize exists server-side and is not sent early. |
+| `POST /rewards/scratch-cards/{id}/reveal` | Unlocks, credits and returns `{card, credited_paise, wallet_balance_paise}`. `409 scratch_card_locked` before delivery, `409 scratch_card_used` on a second reveal, `409 scratch_card_expired` past the window, `404` for someone else's card. |
+| `POST /orders/{id}/return` | `{"items": [{"order_item_id", "quantity"}], "reason": "…"}`. `409 return_order_not_delivered`, `409 return_window_closed`, `409 return_already_open`, `409 return_quantity_too_high`, `404` for another customer's order. |
+| `GET /returns` | My returns, newest first, with items and status. |
+
+**Wallet at checkout.** `POST /checkout/quote` and `POST /orders` take
+`use_wallet_paise` (default `0`). The server clamps it to the balance **and** to
+what is payable, fills `wallet_applied_paise`, `payable_before_wallet_paise` and
+`discount_reason`, and sets `payment_status='paid'` when the cash due is zero. The
+web asks the quote for the balance first, then re-quotes with the chosen amount;
+switching it rotates the idempotency key so a replay cannot silently change what
+was paid.
+
+### Admin routes (behind `require_admin`)
+
+| Route | Purpose |
+|---|---|
+| `GET /admin/returns?status=&page=&page_size=` | The queue with customer name/phone, items and `refund_paise`. Statuses: `requested`, `approved`, `rejected`, `received_credited`. |
+| `POST /admin/returns/{id}/decision` | `{"approve": true, "note": "…"}` — decides only. **No money moves.** `409 return_already_decided` on a second decision. |
+| `POST /admin/returns/{id}/received` | The goods are back: restores stock, credits the wallet **once** and parks the return in `received_credited`. `409 return_not_approved` if it was never approved; a repeat call is idempotent, not a second credit. |
+
+### Rules that live in settings, not code
+
+| Setting | Default | Effect |
+|---|---|---|
+| `referral_reward_paise` | 2000 | Paid to the referrer, on delivery of the friend's first order. |
+| `referral_discount_pct` | 10 | The friend's first-order discount. |
+| `scratch_card_threshold_paise` | 200000 | Basket size that earns a card (at placement; unlocked at delivery). |
+| `scratch_card_min_paise` / `_max_paise` | 5000 / 10000 | The reveal range the server draws from. |
+| `scratch_card_expiry_days` | 30 | How long an unlocked card can be scratched. |
+| `return_window_days` | 3 | How long after delivery a return can be asked for. |
+| `tier_gold_paise` / `tier_platinum_paise` / `tier_diamond_paise` | 2000000 / 5000000 / 10000000 | Delivered spend (net of returns) for each badge. |
 
 ## Regenerating the typed client
 
