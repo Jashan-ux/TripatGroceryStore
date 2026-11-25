@@ -23,6 +23,7 @@ class AdminOrderSummaryOut(APIModel):
     order_number: str
     status: str
     payment_status: str
+    wallet_paise: int = 0
     total_paise: int
     item_count: int
     placed_at: datetime

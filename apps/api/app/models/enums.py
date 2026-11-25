@@ -56,6 +56,28 @@ class ScratchCardStatus(enum.StrEnum):
     void = "void"
 
 
+class ReferralStatus(enum.StrEnum):
+    #: The friend has joined but their first order is not delivered yet.
+    pending = "pending"
+    #: The referrer has been paid; nothing left to do.
+    credited = "credited"
+    #: Called off before it could pay (the friend's order was cancelled).
+    void = "void"
+
+
+class WalletReason(enum.StrEnum):
+    #: Credit: the referrer's reward once the friend's first order lands.
+    referral_bonus = "referral_bonus"
+    #: Credit: a scratch card the customer rubbed off.
+    scratch_card = "scratch_card"
+    #: Credit: the shop received a return.
+    return_refund = "return_refund"
+    #: Debit: part of an order paid from the wallet instead of cash.
+    order_payment = "order_payment"
+    #: Credit/debit: the owner's correction, with a note.
+    adjustment = "adjustment"
+
+
 class NotificationKind(enum.StrEnum):
     #: Customer: "we have your order".
     order_placed = "order_placed"

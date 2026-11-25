@@ -110,6 +110,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Returns waiting or decided */
+        get: operations["list_returns_api_v1_admin_returns_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/returns/{return_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve or refuse a return */
+        post: operations["decide_api_v1_admin_returns__return_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/returns/{return_id}/received": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Goods are back: restore stock, credit the wallet (once) */
+        post: operations["received_api_v1_admin_returns__return_id__received_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/whoami": {
         parameters: {
             query?: never;
@@ -187,7 +238,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Price a cart */
+        /** Price a cart (signed in: also the referral discount and wallet) */
         post: operations["quote_cart_api_v1_checkout_quote_post"];
         delete?: never;
         options?: never;
@@ -411,6 +462,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders/{order_id}/return": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask to return part of a delivered order */
+        post: operations["request_return_api_v1_orders__order_id__return_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/products": {
         parameters: {
             query?: never;
@@ -437,6 +505,108 @@ export interface paths {
         };
         /** Product detail */
         get: operations["get_product_api_v1_products__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My returns */
+        get: operations["list_returns_api_v1_returns_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rewards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Wallet, referrals, cards and badge */
+        get: operations["summary_api_v1_rewards_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rewards/referral": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Use a friend's code */
+        post: operations["join_referral_api_v1_rewards_referral_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rewards/scratch-cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My scratch cards */
+        get: operations["list_cards_api_v1_rewards_scratch_cards_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rewards/scratch-cards/{card_id}/reveal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rub a card off (once) */
+        post: operations["reveal_card_api_v1_rewards_scratch_cards__card_id__reveal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rewards/wallet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Wallet balance and statement */
+        get: operations["wallet_statement_api_v1_rewards_wallet_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -713,6 +883,98 @@ export interface components {
             status: string;
             /** Total Paise */
             total_paise: number;
+            /**
+             * Wallet Paise
+             * @default 0
+             */
+            wallet_paise: number;
+        };
+        /** AdminReturnDecisionIn */
+        AdminReturnDecisionIn: {
+            /** Approve */
+            approve: boolean;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+        };
+        /** AdminReturnListOut */
+        AdminReturnListOut: {
+            /** Items */
+            items: components["schemas"]["AdminReturnOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            total_pages: number;
+        };
+        /** AdminReturnOut */
+        AdminReturnOut: {
+            /**
+             * Customer Name
+             * @default
+             */
+            customer_name: string;
+            /**
+             * Customer Phone
+             * @default
+             */
+            customer_phone: string;
+            /** Decided At */
+            decided_at?: string | null;
+            /**
+             * Decision Note
+             * @default
+             */
+            decision_note: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Items */
+            items: components["schemas"]["ReturnItemOut"][];
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /**
+             * Order Number
+             * @default
+             */
+            order_number: string;
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+            /** Received At */
+            received_at?: string | null;
+            /** Refund Paise */
+            refund_paise: number;
+            /**
+             * Requested At
+             * Format: date-time
+             */
+            requested_at: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "requested" | "approved" | "rejected" | "received_credited";
+        };
+        /** AdminReturnReceiveIn */
+        AdminReturnReceiveIn: {
+            /**
+             * Note
+             * @default
+             */
+            note: string;
         };
         /** BlockingIssue */
         BlockingIssue: {
@@ -869,6 +1131,26 @@ export interface components {
             /** Marked */
             marked: number;
         };
+        /**
+         * MyReferralOut
+         * @description The code *this* customer was referred with, if any.
+         */
+        MyReferralOut: {
+            /** Code */
+            code: string;
+            /** Discount Paise */
+            discount_paise: number;
+            /**
+             * Referrer Name
+             * @default
+             */
+            referrer_name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "credited" | "void";
+        };
         /** NotificationListOut */
         NotificationListOut: {
             /** Items */
@@ -963,6 +1245,11 @@ export interface components {
             customer_note: string;
             /** Items */
             items: components["schemas"]["CartLineIn"][];
+            /**
+             * Use Wallet Paise
+             * @default 0
+             */
+            use_wallet_paise: number;
         };
         /** OrderItemOut */
         OrderItemOut: {
@@ -1029,6 +1316,11 @@ export interface components {
             delivery_fee_paise: number;
             /** Discount Paise */
             discount_paise: number;
+            /**
+             * Discount Reason
+             * @default
+             */
+            discount_reason: string;
             /** Events */
             events: components["schemas"]["OrderEventOut"][];
             /**
@@ -1057,6 +1349,11 @@ export interface components {
             subtotal_paise: number;
             /** Total Paise */
             total_paise: number;
+            /**
+             * Wallet Paise
+             * @default 0
+             */
+            wallet_paise: number;
         };
         /** OrderSummaryOut */
         OrderSummaryOut: {
@@ -1086,6 +1383,11 @@ export interface components {
             status: string;
             /** Total Paise */
             total_paise: number;
+            /**
+             * Wallet Paise
+             * @default 0
+             */
+            wallet_paise: number;
         };
         /** PhoneIn */
         PhoneIn: {
@@ -1309,6 +1611,11 @@ export interface components {
             items: components["schemas"]["CartLineIn"][];
             /** Pincode */
             pincode?: string | null;
+            /**
+             * Use Wallet Paise
+             * @default 0
+             */
+            use_wallet_paise: number;
         };
         /** QuoteLineOut */
         QuoteLineOut: {
@@ -1361,12 +1668,22 @@ export interface components {
             delivery_fee_paise: number;
             /** Discount Paise */
             discount_paise: number;
+            /**
+             * Discount Reason
+             * @default
+             */
+            discount_reason: string;
             /** Item Count */
             item_count: number;
             /** Lines */
             lines: components["schemas"]["QuoteLineOut"][];
             /** Minimum Order Paise */
             minimum_order_paise: number;
+            /**
+             * Payable Before Wallet Paise
+             * @default 0
+             */
+            payable_before_wallet_paise: number;
             /** Pincode */
             pincode?: string | null;
             /** Pincode Serviceable */
@@ -1377,6 +1694,221 @@ export interface components {
             subtotal_paise: number;
             /** Total Paise */
             total_paise: number;
+            /**
+             * Wallet Applied Paise
+             * @default 0
+             */
+            wallet_applied_paise: number;
+            /**
+             * Wallet Available Paise
+             * @default 0
+             */
+            wallet_available_paise: number;
+        };
+        /**
+         * ReferralFriendOut
+         * @description A friend who used this customer's code. Deliberately thin: no email, no phone.
+         */
+        ReferralFriendOut: {
+            /** Credited At */
+            credited_at?: string | null;
+            /**
+             * Joined At
+             * Format: date-time
+             */
+            joined_at: string;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /** Reward Paise */
+            reward_paise: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "credited" | "void";
+        };
+        /** ReferralJoinIn */
+        ReferralJoinIn: {
+            /**
+             * Code
+             * @description A friend's referral code.
+             */
+            code: string;
+        };
+        /** ReferralProgramOut */
+        ReferralProgramOut: {
+            /**
+             * Code
+             * @description Share this; the friend gets a discount on their first order.
+             */
+            code: string;
+            /** Credited */
+            credited: number;
+            /** Earned Paise */
+            earned_paise: number;
+            /** Friend Discount Pct */
+            friend_discount_pct: number;
+            /** Friends */
+            friends: components["schemas"]["ReferralFriendOut"][];
+            /** Joined */
+            joined: number;
+            my_referral?: components["schemas"]["MyReferralOut"] | null;
+            /** Referrer Reward Paise */
+            referrer_reward_paise: number;
+            /** Share Url */
+            share_url: string;
+        };
+        /** ReturnItemIn */
+        ReturnItemIn: {
+            /**
+             * Order Item Id
+             * Format: uuid
+             */
+            order_item_id: string;
+            /** Quantity */
+            quantity: number;
+        };
+        /** ReturnItemOut */
+        ReturnItemOut: {
+            /** Name */
+            name: string;
+            /**
+             * Order Item Id
+             * Format: uuid
+             */
+            order_item_id: string;
+            /** Quantity */
+            quantity: number;
+            /** Refund Paise */
+            refund_paise: number;
+        };
+        /** ReturnListOut */
+        ReturnListOut: {
+            /** Returns */
+            returns: components["schemas"]["ReturnOut"][];
+        };
+        /** ReturnOut */
+        ReturnOut: {
+            /** Decided At */
+            decided_at?: string | null;
+            /**
+             * Decision Note
+             * @default
+             */
+            decision_note: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Items */
+            items: components["schemas"]["ReturnItemOut"][];
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /**
+             * Order Number
+             * @default
+             */
+            order_number: string;
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+            /** Received At */
+            received_at?: string | null;
+            /** Refund Paise */
+            refund_paise: number;
+            /**
+             * Requested At
+             * Format: date-time
+             */
+            requested_at: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "requested" | "approved" | "rejected" | "received_credited";
+        };
+        /** ReturnRequestIn */
+        ReturnRequestIn: {
+            /** Items */
+            items: components["schemas"]["ReturnItemIn"][];
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+        };
+        /** RewardsSummaryOut */
+        RewardsSummaryOut: {
+            referrals: components["schemas"]["ReferralProgramOut"];
+            scratch: components["schemas"]["ScratchCardListOut"];
+            tier: components["schemas"]["TierOut"];
+            wallet: components["schemas"]["WalletOut"];
+        };
+        /** ScratchCardListOut */
+        ScratchCardListOut: {
+            /** Cards */
+            cards: components["schemas"]["ScratchCardOut"][];
+            /** Locked */
+            locked: number;
+            /** Ready */
+            ready: number;
+            /** Revealed */
+            revealed: number;
+        };
+        /** ScratchCardOut */
+        ScratchCardOut: {
+            /** Amount Paise */
+            amount_paise?: number | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Expires At */
+            expires_at?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /**
+             * Order Number
+             * @default
+             */
+            order_number: string;
+            /** Revealed At */
+            revealed_at?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "locked" | "ready" | "revealed" | "used" | "void";
+            /** Threshold Paise */
+            threshold_paise: number;
+            /** Unlocked At */
+            unlocked_at?: string | null;
+        };
+        /** ScratchRevealOut */
+        ScratchRevealOut: {
+            card: components["schemas"]["ScratchCardOut"];
+            /** Credited Paise */
+            credited_paise: number;
+            /** Wallet Balance Paise */
+            wallet_balance_paise: number;
         };
         /** StatusResponse */
         StatusResponse: {
@@ -1391,6 +1923,34 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** TierOut */
+        TierOut: {
+            /** Next Tier */
+            next_tier?: ("gold" | "platinum" | "diamond") | null;
+            /** Next Tier At Paise */
+            next_tier_at_paise?: number | null;
+            /**
+             * Progress Pct
+             * @description 0–100 towards the next badge.
+             * @default 0
+             */
+            progress_pct: number;
+            /**
+             * Remaining Paise
+             * @default 0
+             */
+            remaining_paise: number;
+            /**
+             * Spend Paise
+             * @description Delivered spend, net of returns.
+             */
+            spend_paise: number;
+            /**
+             * Tier
+             * @enum {string}
+             */
+            tier: "none" | "gold" | "platinum" | "diamond";
         };
         /** UnreadCountOut */
         UnreadCountOut: {
@@ -1424,6 +1984,53 @@ export interface components {
             sort_order: number;
             /** Stock */
             stock: number;
+        };
+        /** WalletEntryOut */
+        WalletEntryOut: {
+            /** Balance After Paise */
+            balance_after_paise: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Delta Paise
+             * @description Positive for money in, negative for money out.
+             */
+            delta_paise: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Order Id */
+            order_id?: string | null;
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "referral_bonus" | "scratch_card" | "return_refund" | "order_payment" | "adjustment";
+        };
+        /** WalletOut */
+        WalletOut: {
+            /** Balance Paise */
+            balance_paise: number;
+            /** Entries */
+            entries: components["schemas"]["WalletEntryOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            total_pages: number;
         };
     };
     responses: never;
@@ -2004,6 +2611,247 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminOrderSummaryOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_returns_api_v1_admin_returns_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by status */
+                status?: ("requested" | "approved" | "rejected" | "received_credited") | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminReturnListOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    decide_api_v1_admin_returns__return_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Return id */
+                return_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminReturnDecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminReturnOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    received_api_v1_admin_returns__return_id__received_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Return id */
+                return_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminReturnReceiveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminReturnOut"];
                 };
             };
             /** @description Missing, expired or invalid token. */
@@ -3512,6 +4360,87 @@ export interface operations {
             };
         };
     };
+    request_return_api_v1_orders__order_id__return_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Order id */
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReturnRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReturnOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_products_api_v1_products_get: {
         parameters: {
             query?: {
@@ -3619,6 +4548,460 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProductDetailOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_returns_api_v1_returns_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReturnListOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    summary_api_v1_rewards_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RewardsSummaryOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    join_referral_api_v1_rewards_referral_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferralJoinIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReferralProgramOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_cards_api_v1_rewards_scratch_cards_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScratchCardListOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reveal_card_api_v1_rewards_scratch_cards__card_id__reveal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Scratch card id */
+                card_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScratchRevealOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    wallet_statement_api_v1_rewards_wallet_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletOut"];
                 };
             };
             /** @description Missing, expired or invalid token. */

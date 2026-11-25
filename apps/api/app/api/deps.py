@@ -106,6 +106,37 @@ async def get_current_user(
 CurrentUserDep = Annotated[CurrentUser, Depends(get_current_user)]
 
 
+async def get_optional_user(
+    request: Request,
+    session: SessionDep,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
+) -> CurrentUser | None:
+    """The caller when the request carries a good token, ``None`` otherwise.
+
+    Used by the public quote: a guest gets a price, a signed-in customer additionally
+    gets their referral discount and wallet. A bad token is treated as "no token"
+    rather than an error, because the route is public either way — and this never
+    creates a profile as a side effect of pricing a cart.
+    """
+    from app.core.errors import UnauthenticatedError
+
+    if credentials is None or not credentials.credentials:
+        return None
+    try:
+        claims = verify_token(credentials.credentials)
+    except UnauthenticatedError:
+        return None
+    profile = await get_profile(session, claims.sub)
+    if profile is None:
+        return None
+    request.state.token_claims = claims
+    request.state.user = profile
+    return CurrentUser(claims=claims, profile=profile)
+
+
+OptionalUserDep = Annotated[CurrentUser | None, Depends(get_optional_user)]
+
+
 async def require_admin(user: CurrentUserDep) -> CurrentUser:
     """Single gate for every admin route. Role comes from ``profiles.role``."""
     if user.profile.role is not UserRole.admin:

@@ -33,6 +33,7 @@ from app.schemas.admin_orders import (
 from app.schemas.orders import OrderOut
 from app.services import email as email_service
 from app.services import notifications as notifications_service
+from app.services import rewards as rewards_service
 from app.services.orders import order_out
 from app.services.settings import get_store_settings
 
@@ -65,6 +66,7 @@ def summary_out(order: Order) -> AdminOrderSummaryOut:
         order_number=order.order_number,
         status=order.status.value,
         payment_status=order.payment_status.value,
+        wallet_paise=order.wallet_paise,
         total_paise=order.total_paise,
         item_count=order.item_count,
         placed_at=order.placed_at,
@@ -155,10 +157,28 @@ async def transition(
 
     # Tell the customer, in the same transaction that moved the order.
     customer = await session.get(Profile, order.profile_id)
+    settings = await get_store_settings(session)
     if customer is not None:
-        settings = await get_store_settings(session)
         await notifications_service.announce_status_change(
             session, order, customer, settings, note=payload.note
+        )
+    if customer is not None and target is OrderStatus.delivered:
+        # Spend, badge, scratch card and the friend's referral reward all follow
+        # delivery, in this same transaction.
+        await rewards_service.on_order_delivered(session, order, customer, settings)
+    elif customer is not None and target is OrderStatus.returned:
+        # A return booked straight from the queue still has to give the money back.
+        await rewards_service.on_order_reversed(
+            session,
+            order,
+            customer,
+            settings,
+            reason="Order was returned",
+            spend_paise=order.total_paise,
+        )
+    elif customer is not None and target is OrderStatus.cancelled:
+        await rewards_service.on_order_reversed(
+            session, order, customer, settings, reason="Order was cancelled"
         )
 
     await session.commit()

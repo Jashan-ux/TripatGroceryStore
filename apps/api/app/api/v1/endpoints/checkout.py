@@ -12,7 +12,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Header, Request, status
 
-from app.api.deps import CurrentUserDep, SessionDep
+from app.api.deps import CurrentUserDep, OptionalUserDep, SessionDep
 from app.schemas.orders import OrderIn, OrderOut, QuoteIn, QuoteOut
 from app.services import orders as service
 
@@ -31,9 +31,15 @@ IdempotencyKey = Annotated[
 ]
 
 
-@router.post("/checkout/quote", response_model=QuoteOut, summary="Price a cart")
-async def quote_cart(session: SessionDep, payload: QuoteIn) -> QuoteOut:
-    return await service.quote(session, payload)
+@router.post(
+    "/checkout/quote",
+    response_model=QuoteOut,
+    summary="Price a cart (signed in: also the referral discount and wallet)",
+)
+async def quote_cart(
+    session: SessionDep, payload: QuoteIn, user: OptionalUserDep = None
+) -> QuoteOut:
+    return await service.quote(session, payload, profile=user.profile if user else None)
 
 
 @router.post(

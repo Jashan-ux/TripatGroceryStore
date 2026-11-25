@@ -15,6 +15,7 @@ from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logging import get_logger
 from app.models.catalogue import Profile, StoreSettings
 from app.models.enums import NotificationKind, OrderStatus
 from app.models.notifications import Notification
@@ -23,6 +24,8 @@ from app.repositories import notifications as repo
 from app.schemas.notifications import NotificationListOut, NotificationOut
 from app.services.email import queue as queue_email
 from app.services.format import day, day_count, items_phrase, rupees
+
+logger = get_logger(__name__)
 
 STATUS_COPY: dict[OrderStatus, tuple[str, str]] = {
     OrderStatus.processing: ("Order confirmed", "We have your order and are packing it."),
@@ -86,11 +89,13 @@ async def _customer_email(
     """Queue the email twin of a notification, signed with the shop's details."""
     if not profile.email:
         return
+    paid = [f"Paid from your wallet: {rupees(order.wallet_paise)}"] if order.wallet_paise else []
     body = "\n".join(
         [
             *lines,
             "",
             f"Order: {order.order_number}",
+            *paid,
             f"Total: {rupees(order.total_paise)} (cash on delivery)",
             f"Delivering to: {order.customer_name}, {order.address_snapshot.get('line1', '')}, "
             f"{order.address_snapshot.get('city', '')} {order.address_snapshot.get('pincode', '')}",
@@ -105,6 +110,44 @@ async def _customer_email(
         subject=subject,
         body=body,
         dedupe_key=f"order:{order.id}:{dedupe_suffix}:{profile.email.lower()}",
+    )
+
+
+async def _simple_email(
+    session: AsyncSession,
+    *,
+    profile: Profile,
+    subject: str,
+    lines: list[str],
+    settings: StoreSettings,
+    dedupe_key: str,
+    anchor: str,
+) -> None:
+    """The email twin of a message that is not about an order's status.
+
+    ``dedupe_key`` names the fact being told ("referral:<id>:bonus"), so a replay of
+    the same fact can never post a second email.
+    """
+    if not profile.email:
+        return
+    body = "\n".join(
+        [
+            f"Hello {profile.name or 'there'},",
+            "",
+            *lines,
+            "",
+            anchor,
+            "",
+            f"{settings.store_name} · {settings.store_phone}",
+            settings.store_address,
+        ]
+    )
+    await queue_email(
+        session,
+        to=profile.email,
+        subject=subject,
+        body=body,
+        dedupe_key=dedupe_key,
     )
 
 
@@ -126,7 +169,13 @@ async def announce_order_placed(
             title=f"Order {order.order_number} confirmed",
             body=(
                 f"Thank you! {items_phrase(order.item_count)} · {rupees(order.total_paise)}, "
-                f"cash on delivery.{eta}"
+                f"cash on delivery."
+                + (
+                    f" {rupees(order.wallet_paise)} already paid from your wallet."
+                    if order.wallet_paise
+                    else ""
+                )
+                + eta
             ),
             href=f"/orders/{order.id}",
             order_id=order.id,
@@ -142,6 +191,11 @@ async def announce_order_placed(
             "",
             f"{items_phrase(order.item_count)} · {rupees(order.total_paise)} "
             "to pay in cash on delivery.",
+            *(
+                [f"{rupees(order.wallet_paise)} of that is already paid from your wallet."]
+                if order.wallet_paise
+                else []
+            ),
             *(f"  {item.quantity} × {item.name}" for item in order.items),
             "",
             f"We will deliver by {day(order.deliver_by)}." if order.deliver_by else "",
@@ -290,6 +344,156 @@ async def announce_delivery_change(
         ],
         settings=settings,
         dedupe_suffix=f"delivery-{order.delivery_days}-{order.deliver_by}",
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Rewards: money earned, badges, cards and returns
+# --------------------------------------------------------------------------- #
+async def announce_referral_bonus(
+    session: AsyncSession,
+    referrer: Profile,
+    *,
+    friend_name: str,
+    amount_paise: int,
+    referral_id: uuid.UUID,
+    settings: StoreSettings,
+) -> None:
+    title = f"{rupees(amount_paise)} added to your wallet"
+    body = f"{friend_name} got their first order delivered. Thank you for sending them our way."
+    session.add(
+        _add(
+            session,
+            profile_id=referrer.id,
+            kind=NotificationKind.system,
+            title=title,
+            body=body,
+            href="/rewards",
+        )
+    )
+    await _simple_email(
+        session,
+        profile=referrer,
+        subject=title,
+        lines=[body, "Your wallet balance is ready to spend on your next order."],
+        settings=settings,
+        dedupe_key=f"referral:{referral_id}:bonus",
+        anchor="Open Rewards to see your wallet and invite another friend.",
+    )
+
+
+async def announce_tier_upgrade(
+    session: AsyncSession,
+    profile: Profile,
+    *,
+    tier_label: str,
+    spend_paise: int,
+    settings: StoreSettings,
+) -> None:
+    title = f"You are now a {tier_label}"
+    body = f"That is {rupees(spend_paise)} of delivered orders. Thank you for shopping with us."
+    session.add(
+        _add(
+            session,
+            profile_id=profile.id,
+            kind=NotificationKind.system,
+            title=title,
+            body=body,
+            href="/rewards",
+        )
+    )
+    await _simple_email(
+        session,
+        profile=profile,
+        subject=f"{settings.store_name}: {title}",
+        lines=[body],
+        settings=settings,
+        dedupe_key=f"tier:{profile.id}:{spend_paise}:{tier_label}",
+        anchor="Open Rewards to see how far the next badge is.",
+    )
+
+
+async def announce_scratch_ready(
+    session: AsyncSession,
+    profile: Profile,
+    *,
+    card_id: uuid.UUID,
+    order_number: str,
+) -> None:
+    session.add(
+        _add(
+            session,
+            profile_id=profile.id,
+            kind=NotificationKind.system,
+            title="A scratch card is ready",
+            body=(
+                f"Order {order_number} was delivered, so your scratch card is unlocked. "
+                "Rub it off to see what you won."
+            ),
+            href="/rewards",
+        )
+    )
+    logger.debug("scratch_ready_notified", card_id=str(card_id), profile_id=str(profile.id))
+
+
+async def announce_return_requested(
+    session: AsyncSession, *, order_number: str, return_id: uuid.UUID, refund_paise: int
+) -> None:
+    """The counter needs to know a return is waiting for a decision."""
+    for owner in await repo.list_admin_profiles(session):
+        session.add(
+            _add(
+                session,
+                profile_id=owner.id,
+                kind=NotificationKind.system,
+                title=f"Return requested for {order_number}",
+                body=f"{rupees(refund_paise)} is waiting on your decision.",
+                href="/admin/returns",
+            )
+        )
+
+
+async def announce_return_update(
+    session: AsyncSession,
+    profile: Profile,
+    *,
+    order_number: str,
+    status: str,
+    refund_paise: int,
+    note: str,
+    return_id: uuid.UUID,
+    settings: StoreSettings,
+) -> None:
+    headline, detail = {
+        "approved": (
+            "Return approved",
+            "Bring the items back to the shop. The money reaches your wallet once we have them.",
+        ),
+        "rejected": ("Return not possible", "We could not accept this return."),
+        "received_credited": (
+            "Return received",
+            f"{rupees(refund_paise)} is in your wallet now.",
+        ),
+    }.get(status, ("Return updated", ""))
+    title = f"{order_number}: {headline}"
+    session.add(
+        _add(
+            session,
+            profile_id=profile.id,
+            kind=NotificationKind.system,
+            title=title,
+            body=note or detail,
+            href=f"/orders/{order_number}",
+        )
+    )
+    await _simple_email(
+        session,
+        profile=profile,
+        subject=f"{order_number}: {headline}",
+        lines=[note or detail, "", f"Order: {order_number}"],
+        settings=settings,
+        dedupe_key=f"return:{return_id}:{status}",
+        anchor="You can follow this in Rewards and on the order page.",
     )
 
 

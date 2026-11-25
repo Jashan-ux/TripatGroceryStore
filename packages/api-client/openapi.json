@@ -407,6 +407,11 @@
           "total_paise": {
             "title": "Total Paise",
             "type": "integer"
+          },
+          "wallet_paise": {
+            "default": 0,
+            "title": "Wallet Paise",
+            "type": "integer"
           }
         },
         "required": [
@@ -424,6 +429,176 @@
           "is_new"
         ],
         "title": "AdminOrderSummaryOut",
+        "type": "object"
+      },
+      "AdminReturnDecisionIn": {
+        "additionalProperties": false,
+        "properties": {
+          "approve": {
+            "title": "Approve",
+            "type": "boolean"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 300,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "approve"
+        ],
+        "title": "AdminReturnDecisionIn",
+        "type": "object"
+      },
+      "AdminReturnListOut": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AdminReturnOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "total_pages": {
+            "title": "Total Pages",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size",
+          "total_pages"
+        ],
+        "title": "AdminReturnListOut",
+        "type": "object"
+      },
+      "AdminReturnOut": {
+        "additionalProperties": false,
+        "properties": {
+          "customer_name": {
+            "default": "",
+            "title": "Customer Name",
+            "type": "string"
+          },
+          "customer_phone": {
+            "default": "",
+            "title": "Customer Phone",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decision_note": {
+            "default": "",
+            "title": "Decision Note",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReturnItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          },
+          "order_number": {
+            "default": "",
+            "title": "Order Number",
+            "type": "string"
+          },
+          "reason": {
+            "default": "",
+            "title": "Reason",
+            "type": "string"
+          },
+          "received_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received At"
+          },
+          "refund_paise": {
+            "title": "Refund Paise",
+            "type": "integer"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "requested",
+              "approved",
+              "rejected",
+              "received_credited"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "order_id",
+          "status",
+          "refund_paise",
+          "requested_at",
+          "items"
+        ],
+        "title": "AdminReturnOut",
+        "type": "object"
+      },
+      "AdminReturnReceiveIn": {
+        "additionalProperties": false,
+        "properties": {
+          "note": {
+            "default": "",
+            "maxLength": 300,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "title": "AdminReturnReceiveIn",
         "type": "object"
       },
       "BlockingIssue": {
@@ -869,6 +1044,41 @@
         "title": "MarkAllReadOut",
         "type": "object"
       },
+      "MyReferralOut": {
+        "additionalProperties": false,
+        "description": "The code *this* customer was referred with, if any.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "discount_paise": {
+            "title": "Discount Paise",
+            "type": "integer"
+          },
+          "referrer_name": {
+            "default": "",
+            "title": "Referrer Name",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "credited",
+              "void"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "discount_paise"
+        ],
+        "title": "MyReferralOut",
+        "type": "object"
+      },
       "NotificationListOut": {
         "additionalProperties": false,
         "properties": {
@@ -1056,6 +1266,12 @@
             "minItems": 1,
             "title": "Items",
             "type": "array"
+          },
+          "use_wallet_paise": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Use Wallet Paise",
+            "type": "integer"
           }
         },
         "required": [
@@ -1233,6 +1449,11 @@
             "title": "Discount Paise",
             "type": "integer"
           },
+          "discount_reason": {
+            "default": "",
+            "title": "Discount Reason",
+            "type": "string"
+          },
           "events": {
             "items": {
               "$ref": "#/components/schemas/OrderEventOut"
@@ -1283,6 +1504,11 @@
           },
           "total_paise": {
             "title": "Total Paise",
+            "type": "integer"
+          },
+          "wallet_paise": {
+            "default": 0,
+            "title": "Wallet Paise",
             "type": "integer"
           }
         },
@@ -1361,6 +1587,11 @@
           },
           "total_paise": {
             "title": "Total Paise",
+            "type": "integer"
+          },
+          "wallet_paise": {
+            "default": 0,
+            "title": "Wallet Paise",
             "type": "integer"
           }
         },
@@ -1893,6 +2124,12 @@
               }
             ],
             "title": "Pincode"
+          },
+          "use_wallet_paise": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Use Wallet Paise",
+            "type": "integer"
           }
         },
         "required": [
@@ -2030,6 +2267,11 @@
             "title": "Discount Paise",
             "type": "integer"
           },
+          "discount_reason": {
+            "default": "",
+            "title": "Discount Reason",
+            "type": "string"
+          },
           "item_count": {
             "title": "Item Count",
             "type": "integer"
@@ -2043,6 +2285,11 @@
           },
           "minimum_order_paise": {
             "title": "Minimum Order Paise",
+            "type": "integer"
+          },
+          "payable_before_wallet_paise": {
+            "default": 0,
+            "title": "Payable Before Wallet Paise",
             "type": "integer"
           },
           "pincode": {
@@ -2078,6 +2325,16 @@
           "total_paise": {
             "title": "Total Paise",
             "type": "integer"
+          },
+          "wallet_applied_paise": {
+            "default": 0,
+            "title": "Wallet Applied Paise",
+            "type": "integer"
+          },
+          "wallet_available_paise": {
+            "default": 0,
+            "title": "Wallet Available Paise",
+            "type": "integer"
           }
         },
         "required": [
@@ -2095,6 +2352,494 @@
           "can_checkout"
         ],
         "title": "QuoteOut",
+        "type": "object"
+      },
+      "ReferralFriendOut": {
+        "additionalProperties": false,
+        "description": "A friend who used this customer's code. Deliberately thin: no email, no phone.",
+        "properties": {
+          "credited_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credited At"
+          },
+          "joined_at": {
+            "format": "date-time",
+            "title": "Joined At",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          },
+          "reward_paise": {
+            "title": "Reward Paise",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "credited",
+              "void"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "reward_paise",
+          "joined_at"
+        ],
+        "title": "ReferralFriendOut",
+        "type": "object"
+      },
+      "ReferralJoinIn": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "description": "A friend's referral code.",
+            "maxLength": 12,
+            "minLength": 4,
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "ReferralJoinIn",
+        "type": "object"
+      },
+      "ReferralProgramOut": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "description": "Share this; the friend gets a discount on their first order.",
+            "title": "Code",
+            "type": "string"
+          },
+          "credited": {
+            "title": "Credited",
+            "type": "integer"
+          },
+          "earned_paise": {
+            "title": "Earned Paise",
+            "type": "integer"
+          },
+          "friend_discount_pct": {
+            "title": "Friend Discount Pct",
+            "type": "integer"
+          },
+          "friends": {
+            "items": {
+              "$ref": "#/components/schemas/ReferralFriendOut"
+            },
+            "title": "Friends",
+            "type": "array"
+          },
+          "joined": {
+            "title": "Joined",
+            "type": "integer"
+          },
+          "my_referral": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MyReferralOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "referrer_reward_paise": {
+            "title": "Referrer Reward Paise",
+            "type": "integer"
+          },
+          "share_url": {
+            "title": "Share Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "share_url",
+          "friend_discount_pct",
+          "referrer_reward_paise",
+          "joined",
+          "credited",
+          "earned_paise",
+          "friends"
+        ],
+        "title": "ReferralProgramOut",
+        "type": "object"
+      },
+      "ReturnItemIn": {
+        "additionalProperties": false,
+        "properties": {
+          "order_item_id": {
+            "format": "uuid",
+            "title": "Order Item Id",
+            "type": "string"
+          },
+          "quantity": {
+            "maximum": 99.0,
+            "minimum": 1.0,
+            "title": "Quantity",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "order_item_id",
+          "quantity"
+        ],
+        "title": "ReturnItemIn",
+        "type": "object"
+      },
+      "ReturnItemOut": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "order_item_id": {
+            "format": "uuid",
+            "title": "Order Item Id",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          },
+          "refund_paise": {
+            "title": "Refund Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "order_item_id",
+          "name",
+          "quantity",
+          "refund_paise"
+        ],
+        "title": "ReturnItemOut",
+        "type": "object"
+      },
+      "ReturnListOut": {
+        "additionalProperties": false,
+        "properties": {
+          "returns": {
+            "items": {
+              "$ref": "#/components/schemas/ReturnOut"
+            },
+            "title": "Returns",
+            "type": "array"
+          }
+        },
+        "required": [
+          "returns"
+        ],
+        "title": "ReturnListOut",
+        "type": "object"
+      },
+      "ReturnOut": {
+        "additionalProperties": false,
+        "properties": {
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decision_note": {
+            "default": "",
+            "title": "Decision Note",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReturnItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          },
+          "order_number": {
+            "default": "",
+            "title": "Order Number",
+            "type": "string"
+          },
+          "reason": {
+            "default": "",
+            "title": "Reason",
+            "type": "string"
+          },
+          "received_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received At"
+          },
+          "refund_paise": {
+            "title": "Refund Paise",
+            "type": "integer"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "requested",
+              "approved",
+              "rejected",
+              "received_credited"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "order_id",
+          "status",
+          "refund_paise",
+          "requested_at",
+          "items"
+        ],
+        "title": "ReturnOut",
+        "type": "object"
+      },
+      "ReturnRequestIn": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReturnItemIn"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          },
+          "reason": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReturnRequestIn",
+        "type": "object"
+      },
+      "RewardsSummaryOut": {
+        "additionalProperties": false,
+        "properties": {
+          "referrals": {
+            "$ref": "#/components/schemas/ReferralProgramOut"
+          },
+          "scratch": {
+            "$ref": "#/components/schemas/ScratchCardListOut"
+          },
+          "tier": {
+            "$ref": "#/components/schemas/TierOut"
+          },
+          "wallet": {
+            "$ref": "#/components/schemas/WalletOut"
+          }
+        },
+        "required": [
+          "wallet",
+          "referrals",
+          "scratch",
+          "tier"
+        ],
+        "title": "RewardsSummaryOut",
+        "type": "object"
+      },
+      "ScratchCardListOut": {
+        "additionalProperties": false,
+        "properties": {
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/ScratchCardOut"
+            },
+            "title": "Cards",
+            "type": "array"
+          },
+          "locked": {
+            "title": "Locked",
+            "type": "integer"
+          },
+          "ready": {
+            "title": "Ready",
+            "type": "integer"
+          },
+          "revealed": {
+            "title": "Revealed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cards",
+          "ready",
+          "locked",
+          "revealed"
+        ],
+        "title": "ScratchCardListOut",
+        "type": "object"
+      },
+      "ScratchCardOut": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_paise": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Paise"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          },
+          "order_number": {
+            "default": "",
+            "title": "Order Number",
+            "type": "string"
+          },
+          "revealed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revealed At"
+          },
+          "status": {
+            "enum": [
+              "locked",
+              "ready",
+              "revealed",
+              "used",
+              "void"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "threshold_paise": {
+            "title": "Threshold Paise",
+            "type": "integer"
+          },
+          "unlocked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlocked At"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "threshold_paise",
+          "order_id",
+          "created_at"
+        ],
+        "title": "ScratchCardOut",
+        "type": "object"
+      },
+      "ScratchRevealOut": {
+        "additionalProperties": false,
+        "properties": {
+          "card": {
+            "$ref": "#/components/schemas/ScratchCardOut"
+          },
+          "credited_paise": {
+            "title": "Credited Paise",
+            "type": "integer"
+          },
+          "wallet_balance_paise": {
+            "title": "Wallet Balance Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "card",
+          "credited_paise",
+          "wallet_balance_paise"
+        ],
+        "title": "ScratchRevealOut",
         "type": "object"
       },
       "StatusResponse": {
@@ -2116,6 +2861,70 @@
           "server_time"
         ],
         "title": "StatusResponse",
+        "type": "object"
+      },
+      "TierOut": {
+        "additionalProperties": false,
+        "properties": {
+          "next_tier": {
+            "anyOf": [
+              {
+                "enum": [
+                  "gold",
+                  "platinum",
+                  "diamond"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Tier"
+          },
+          "next_tier_at_paise": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Tier At Paise"
+          },
+          "progress_pct": {
+            "default": 0,
+            "description": "0\u2013100 towards the next badge.",
+            "title": "Progress Pct",
+            "type": "integer"
+          },
+          "remaining_paise": {
+            "default": 0,
+            "title": "Remaining Paise",
+            "type": "integer"
+          },
+          "spend_paise": {
+            "description": "Delivered spend, net of returns.",
+            "title": "Spend Paise",
+            "type": "integer"
+          },
+          "tier": {
+            "enum": [
+              "none",
+              "gold",
+              "platinum",
+              "diamond"
+            ],
+            "title": "Tier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tier",
+          "spend_paise"
+        ],
+        "title": "TierOut",
         "type": "object"
       },
       "UnreadCountOut": {
@@ -2186,6 +2995,109 @@
           "discount_percent"
         ],
         "title": "VariantOut",
+        "type": "object"
+      },
+      "WalletEntryOut": {
+        "additionalProperties": false,
+        "properties": {
+          "balance_after_paise": {
+            "title": "Balance After Paise",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "delta_paise": {
+            "description": "Positive for money in, negative for money out.",
+            "title": "Delta Paise",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          },
+          "order_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Id"
+          },
+          "reason": {
+            "enum": [
+              "referral_bonus",
+              "scratch_card",
+              "return_refund",
+              "order_payment",
+              "adjustment"
+            ],
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "delta_paise",
+          "balance_after_paise",
+          "reason",
+          "created_at"
+        ],
+        "title": "WalletEntryOut",
+        "type": "object"
+      },
+      "WalletOut": {
+        "additionalProperties": false,
+        "properties": {
+          "balance_paise": {
+            "title": "Balance Paise",
+            "type": "integer"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/WalletEntryOut"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "total_pages": {
+            "title": "Total Pages",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "balance_paise",
+          "entries",
+          "total",
+          "page",
+          "page_size",
+          "total_pages"
+        ],
+        "title": "WalletOut",
         "type": "object"
       }
     },
@@ -3065,6 +3977,361 @@
         ]
       }
     },
+    "/api/v1/admin/returns": {
+      "get": {
+        "operationId": "list_returns_api_v1_admin_returns_get",
+        "parameters": [
+          {
+            "description": "Filter by status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "requested",
+                    "approved",
+                    "rejected",
+                    "received_credited"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by status",
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminReturnListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Returns waiting or decided",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/returns/{return_id}/decision": {
+      "post": {
+        "operationId": "decide_api_v1_admin_returns__return_id__decision_post",
+        "parameters": [
+          {
+            "description": "Return id",
+            "in": "path",
+            "name": "return_id",
+            "required": true,
+            "schema": {
+              "description": "Return id",
+              "format": "uuid",
+              "title": "Return Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminReturnDecisionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminReturnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Approve or refuse a return",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/returns/{return_id}/received": {
+      "post": {
+        "operationId": "received_api_v1_admin_returns__return_id__received_post",
+        "parameters": [
+          {
+            "description": "Return id",
+            "in": "path",
+            "name": "return_id",
+            "required": true,
+            "schema": {
+              "description": "Return id",
+              "format": "uuid",
+              "title": "Return Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminReturnReceiveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminReturnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Goods are back: restore stock, credit the wallet (once)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/whoami": {
       "get": {
         "operationId": "whoami_api_v1_admin_whoami_get",
@@ -3499,7 +4766,12 @@
             "description": "Unexpected server error."
           }
         },
-        "summary": "Price a cart",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Price a cart (signed in: also the referral discount and wallet)",
         "tags": [
           "checkout"
         ]
@@ -4866,6 +6138,116 @@
         ]
       }
     },
+    "/api/v1/orders/{order_id}/return": {
+      "post": {
+        "operationId": "request_return_api_v1_orders__order_id__return_post",
+        "parameters": [
+          {
+            "description": "Order id",
+            "in": "path",
+            "name": "order_id",
+            "required": true,
+            "schema": {
+              "description": "Order id",
+              "format": "uuid",
+              "title": "Order Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReturnRequestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Ask to return part of a delivered order",
+        "tags": [
+          "returns"
+        ]
+      }
+    },
     "/api/v1/products": {
       "get": {
         "operationId": "list_products_api_v1_products_get",
@@ -5203,6 +6585,571 @@
         "summary": "Product detail",
         "tags": [
           "catalogue"
+        ]
+      }
+    },
+    "/api/v1/returns": {
+      "get": {
+        "operationId": "list_returns_api_v1_returns_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "My returns",
+        "tags": [
+          "returns"
+        ]
+      }
+    },
+    "/api/v1/rewards": {
+      "get": {
+        "operationId": "summary_api_v1_rewards_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardsSummaryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Wallet, referrals, cards and badge",
+        "tags": [
+          "rewards"
+        ]
+      }
+    },
+    "/api/v1/rewards/referral": {
+      "post": {
+        "operationId": "join_referral_api_v1_rewards_referral_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferralJoinIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralProgramOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Use a friend's code",
+        "tags": [
+          "rewards"
+        ]
+      }
+    },
+    "/api/v1/rewards/scratch-cards": {
+      "get": {
+        "operationId": "list_cards_api_v1_rewards_scratch_cards_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScratchCardListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "My scratch cards",
+        "tags": [
+          "rewards"
+        ]
+      }
+    },
+    "/api/v1/rewards/scratch-cards/{card_id}/reveal": {
+      "post": {
+        "operationId": "reveal_card_api_v1_rewards_scratch_cards__card_id__reveal_post",
+        "parameters": [
+          {
+            "description": "Scratch card id",
+            "in": "path",
+            "name": "card_id",
+            "required": true,
+            "schema": {
+              "description": "Scratch card id",
+              "format": "uuid",
+              "title": "Card Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScratchRevealOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Rub a card off (once)",
+        "tags": [
+          "rewards"
+        ]
+      }
+    },
+    "/api/v1/rewards/wallet": {
+      "get": {
+        "operationId": "wallet_statement_api_v1_rewards_wallet_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Wallet balance and statement",
+        "tags": [
+          "rewards"
         ]
       }
     },

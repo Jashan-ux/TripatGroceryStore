@@ -125,6 +125,10 @@ class Order(Base, TimestampMixin):
     discount_paise: Mapped[int] = mapped_column(
         BigInteger, nullable=False, server_default=text("0")
     )
+    #: Part of the order paid from the customer's wallet instead of cash.
+    wallet_paise: Mapped[int] = mapped_column(BigInteger, nullable=False, server_default=text("0"))
+    #: Why a discount was given ("Referral 10% off"), for the receipt.
+    discount_reason: Mapped[str] = mapped_column(String(40), nullable=False, server_default="")
     total_paise: Mapped[int] = mapped_column(BigInteger, nullable=False, server_default=text("0"))
     item_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
 
@@ -169,8 +173,13 @@ class Order(Base, TimestampMixin):
         CheckConstraint("total_paise >= 0", name="total_non_negative"),
         CheckConstraint("item_count > 0", name="item_count_positive"),
         CheckConstraint(
-            "total_paise = subtotal_paise + delivery_fee_paise - discount_paise",
+            "total_paise = subtotal_paise + delivery_fee_paise - discount_paise - wallet_paise",
             name="total_adds_up",
+        ),
+        CheckConstraint("wallet_paise >= 0", name="wallet_non_negative"),
+        CheckConstraint(
+            "wallet_paise <= subtotal_paise + delivery_fee_paise - discount_paise",
+            name="wallet_within_order",
         ),
         Index("ix_orders_profile_placed", "profile_id", "placed_at"),
         Index("ix_orders_status_placed", "status", "placed_at"),

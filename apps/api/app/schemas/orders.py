@@ -66,6 +66,9 @@ class CartLineIn(APIModel):
 class QuoteIn(APIModel):
     items: list[CartLineIn] = Field(min_length=1, max_length=50)
     pincode: Pincode | None = None
+    #: How much of the wallet the customer wants to put in. The server clamps it to
+    #: the balance and to what is actually payable; it is never trusted as money.
+    use_wallet_paise: int = Field(default=0, ge=0)
 
 
 class QuoteLineOut(APIModel):
@@ -98,7 +101,15 @@ class QuoteOut(APIModel):
     item_count: int
     subtotal_paise: int
     delivery_fee_paise: int
+    #: The referral's 10% off the first order, when one is due.
     discount_paise: int
+    discount_reason: str = ""
+    #: What the wallet holds, and how much of it this basket would actually use.
+    wallet_available_paise: int = 0
+    wallet_applied_paise: int = 0
+    #: Price before the wallet: subtotal + delivery − discount.
+    payable_before_wallet_paise: int = 0
+    #: What is left to pay in cash (`= payable_before_wallet − wallet_applied`).
     total_paise: int
     minimum_order_paise: int
     shortfall_paise: int
@@ -117,6 +128,8 @@ class OrderIn(APIModel):
     items: list[CartLineIn] = Field(min_length=1, max_length=50)
     address_id: uuid.UUID
     customer_note: str = Field(default="", max_length=500)
+    #: Same meaning as on the quote: the server clamps it and re-prices the basket.
+    use_wallet_paise: int = Field(default=0, ge=0)
 
 
 class OrderItemOut(APIModel):
@@ -161,6 +174,8 @@ class OrderOut(APIModel):
     subtotal_paise: int
     delivery_fee_paise: int
     discount_paise: int
+    discount_reason: str = ""
+    wallet_paise: int = 0
     total_paise: int
     item_count: int
     customer_name: str
@@ -181,6 +196,7 @@ class OrderSummaryOut(APIModel):
     order_number: str
     status: str
     payment_status: str
+    wallet_paise: int = 0
     total_paise: int
     item_count: int
     placed_at: datetime

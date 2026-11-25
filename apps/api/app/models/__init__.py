@@ -21,12 +21,16 @@ from app.models.enums import (
     OrderStatus,
     PaymentMethod,
     PaymentStatus,
+    ReferralStatus,
     ReturnStatus,
     ScratchCardStatus,
     UserRole,
+    WalletReason,
 )
 from app.models.notifications import EmailMessage, Notification
 from app.models.orders import Address, Order, OrderEvent, OrderItem
+from app.models.returns import OrderReturn, ReturnItem
+from app.models.rewards import Referral, ScratchCard, Wallet, WalletEntry
 
 __all__ = [
     "Address",
@@ -42,14 +46,22 @@ __all__ = [
     "Order",
     "OrderEvent",
     "OrderItem",
+    "OrderReturn",
     "OrderStatus",
     "PaymentMethod",
     "PaymentStatus",
     "Product",
     "ProductVariant",
     "Profile",
+    "Referral",
+    "ReferralStatus",
+    "ReturnItem",
     "ReturnStatus",
+    "ScratchCard",
     "ScratchCardStatus",
     "StoreSettings",
     "UserRole",
+    "Wallet",
+    "WalletEntry",
+    "WalletReason",
 ]

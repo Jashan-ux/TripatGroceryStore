@@ -25,9 +25,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.errors import ConflictError, NotFoundError, ValidationError
 from app.core.logging import get_logger
 from app.models.catalogue import Product, Profile, StoreSettings
-from app.models.enums import OrderStatus
+from app.models.enums import OrderStatus, PaymentStatus, ReferralStatus, WalletReason
 from app.models.orders import Address, Order, OrderItem
 from app.repositories import orders as repo
+from app.repositories import rewards as rewards_repo
 from app.schemas.orders import (
     AddressIn,
     AddressOut,
@@ -46,6 +47,10 @@ from app.schemas.orders import (
 )
 from app.services import email as email_service
 from app.services import notifications as notifications_service
+from app.services import referrals as referrals_service
+from app.services import rewards as rewards_service
+from app.services import scratch_cards as scratch_service
+from app.services import wallet as wallet_service
 from app.services.profiles import normalise_phone
 from app.services.settings import get_store_settings
 
@@ -279,7 +284,15 @@ def _quote_line_out(line: PricedLine) -> QuoteLineOut:
     )
 
 
-async def quote(session: AsyncSession, payload: QuoteIn) -> QuoteOut:
+async def quote(
+    session: AsyncSession, payload: QuoteIn, *, profile: Profile | None = None
+) -> QuoteOut:
+    """Price a cart. ``profile`` is optional: a guest gets a price, not a discount.
+
+    Signed in, the quote also answers two questions the cart page must not guess:
+    is a referral discount due on this first order, and how much of the wallet would
+    this basket actually use.
+    """
     settings = await get_store_settings(session)
     product_ids = list({item.product_id for item in payload.items})
     products = await repo.products_for_cart(session, product_ids)
@@ -288,8 +301,26 @@ async def quote(session: AsyncSession, payload: QuoteIn) -> QuoteOut:
     subtotal = sum(line.line_total_paise for line in lines)
     item_count = sum(line.quantity for line in lines if line.billable)
     delivery_fee = 0
+
     discount = 0
-    total = subtotal + delivery_fee - discount
+    discount_reason = ""
+    wallet_available = 0
+    if profile is not None:
+        referral = await rewards_repo.get_referral_for_referee(session, profile.id)
+        # "First order only" is checked against the orders that exist, not a flag.
+        if (
+            referral is not None
+            and referral.status is ReferralStatus.pending
+            and referral.first_order_id is None
+            and await repo.count_orders(session, profile.id) == 0
+        ):
+            discount = referrals_service.friend_discount_paise(subtotal, settings)
+            discount_reason = referrals_service.discount_reason(settings)
+        wallet_available = await wallet_service.balance(session, profile.id)
+
+    payable = subtotal + delivery_fee - discount
+    wallet_applied = max(0, min(payload.use_wallet_paise, wallet_available, payable))
+    total = payable - wallet_applied
 
     issues: list[BlockingIssue] = []
     unavailable = [line.product.name for line in lines if not line.billable]
@@ -340,6 +371,10 @@ async def quote(session: AsyncSession, payload: QuoteIn) -> QuoteOut:
         subtotal_paise=subtotal,
         delivery_fee_paise=delivery_fee,
         discount_paise=discount,
+        discount_reason=discount_reason,
+        wallet_available_paise=wallet_available,
+        wallet_applied_paise=wallet_applied,
+        payable_before_wallet_paise=payable,
         total_paise=total,
         minimum_order_paise=settings.minimum_order_paise,
         shortfall_paise=shortfall,
@@ -442,13 +477,37 @@ async def place_order(
 
     order_number = await _unique_order_number(session)
     delivery_days = max(1, settings.default_delivery_days)
+
+    # A referral discount only ever applies to the very first delivered order.
+    referral = await rewards_repo.get_referral_for_update(session, profile.id)
+    discount = 0
+    discount_reason = ""
+    if (
+        referral is not None
+        and referral.status is ReferralStatus.pending
+        and referral.first_order_id is None
+        and await repo.count_orders(session, profile.id) == 0
+    ):
+        discount = referrals_service.friend_discount_paise(subtotal, settings)
+        discount_reason = referrals_service.discount_reason(settings)
+
+    # The wallet is re-read here, not taken from the quote: balances move.
+    payable = subtotal - discount
+    wallet_available = await wallet_service.balance(session, profile.id)
+    wallet_paise = max(0, min(payload.use_wallet_paise, wallet_available, payable))
+    cash_due = payable - wallet_paise
+
     order = Order(
         order_number=order_number,
         profile_id=profile.id,
         subtotal_paise=subtotal,
         delivery_fee_paise=0,
-        discount_paise=0,
-        total_paise=subtotal,
+        discount_paise=discount,
+        discount_reason=discount_reason,
+        wallet_paise=wallet_paise,
+        total_paise=cash_due,
+        # Nothing to collect in cash means nothing to collect: settle it now.
+        payment_status=(PaymentStatus.paid if cash_due == 0 else PaymentStatus.pending),
         item_count=sum(line.quantity for line in lines),
         customer_name=profile.name or address.recipient_name,
         customer_phone=profile.phone,
@@ -506,6 +565,22 @@ async def place_order(
                 details={"items": [name]},
             )
         taken.append((line.variant_id, line.product.id, line.quantity, line.product.name))
+
+    if wallet_paise:
+        await wallet_service.debit(
+            session,
+            profile.id,
+            wallet_paise,
+            WalletReason.order_payment,
+            note=f"Paid towards {order.order_number}",
+            order_id=order.id,
+        )
+    if referral is not None and discount:
+        referral.discount_paise = discount
+        referral.first_order_id = order.id
+
+    # A big enough basket earns a card; it stays locked until this order lands.
+    await scratch_service.create_for_order(session, order, settings)
 
     await repo.add_event(
         session,
@@ -570,6 +645,10 @@ async def cancel_order(
         note=reason or "You cancelled this order. Nothing was charged.",
     )
     await notifications_service.announce_cancellation_to_shop(session, order)
+    # The card and the referral that hung off this order are no longer owed.
+    await rewards_service.on_order_reversed(
+        session, order, profile, settings, reason="Order cancelled by the customer"
+    )
     await session.commit()
     await session.refresh(order)
     email_service.schedule_flush()
@@ -590,6 +669,8 @@ def order_out(order: Order) -> OrderOut:
         subtotal_paise=order.subtotal_paise,
         delivery_fee_paise=order.delivery_fee_paise,
         discount_paise=order.discount_paise,
+        discount_reason=order.discount_reason,
+        wallet_paise=order.wallet_paise,
         total_paise=order.total_paise,
         item_count=order.item_count,
         customer_name=order.customer_name,

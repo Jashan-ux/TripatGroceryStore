@@ -17,10 +17,13 @@ from app.api.v1.endpoints import (
     me,
     notifications,
     orders,
+    returns,
+    rewards,
     system,
 )
 from app.api.v1.endpoints.admin import dashboard as admin_dashboard
 from app.api.v1.endpoints.admin import orders as admin_orders
+from app.api.v1.endpoints.admin import returns as admin_returns
 from app.core.openapi import ERROR_RESPONSES
 
 api_router = APIRouter(responses=ERROR_RESPONSES)
@@ -31,5 +34,8 @@ api_router.include_router(addresses.router)
 api_router.include_router(checkout.router)
 api_router.include_router(orders.router)
 api_router.include_router(notifications.router)
+api_router.include_router(rewards.router)
+api_router.include_router(returns.router)
 api_router.include_router(admin_dashboard.router)
 api_router.include_router(admin_orders.router)
+api_router.include_router(admin_returns.router)
