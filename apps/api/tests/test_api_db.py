@@ -9,6 +9,7 @@ run in parallel later without change.
 
 from __future__ import annotations
 
+import logging
 import time
 import uuid
 from collections.abc import AsyncIterator, Callable
@@ -46,6 +47,15 @@ async def _use_test_database(
     try:
         yield
     finally:
+        # Tests create profiles; clearing them keeps the suite re-runnable on a
+        # database that already has rows without relying on ordering.
+        try:
+            sessionmaker = get_sessionmaker()
+            async with sessionmaker() as session:
+                await session.execute(text("DELETE FROM public.profiles"))
+                await session.commit()
+        except Exception:  # pragma: no cover - database already gone
+            logging.getLogger(__name__).debug("profile cleanup skipped")
         await dispose_engine()
         monkeypatch.undo()
         get_settings.cache_clear()
@@ -74,6 +84,8 @@ def auth_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
         ADMIN_EMAILS="owner@example.com",
     )
     monkeypatch.setattr("app.core.security.get_settings", lambda: settings)
+    # `bootstrap_role` lives in the service layer and calls get_settings itself.
+    monkeypatch.setattr("app.services.profiles.get_settings", lambda: settings)
     return settings
 
 
@@ -98,9 +110,12 @@ def make_token(signing_key: tuple[Any, Any]) -> Callable[..., str]:
 
     def _make(email: str, *, subject: uuid.UUID | None = None, expires_in: int = 600) -> str:
         now = int(time.time())
+        # Deterministic per address: requesting the same user twice in a test
+        # must not look like two sign-ups racing on the same email.
+        user_id = subject or uuid.uuid5(uuid.NAMESPACE_URL, f"mailto:{email}")
         return jwt.encode(
             {
-                "sub": str(subject or uuid.uuid4()),
+                "sub": str(user_id),
                 "email": email,
                 "email_verified": True,
                 "aud": "authenticated",
