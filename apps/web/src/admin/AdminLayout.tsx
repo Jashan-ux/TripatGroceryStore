@@ -2,6 +2,7 @@ import { Store } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 
 import { adminSections } from '@/admin/adminSections';
+import { useUnreadCount } from '@/features/notifications/queries';
 import { BrandMark } from '@/components/common/BrandMark';
 import { t } from '@/i18n';
 import { cn } from '@/lib/utils';
@@ -12,6 +13,10 @@ import { cn } from '@/lib/utils';
  * bundle so no admin code ships to customers.
  */
 export function AdminLayout() {
+  // Red dot: unread order notifications. The shop sees a new order without
+  // refreshing the queue.
+  const unread = useUnreadCount().data?.unread_count ?? 0;
+
   return (
     <div className="flex min-h-dvh flex-col bg-muted/30">
       <header className="sticky top-0 z-40 border-b border-border bg-background">
@@ -50,6 +55,14 @@ export function AdminLayout() {
                 >
                   <Icon className="size-4" aria-hidden="true" />
                   {t(labelKey)}
+                  {to === '/admin/orders' && unread > 0 && (
+                    <span
+                      className="min-w-4 rounded-full bg-destructive px-1 text-center text-[10px] font-bold leading-4 text-destructive-foreground"
+                      aria-label={`${unread} unread`}
+                    >
+                      {unread > 99 ? '99+' : unread}
+                    </span>
+                  )}
                 </NavLink>
               </li>
             ))}
@@ -81,8 +94,23 @@ export function AdminLayout() {
                     )
                   }
                 >
-                  <Icon className="size-5" aria-hidden="true" />
-                  <span>{t(labelKey)}</span>
+                  <span className="relative">
+                    <Icon className="size-5" aria-hidden="true" />
+                    {to === '/admin/orders' && unread > 0 && (
+                      <span
+                        className="absolute -right-2 -top-1.5 min-w-4 rounded-full bg-destructive px-1 text-center text-[10px] font-bold leading-4 text-destructive-foreground"
+                        aria-hidden="true"
+                      >
+                        {unread > 99 ? '99+' : unread}
+                      </span>
+                    )}
+                  </span>
+                  <span>
+                    {t(labelKey)}
+                    {to === '/admin/orders' && unread > 0 && (
+                      <span className="sr-only">, {unread} unread</span>
+                    )}
+                  </span>
                 </NavLink>
               </li>
             ))}

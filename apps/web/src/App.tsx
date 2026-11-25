@@ -27,6 +27,7 @@ const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 // Cart and orders are their own chunks: browsing never pays for checkout.
 const CartPage = lazy(() => import('@/pages/CartPage'));
 const CheckoutPage = lazy(() => import('@/pages/CheckoutPage'));
+const NotificationsPage = lazy(() => import('@/pages/NotificationsPage'));
 const OrdersPage = lazy(() => import('@/pages/OrdersPage'));
 const OrderDetailPage = lazy(() => import('@/pages/OrderDetailPage'));
 
@@ -125,7 +126,10 @@ export default function App() {
           path="profile"
           element={<ProtectedRoute>{deferred(<ProfilePage />)}</ProtectedRoute>}
         />
-        <Route path="notifications" element={<ComingSoonPage titleKey="nav.notifications" />} />
+        <Route
+          path="notifications"
+          element={<ProtectedRoute>{deferred(<NotificationsPage />)}</ProtectedRoute>}
+        />
         <Route path="menu" element={<ComingSoonPage titleKey="nav.menu" />} />
         <Route path="rewards" element={<ComingSoonPage titleKey="footer.rewards" />} />
         <Route path="contact" element={<ComingSoonPage titleKey="footer.contactUs" />} />

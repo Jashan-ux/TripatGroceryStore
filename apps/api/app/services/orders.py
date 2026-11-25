@@ -44,6 +44,8 @@ from app.schemas.orders import (
     QuoteLineOut,
     QuoteOut,
 )
+from app.services import email as email_service
+from app.services import notifications as notifications_service
 from app.services.profiles import normalise_phone
 from app.services.settings import get_store_settings
 
@@ -512,8 +514,13 @@ async def place_order(
         actor="customer",
         note="Order placed",
     )
+    # The bell and the outbox commit with the order: either the customer and the
+    # shop both hear about it, or nothing was placed at all.
+    await notifications_service.announce_order_placed(session, order, profile, settings)
+    await notifications_service.announce_new_order(session, order, settings)
     await session.commit()
     await session.refresh(order)
+    email_service.schedule_flush()
     logger.info(
         "order_placed",
         order_id=str(order.id),
@@ -554,8 +561,17 @@ async def cancel_order(
         actor="customer",
         note=reason or "Cancelled by the customer",
     )
+    settings = await get_store_settings(session)
+    await notifications_service.announce_status_change(
+        session,
+        order,
+        profile,
+        settings,
+        note=reason or "You cancelled this order. Nothing was charged.",
+    )
     await session.commit()
     await session.refresh(order)
+    email_service.schedule_flush()
     logger.info("order_cancelled", order_id=str(order.id), order_number=order.order_number)
     return order
 

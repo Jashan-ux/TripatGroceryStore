@@ -14,7 +14,9 @@ from app.models.catalogue import (
     StoreSettings,
 )
 from app.models.enums import (
+    EmailStatus,
     LoyaltyTier,
+    NotificationKind,
     OfferAudience,
     OrderStatus,
     PaymentMethod,
@@ -23,6 +25,7 @@ from app.models.enums import (
     ScratchCardStatus,
     UserRole,
 )
+from app.models.notifications import EmailMessage, Notification
 from app.models.orders import Address, Order, OrderEvent, OrderItem
 
 __all__ = [
@@ -30,7 +33,11 @@ __all__ = [
     "Base",
     "Brand",
     "Category",
+    "EmailMessage",
+    "EmailStatus",
     "LoyaltyTier",
+    "Notification",
+    "NotificationKind",
     "OfferAudience",
     "Order",
     "OrderEvent",

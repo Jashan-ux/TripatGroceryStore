@@ -1,8 +1,9 @@
-import { Bell, Menu, Search, ShoppingCart, User } from 'lucide-react';
+import { Menu, Search, ShoppingCart, User } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { BrandMark, Wordmark } from '@/components/common/BrandMark';
+import { NotificationBell } from '@/components/layout/NotificationBell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/features/auth/useAuth';
@@ -34,11 +35,7 @@ export function SiteHeader() {
         </Link>
 
         <nav aria-label={t('nav.primary')} className="ml-auto flex items-center gap-0.5">
-          <Button asChild variant="ghost" size="icon" aria-label={t('nav.notifications')}>
-            <Link to="/notifications">
-              <Bell aria-hidden="true" />
-            </Link>
-          </Button>
+          <NotificationBell />
           <Button
             asChild
             variant="ghost"

@@ -30,7 +30,10 @@ from app.schemas.admin_orders import (
     AdminOrderSummaryOut,
 )
 from app.schemas.orders import OrderOut
+from app.services import email as email_service
+from app.services import notifications as notifications_service
 from app.services.orders import order_out
+from app.services.settings import get_store_settings
 
 logger = get_logger(__name__)
 
@@ -145,8 +148,18 @@ async def transition(
         actor="admin",
         note=payload.note or f"Marked {target.value.replace('_', ' ')} by the store",
     )
+
+    # Tell the customer, in the same transaction that moved the order.
+    customer = await session.get(Profile, order.profile_id)
+    if customer is not None:
+        settings = await get_store_settings(session)
+        await notifications_service.announce_status_change(
+            session, order, customer, settings, note=payload.note
+        )
+
     await session.commit()
     await session.refresh(order)
+    email_service.schedule_flush()
     logger.info(
         "order_status_changed",
         order_id=str(order.id),
