@@ -191,6 +191,8 @@ nobody. Kinds and copy:
 | Customer places an order | customer | `order_placed` — "Order MSG-… confirmed" + items/total/COD line | `/orders/{id}` |
 | Same order | every profile in `ADMIN_EMAILS` | `new_order` — "New order MSG-…" + name, phone, items, total | `/admin/orders` |
 | Status move by the shop, or a customer cancel | customer | `order_status` — "MSG-…: Packed and shipped" / `order_cancelled` with the reason as `body` | `/orders/{id}` |
+| Customer cancels | every owner profile | `order_cancelled` — "MSG-… cancelled by the customer" + "the stock is back on the shelf" | `/admin/orders` |
+| Shop changes the delivery promise | customer | `system` — "MSG-…: Delivery in 3 days" | `/orders/{id}` |
 
 **Email.** `email_messages` is an outbox, not a mail call inline with the request:
 a row is queued in the same transaction, and a background task flushes it with its

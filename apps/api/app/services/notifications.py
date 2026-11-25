@@ -232,6 +232,29 @@ async def announce_status_change(
 
 
 # --------------------------------------------------------------------------- #
+# Owner: the customer cancelled
+# --------------------------------------------------------------------------- #
+async def announce_cancellation_to_shop(session: AsyncSession, order: Order) -> None:
+    """A cancel means stock came back and a slot freed up — the counter must know."""
+    for owner in await repo.list_admin_profiles(session):
+        session.add(
+            _add(
+                session,
+                profile_id=owner.id,
+                kind=NotificationKind.order_cancelled,
+                title=f"{order.order_number} cancelled by the customer",
+                body=(
+                    f"{order.customer_name or 'The customer'} cancelled "
+                    f"{items_phrase(order.item_count)} · {rupees(order.total_paise)}. "
+                    "The stock is back on the shelf."
+                ),
+                href="/admin/orders",
+                order_id=order.id,
+            )
+        )
+
+
+# --------------------------------------------------------------------------- #
 # Customer: the shop changed the delivery promise
 # --------------------------------------------------------------------------- #
 async def announce_delivery_change(

@@ -271,6 +271,33 @@ async def test_cancellation_and_its_reason_reach_the_customer(
     assert latest["body"] == "changed my mind"
 
 
+async def test_a_customer_cancellation_rings_the_shop(
+    async_client: AsyncClient,
+    customer: dict[str, Any],
+    admin: dict[str, Any],
+    ghee: dict[str, Any],
+) -> None:
+    order = await _place(async_client, customer, ghee)
+    await async_client.post("/api/v1/notifications/read-all", headers=admin["headers"])
+
+    cancelled = await async_client.post(
+        f"/api/v1/orders/{order['id']}/cancel",
+        json={"reason": "ordered by mistake"},
+        headers=customer["headers"],
+    )
+    assert cancelled.status_code == 200, cancelled.text
+
+    bell = await _bell(async_client, admin["headers"])
+    assert bell["unread_count"] == 1
+    entry = bell["items"][0]
+    assert entry["kind"] == "order_cancelled"
+    assert entry["title"] == f"{order['order_number']} cancelled by the customer"
+    assert entry["href"] == "/admin/orders"
+    # The customer still sees their own side of it.
+    mine = (await _bell(async_client, customer["headers"]))["items"][0]
+    assert mine["title"] == f"{order['order_number']}: Order cancelled"
+
+
 # --------------------------------------------------------------------------- #
 # The outbox
 # --------------------------------------------------------------------------- #

@@ -569,6 +569,7 @@ async def cancel_order(
         settings,
         note=reason or "You cancelled this order. Nothing was charged.",
     )
+    await notifications_service.announce_cancellation_to_shop(session, order)
     await session.commit()
     await session.refresh(order)
     email_service.schedule_flush()
