@@ -23,13 +23,18 @@ from app.models.enums import (
     ScratchCardStatus,
     UserRole,
 )
+from app.models.orders import Address, Order, OrderEvent, OrderItem
 
 __all__ = [
+    "Address",
     "Base",
     "Brand",
     "Category",
     "LoyaltyTier",
     "OfferAudience",
+    "Order",
+    "OrderEvent",
+    "OrderItem",
     "OrderStatus",
     "PaymentMethod",
     "PaymentStatus",

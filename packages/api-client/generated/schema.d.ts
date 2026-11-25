@@ -6,6 +6,42 @@
  */
 
 export interface paths {
+    "/api/v1/addresses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My addresses */
+        get: operations["list_addresses_api_v1_addresses_get"];
+        put?: never;
+        /** Add an address */
+        post: operations["create_address_api_v1_addresses_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/addresses/{address_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Edit an address */
+        put: operations["update_address_api_v1_addresses__address_id__put"];
+        post?: never;
+        /** Delete an address */
+        delete: operations["delete_address_api_v1_addresses__address_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/whoami": {
         parameters: {
             query?: never;
@@ -68,6 +104,23 @@ export interface paths {
         get: operations["get_category_api_v1_categories__slug__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checkout/quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Price a cart */
+        post: operations["quote_cart_api_v1_checkout_quote_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -170,6 +223,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My orders */
+        get: operations["list_orders_api_v1_orders_get"];
+        put?: never;
+        /** Place a cash-on-delivery order */
+        post: operations["place_order_api_v1_orders_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One of my orders */
+        get: operations["get_order_api_v1_orders__order_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel while processing */
+        post: operations["cancel_order_api_v1_orders__order_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/products": {
         parameters: {
             query?: never;
@@ -259,6 +364,150 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AddressIn */
+        AddressIn: {
+            /**
+             * City
+             * @default
+             */
+            city: string;
+            /**
+             * Is Default
+             * @default false
+             */
+            is_default: boolean;
+            /**
+             * Label
+             * @default Home
+             */
+            label: string;
+            /**
+             * Landmark
+             * @default
+             */
+            landmark: string;
+            /** Latitude */
+            latitude?: number | null;
+            /** Line1 */
+            line1: string;
+            /**
+             * Line2
+             * @default
+             */
+            line2: string;
+            /** Longitude */
+            longitude?: number | null;
+            /** Phone */
+            phone: string;
+            /** Pincode */
+            pincode: string;
+            /** Recipient Name */
+            recipient_name: string;
+            /**
+             * State
+             * @default
+             */
+            state: string;
+        };
+        /** AddressOut */
+        AddressOut: {
+            /** City */
+            city: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Default */
+            is_default: boolean;
+            /** Label */
+            label: string;
+            /** Landmark */
+            landmark: string;
+            /** Latitude */
+            latitude?: number | null;
+            /** Line1 */
+            line1: string;
+            /** Line2 */
+            line2: string;
+            /** Longitude */
+            longitude?: number | null;
+            /** Phone */
+            phone: string;
+            /** Pincode */
+            pincode: string;
+            /** Recipient Name */
+            recipient_name: string;
+            /** State */
+            state: string;
+        };
+        /** AddressSnapshotOut */
+        AddressSnapshotOut: {
+            /**
+             * City
+             * @default
+             */
+            city: string;
+            /**
+             * Label
+             * @default
+             */
+            label: string;
+            /**
+             * Landmark
+             * @default
+             */
+            landmark: string;
+            /**
+             * Line1
+             * @default
+             */
+            line1: string;
+            /**
+             * Line2
+             * @default
+             */
+            line2: string;
+            /**
+             * Phone
+             * @default
+             */
+            phone: string;
+            /**
+             * Pincode
+             * @default
+             */
+            pincode: string;
+            /**
+             * Recipient Name
+             * @default
+             */
+            recipient_name: string;
+            /**
+             * State
+             * @default
+             */
+            state: string;
+        };
+        /** BlockingIssue */
+        BlockingIssue: {
+            /**
+             * Code
+             * @enum {string}
+             */
+            code: "empty_cart" | "minimum_order" | "pincode" | "stock";
+            /** Details */
+            details?: {
+                [key: string]: unknown;
+            };
+            /** Message */
+            message: string;
+        };
         /** BrandOut */
         BrandOut: {
             /**
@@ -272,6 +521,18 @@ export interface components {
             name: string;
             /** Slug */
             slug: string;
+        };
+        /** CartLineIn */
+        CartLineIn: {
+            /**
+             * Product Id
+             * Format: uuid
+             */
+            product_id: string;
+            /** Quantity */
+            quantity: number;
+            /** Variant Id */
+            variant_id?: string | null;
         };
         /** CategoryOut */
         CategoryOut: {
@@ -400,6 +661,166 @@ export interface components {
              * @default true
              */
             push: boolean;
+        };
+        /** OrderCancelIn */
+        OrderCancelIn: {
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+        };
+        /** OrderEventOut */
+        OrderEventOut: {
+            /** Actor */
+            actor: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Note */
+            note: string;
+            /** Status */
+            status: string;
+        };
+        /** OrderIn */
+        OrderIn: {
+            /**
+             * Address Id
+             * Format: uuid
+             */
+            address_id: string;
+            /**
+             * Customer Note
+             * @default
+             */
+            customer_note: string;
+            /** Items */
+            items: components["schemas"]["CartLineIn"][];
+        };
+        /** OrderItemOut */
+        OrderItemOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Image Url */
+            image_url: string;
+            /** Line Total Paise */
+            line_total_paise: number;
+            /** Mrp Paise */
+            mrp_paise: number;
+            /** Name */
+            name: string;
+            /**
+             * Product Id
+             * Format: uuid
+             */
+            product_id: string;
+            /** Quantity */
+            quantity: number;
+            /** Unit Label */
+            unit_label: string;
+            /** Unit Price Paise */
+            unit_price_paise: number;
+            /** Variant Id */
+            variant_id?: string | null;
+            /** Variant Label */
+            variant_label: string;
+        };
+        /** OrderListOut */
+        OrderListOut: {
+            /** Items */
+            items: components["schemas"]["OrderSummaryOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            total_pages: number;
+        };
+        /** OrderOut */
+        OrderOut: {
+            address: components["schemas"]["AddressSnapshotOut"];
+            /** Cancelled At */
+            cancelled_at?: string | null;
+            /** Cancelled Reason */
+            cancelled_reason: string;
+            /** Customer Name */
+            customer_name: string;
+            /** Customer Note */
+            customer_note: string;
+            /** Customer Phone */
+            customer_phone: string;
+            /** Deliver By */
+            deliver_by?: string | null;
+            /** Delivery Days */
+            delivery_days: number;
+            /** Delivery Fee Paise */
+            delivery_fee_paise: number;
+            /** Discount Paise */
+            discount_paise: number;
+            /** Events */
+            events: components["schemas"]["OrderEventOut"][];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Item Count */
+            item_count: number;
+            /** Items */
+            items: components["schemas"]["OrderItemOut"][];
+            /** Order Number */
+            order_number: string;
+            /** Payment Method */
+            payment_method: string;
+            /** Payment Status */
+            payment_status: string;
+            /**
+             * Placed At
+             * Format: date-time
+             */
+            placed_at: string;
+            /** Status */
+            status: string;
+            /** Subtotal Paise */
+            subtotal_paise: number;
+            /** Total Paise */
+            total_paise: number;
+        };
+        /** OrderSummaryOut */
+        OrderSummaryOut: {
+            /** Deliver By */
+            deliver_by?: string | null;
+            /** First Item Image Url */
+            first_item_image_url: string;
+            /** First Item Name */
+            first_item_name: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Item Count */
+            item_count: number;
+            /** Order Number */
+            order_number: string;
+            /** Payment Status */
+            payment_status: string;
+            /**
+             * Placed At
+             * Format: date-time
+             */
+            placed_at: string;
+            /** Status */
+            status: string;
+            /** Total Paise */
+            total_paise: number;
         };
         /** PhoneIn */
         PhoneIn: {
@@ -617,6 +1038,81 @@ export interface components {
              */
             vapid_public_key: string;
         };
+        /** QuoteIn */
+        QuoteIn: {
+            /** Items */
+            items: components["schemas"]["CartLineIn"][];
+            /** Pincode */
+            pincode?: string | null;
+        };
+        /** QuoteLineOut */
+        QuoteLineOut: {
+            /** Available Stock */
+            available_stock: number;
+            /** Image Url */
+            image_url: string;
+            /** In Stock */
+            in_stock: boolean;
+            /** Issue */
+            issue?: ("out_of_stock" | "partially_available" | "unavailable") | null;
+            /** Line Total Paise */
+            line_total_paise: number;
+            /** Mrp Paise */
+            mrp_paise: number;
+            /** Name */
+            name: string;
+            /**
+             * Product Id
+             * Format: uuid
+             */
+            product_id: string;
+            /** Quantity */
+            quantity: number;
+            /** Slug */
+            slug: string;
+            /** Unit Label */
+            unit_label: string;
+            /** Unit Price Paise */
+            unit_price_paise: number;
+            /** Variant Id */
+            variant_id?: string | null;
+            /** Variant Label */
+            variant_label: string;
+        };
+        /** QuoteOut */
+        QuoteOut: {
+            /** Blocking Issues */
+            blocking_issues: components["schemas"]["BlockingIssue"][];
+            /** Can Checkout */
+            can_checkout: boolean;
+            /**
+             * Deliver By
+             * Format: date
+             */
+            deliver_by: string;
+            /** Delivery Days */
+            delivery_days: number;
+            /** Delivery Fee Paise */
+            delivery_fee_paise: number;
+            /** Discount Paise */
+            discount_paise: number;
+            /** Item Count */
+            item_count: number;
+            /** Lines */
+            lines: components["schemas"]["QuoteLineOut"][];
+            /** Minimum Order Paise */
+            minimum_order_paise: number;
+            /** Pincode */
+            pincode?: string | null;
+            /** Pincode Serviceable */
+            pincode_serviceable?: boolean | null;
+            /** Shortfall Paise */
+            shortfall_paise: number;
+            /** Subtotal Paise */
+            subtotal_paise: number;
+            /** Total Paise */
+            total_paise: number;
+        };
         /** StatusResponse */
         StatusResponse: {
             /**
@@ -668,6 +1164,314 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_addresses_api_v1_addresses_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressOut"][];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_address_api_v1_addresses_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddressIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_address_api_v1_addresses__address_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Address id */
+                address_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddressIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_address_api_v1_addresses__address_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Address id */
+                address_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     whoami_api_v1_admin_whoami_get: {
         parameters: {
             query?: never;
@@ -908,6 +1712,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CategoryTreeOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    quote_cart_api_v1_checkout_quote_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuoteOut"];
                 };
             };
             /** @description Missing, expired or invalid token. */
@@ -1364,6 +2246,322 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_orders_api_v1_orders_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderListOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    place_order_api_v1_orders_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Send the same key when retrying: the API returns the original order instead of placing a second one. */
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_order_api_v1_orders__order_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Order id */
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    cancel_order_api_v1_orders__order_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Order id */
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["OrderCancelIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderOut"];
                 };
             };
             /** @description Missing, expired or invalid token. */

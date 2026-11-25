@@ -2,251 +2,25 @@
 
 These need a real Postgres and are skipped locally unless ``TEST_DATABASE_URL`` is
 set; CI runs them against the service container after ``alembic upgrade head``.
-
-Each test seeds its own rows and cleans up, so they are order-independent and can
-run in parallel later without change.
+Fixtures live in ``conftest.py`` so the order tests share them.
 """
 
 from __future__ import annotations
 
-import logging
-import time
 import uuid
-from collections.abc import AsyncIterator, Callable
+from collections.abc import Callable
 from typing import Any
 
-import jwt
 import pytest
 from app.core.config import Settings
 from app.db.session import get_sessionmaker
 from app.models.enums import UserRole
-from cryptography.hazmat.primitives.asymmetric import ec
 from httpx import AsyncClient
 from sqlalchemy import text
 
 pytestmark = pytest.mark.db
 
 
-@pytest.fixture(autouse=True)
-async def _use_test_database(
-    database_url: str, monkeypatch: pytest.MonkeyPatch
-) -> AsyncIterator[None]:
-    """Point the API at the throwaway test database, or skip.
-
-    ``DATABASE_URL`` on a developer machine points at the hosted project, so these
-    tests must never inherit it: the engine is rebuilt against ``TEST_DATABASE_URL``
-    (set by CI) and torn down afterwards.
-    """
-    from app.core.config import get_settings
-    from app.db.session import dispose_engine
-
-    monkeypatch.setenv("DATABASE_URL", database_url)
-    monkeypatch.setenv("DATABASE_DIRECT_URL", database_url)
-    get_settings.cache_clear()
-    await dispose_engine()
-    try:
-        yield
-    finally:
-        # Tests create profiles; clearing them keeps the suite re-runnable on a
-        # database that already has rows without relying on ordering.
-        try:
-            sessionmaker = get_sessionmaker()
-            async with sessionmaker() as session:
-                await session.execute(text("DELETE FROM public.profiles"))
-                await session.commit()
-        except Exception:  # pragma: no cover - database already gone
-            logging.getLogger(__name__).debug("profile cleanup skipped")
-        await dispose_engine()
-        monkeypatch.undo()
-        get_settings.cache_clear()
-
-
-SUPABASE_URL = "https://project.supabase.co"
-ISSUER = f"{SUPABASE_URL}/auth/v1"
-
-
-# --------------------------------------------------------------------------- #
-# Fixtures
-# --------------------------------------------------------------------------- #
-@pytest.fixture(scope="module")
-def signing_key() -> tuple[Any, Any]:
-    private = ec.generate_private_key(ec.SECP256R1())
-    return private, private.public_key()
-
-
-@pytest.fixture()
-def auth_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
-    """Point token verification at a local key instead of the project's JWKS."""
-    settings = Settings(
-        ENVIRONMENT="test",
-        SUPABASE_URL=SUPABASE_URL,
-        SUPABASE_JWT_SECRET="",
-        ADMIN_EMAILS="owner@example.com",
-    )
-    monkeypatch.setattr("app.core.security.get_settings", lambda: settings)
-    # `bootstrap_role` lives in the service layer and calls get_settings itself.
-    monkeypatch.setattr("app.services.profiles.get_settings", lambda: settings)
-    return settings
-
-
-@pytest.fixture()
-def use_local_keys(
-    signing_key: tuple[Any, Any], auth_settings: Settings, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _, public = signing_key
-
-    class Provider:
-        def get_signing_key(self, token: str) -> Any:
-            return type("SigningKey", (), {"key": public})()
-
-    monkeypatch.setattr(
-        "app.core.security.get_signing_key_provider", lambda settings=None: Provider()
-    )
-
-
-@pytest.fixture()
-def make_token(signing_key: tuple[Any, Any]) -> Callable[..., str]:
-    private, _ = signing_key
-
-    def _make(email: str, *, subject: uuid.UUID | None = None, expires_in: int = 600) -> str:
-        now = int(time.time())
-        # Deterministic per address: requesting the same user twice in a test
-        # must not look like two sign-ups racing on the same email.
-        user_id = subject or uuid.uuid5(uuid.NAMESPACE_URL, f"mailto:{email}")
-        return jwt.encode(
-            {
-                "sub": str(user_id),
-                "email": email,
-                "email_verified": True,
-                "aud": "authenticated",
-                "iss": ISSUER,
-                "iat": now,
-                "exp": now + expires_in,
-                "app_metadata": {"provider": "email"},
-                "user_metadata": {"full_name": "Test Customer"},
-            },
-            private,
-            algorithm="ES256",
-            headers={"kid": "test"},
-        )
-
-    return _make
-
-
-@pytest.fixture()
-async def catalogue() -> AsyncIterator[dict[str, Any]]:
-    """A tiny, fully-linked catalogue: one brand, two categories, three products."""
-    sessionmaker = get_sessionmaker()
-    suffix = uuid.uuid4().hex[:8]
-    slugs: dict[str, Any] = {}
-
-    async with sessionmaker() as session:
-        brand_id = await session.scalar(
-            text("INSERT INTO brands (slug, name) VALUES (:slug, :name) RETURNING id"),
-            {"slug": f"test-brand-{suffix}", "name": f"Test Brand {suffix}"},
-        )
-        parent_id = await session.scalar(
-            text(
-                "INSERT INTO categories (slug, name, emoji, sort_order) "
-                "VALUES (:slug, :name, '🧪', 99) RETURNING id"
-            ),
-            {"slug": f"test-parent-{suffix}", "name": f"Test Parent {suffix}"},
-        )
-        child_id = await session.scalar(
-            text(
-                "INSERT INTO categories (slug, name, sort_order, parent_id) "
-                "VALUES (:slug, :name, 1, :parent) RETURNING id"
-            ),
-            {"slug": f"test-child-{suffix}", "name": f"Test Child {suffix}", "parent": parent_id},
-        )
-        product_ids = []
-        for index, (name, price, stock) in enumerate(
-            [("Test Ghee 1L", 32_000, 12), ("Test Mustard Oil 1L", 18_000, 0)]
-        ):
-            product_id = await session.scalar(
-                text(
-                    "INSERT INTO products (slug, name, description, brand_id, category_id, "
-                    "mrp_paise, price_paise, unit_label, stock, tags, rating) VALUES "
-                    "(:slug, :name, :description, :brand, :category, :mrp, :price, '1 L', :stock, "
-                    "ARRAY['bestseller'], 4.5) RETURNING id"
-                ),
-                {
-                    "slug": f"test-product-{suffix}-{index}",
-                    "name": name,
-                    "description": "A product used by the test suite.",
-                    "brand": brand_id,
-                    "category": child_id,
-                    "mrp": price + 1_500,
-                    "price": price,
-                    "stock": stock,
-                },
-            )
-            product_ids.append(product_id)
-
-        variant_product_id = await session.scalar(
-            text(
-                "INSERT INTO products (slug, name, description, category_id, mrp_paise, "
-                "price_paise, unit_label, stock) VALUES "
-                "(:slug, :name, '', :category, 13000, 11500, 'per pack', 0) RETURNING id"
-            ),
-            {
-                "slug": f"test-loose-{suffix}",
-                "name": "Test Loose Powder",
-                "category": child_id,
-            },
-        )
-        for order, (label, mrp, price, stock) in enumerate(
-            [("100 g", 13_000, 11_500, 5), ("250 g", 30_000, 26_500, 0)]
-        ):
-            await session.execute(
-                text(
-                    "INSERT INTO product_variants (product_id, label, mrp_paise, price_paise, "
-                    "stock, sort_order) VALUES (:product, :label, :mrp, :price, :stock, :order)"
-                ),
-                {
-                    "product": variant_product_id,
-                    "label": label,
-                    "mrp": mrp,
-                    "price": price,
-                    "stock": stock,
-                    "order": order,
-                },
-            )
-
-        await session.commit()
-
-    slugs = {
-        "suffix": suffix,
-        "brand_id": brand_id,
-        "parent_slug": f"test-parent-{suffix}",
-        "child_slug": f"test-child-{suffix}",
-        "ghee_slug": f"test-product-{suffix}-0",
-        "oil_slug": f"test-product-{suffix}-1",
-        "loose_slug": f"test-loose-{suffix}",
-    }
-
-    yield slugs
-
-    async with sessionmaker() as session:
-        await session.execute(
-            text("DELETE FROM product_variants WHERE product_id = :id"), {"id": variant_product_id}
-        )
-        await session.execute(
-            text("DELETE FROM products WHERE category_id = :id"), {"id": child_id}
-        )
-        await session.execute(text("DELETE FROM categories WHERE id = :id"), {"id": child_id})
-        await session.execute(text("DELETE FROM categories WHERE id = :id"), {"id": parent_id})
-        await session.execute(text("DELETE FROM brands WHERE id = :id"), {"id": brand_id})
-        await session.execute(
-            text("DELETE FROM profiles WHERE email LIKE :pattern"),
-            {"pattern": "test-%@example.com"},
-        )
-        await session.commit()
-
-
-# --------------------------------------------------------------------------- #
-# Catalogue (C‑01 … C‑05)
-# --------------------------------------------------------------------------- #
 async def test_home_returns_categories_and_rails(
     async_client: AsyncClient, catalogue: dict[str, Any]
 ) -> None:
