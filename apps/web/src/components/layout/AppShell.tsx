@@ -4,6 +4,7 @@ import { OfflineBanner } from '@/components/common/OfflineBanner';
 import { UpdatePrompt } from '@/components/common/UpdatePrompt';
 import { CartBar } from '@/components/cart/CartBar';
 import { BottomNav } from '@/components/layout/BottomNav';
+import { OfferBanner } from '@/components/layout/OfferBanner';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { PhonePrompt } from '@/features/auth/PhonePrompt';
@@ -36,6 +37,7 @@ export function AppShell() {
         <UpdatePrompt />
         <OfflineBanner />
         <SiteHeader />
+        <OfferBanner />
         <main id="main" tabIndex={-1} className={cn('flex-1 outline-none')}>
           <div key={location.pathname} className="animate-none">
             <Outlet />

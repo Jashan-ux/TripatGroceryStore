@@ -31,6 +31,8 @@ const NotificationsPage = lazy(() => import('@/pages/NotificationsPage'));
 const RewardsPage = lazy(() => import('@/pages/RewardsPage'));
 const OrdersPage = lazy(() => import('@/pages/OrdersPage'));
 const OrderDetailPage = lazy(() => import('@/pages/OrderDetailPage'));
+// The contact page carries the feedback form, so it is its own chunk too.
+const ContactPage = lazy(() => import('@/pages/ContactPage'));
 
 /** One suspension boundary for every lazily-loaded route. */
 function deferred(node: ReactNode) {
@@ -136,7 +138,7 @@ export default function App() {
           path="rewards"
           element={<ProtectedRoute>{deferred(<RewardsPage />)}</ProtectedRoute>}
         />
-        <Route path="contact" element={<ComingSoonPage titleKey="footer.contactUs" />} />
+        <Route path="contact" element={deferred(<ContactPage />)} />
         <Route path="policies/privacy" element={<ComingSoonPage titleKey="footer.privacy" />} />
         <Route path="policies/terms" element={<ComingSoonPage titleKey="footer.terms" />} />
         <Route

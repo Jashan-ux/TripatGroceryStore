@@ -53,7 +53,12 @@ supabase --version
      `http://localhost:5173/auth/callback`,
      `https://*-<your-vercel-team>.vercel.app/auth/callback` (preview deploys)
 7. **Storage**: create a bucket named `catalog`, **public read**, no public write.
-   Uploads happen only through the backend with the service-role key.
+   Uploads happen only through the backend with the service-role key. Set
+   `SUPABASE_STORAGE_BUCKET=catalog` (the default) on the API host. Without
+   `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` the upload endpoint answers
+   `503 image_upload_unavailable` — the shop still works, images can be pasted as
+   URLs. Uploaded photos are re-encoded to WebP before they are stored, so the
+   bucket only ever holds images this backend produced.
 8. **Backups**: note what your plan gives you. Free = daily, no PITR. Pro = PITR.
    Record it in §9 below.
 

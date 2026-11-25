@@ -17,6 +17,10 @@ dependencies = [
     "slowapi==0.1.9",
     "redis==5.2.1",
     "python-multipart==0.0.34",
+    # Product images are re-encoded server-side before they are stored: that is
+    # what makes a polyglot upload harmless, so it is a runtime dependency, not
+    # an optional integration.
+    "pillow==11.0.0",
 ]
 
 [project.optional-dependencies]
@@ -26,7 +30,6 @@ integrations = [
     "resend==2.5.1",
     "pywebpush==2.0.3",
     "py-vapid==1.9.1",
-    "pillow==11.0.0",
 ]
 dev = [
     "pytest==9.2.0",

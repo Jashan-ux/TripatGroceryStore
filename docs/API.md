@@ -259,6 +259,56 @@ was paid.
 | `return_window_days` | 3 | How long after delivery a return can be asked for. |
 | `tier_gold_paise` / `tier_platinum_paise` / `tier_diamond_paise` | 2000000 / 5000000 / 10000000 | Delivered spend (net of returns) for each badge. |
 
+## Phase 5 — catalogue tools, offers, settings, feedback
+
+Everything the owner does to the shop now goes through the API, so it can be
+tested, audited and later moved without rewriting a screen. Two rules shape the
+whole group:
+
+* **Every mutation writes exactly one `audit_log` row** (`actor_email`, `action`,
+  `entity`, `before`, `after`) inside the same transaction. If the change rolls
+  back, so does its audit row.
+* **Money is integer paise and prices are validated as a pair** — `price <= mrp`
+  is checked against the *stored* MRP even when the request only sends a price,
+  so a partial edit cannot create an impossible product.
+
+### Catalogue (behind `require_admin`)
+
+| Route | Purpose |
+|---|---|
+| `GET /admin/catalogue/products?q=&category_id=&low_stock=&page=&page_size=` | The catalogue as the owner sees it: `available_stock` (sum of active variants when there are any), `low_stock_threshold`, `is_active`, brand and category names. |
+| `POST /admin/catalogue/products` | Create. Slug is generated and made unique (`ghee-1-l`, `ghee-1-l-2`); `search_text` is recomputed so search finds it immediately. `422 mrp_below_price`, `404 category_not_found`, `422 duplicate_variant_label`. |
+| `PATCH /admin/catalogue/products/{id}` | Partial update from `model_fields_set`. Variants are **replaced wholesale** (an omitted pack disappears), which is why the old rows are deleted before the new ones are inserted. |
+| `DELETE /admin/catalogue/products/{id}` | `{outcome}` is `deleted`, or `deactivated` when past order lines reference it — the order history keeps its item names either way. |
+| `POST /admin/catalogue/products/bulk` | `{csv, dry_run}`. Required columns `name,category,price`; optional `unit,mrp,stock,brand,image_url`. **All-or-nothing**: every row is validated, and if any row fails nothing is written (`committed=false`, per-row `{line, status, errors}`). Caps at 500 rows; `bulk_bad_header`, `bulk_empty_file`, `bulk_too_many_rows`. `image_url` must be public `https` (SSRF guard). |
+| `POST /admin/catalogue/images` | `multipart/form-data` photo. Validated, re-encoded to a 1600 px WebP and stored; returns `{url, width, height, bytes, content_type}`. `422 image_too_large` / `image_type_not_allowed` / `image_unreadable` / `image_dimensions_too_large`, `503 image_upload_unavailable` when storage is not configured. |
+| `GET/POST/PATCH/DELETE /admin/catalogue/categories…` | One level of nesting only (`422 category_too_deep`, `422 category_self_parent`). `DELETE` refuses a shelf that still holds anything (`409 category_not_empty`) unless `?reassign_to=<id>` is passed, which moves its products and children and then deletes it. |
+| `GET/POST/PATCH/DELETE /admin/catalogue/brands…` | `409 brand_exists` on a duplicate name; `409 brand_in_use` while products point at it. |
+
+### Offers
+
+| Route | Purpose |
+|---|---|
+| `GET /offers/current` (public) | The newest live offer for the storefront banner, or `{offer: null}`. |
+| `POST /admin/offers` | `{title, body, href, audience: all\|gold\|platinum\|diamond, expires_at}`. Creates one `offer` notification per matching **customer** (never an owner) and one queued email each, then records what actually happened in `recipients` and `emails_queued`. `href` must be a path inside this app (`422` otherwise). |
+| `GET /admin/offers` | History, newest first, with those counts. |
+
+### Settings
+
+| Route | Purpose |
+|---|---|
+| `GET /admin/settings` | Every number the shop runs on, in one row. |
+| `PATCH /admin/settings` | Only the fields sent are applied. Validated **as a set** (`gifts`: `gold < platinum < diamond`, `scratch_min <= scratch_max`, email shape, `https` Maps URL) → `422 invalid_settings`, nothing half-applied. Clears the 30-second settings cache, so the next checkout uses the new numbers, and writes `settings.updated` with `before`/`after`. |
+
+### Feedback and the audit trail
+
+| Route | Purpose |
+|---|---|
+| `POST /feedback` (public, optionally signed in) | `{name, phone, email, kind, message}`. Stored first, then one `system` bell line per owner (`href=/admin/feedback`) and one queued email to `store_settings.feedback_email` (`dedupe_key=feedback:{id}`). A missing mail provider never loses the message. |
+| `GET /admin/feedback?status=new\|read` | The inbox, newest first. |
+| `POST /admin/feedback/{id}/read` | Marks one read (idempotent). |
+| `GET /admin/audit?entity=&page=` | `actor_email`, `action`, `entity`, `entity_id`, `summary`, `before`, `after`, `note`, `created_at` — newest first. |
+
 ## Regenerating the typed client
 
 ```bash

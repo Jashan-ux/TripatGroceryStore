@@ -4,6 +4,7 @@ Importing this package registers every table on ``Base.metadata``. Alembic and
 the drift check depend on that, so new model modules must be listed here.
 """
 
+from app.models.admin import AuditLog, Feedback, Offer
 from app.models.base import Base
 from app.models.catalogue import (
     Brand,
@@ -15,6 +16,8 @@ from app.models.catalogue import (
 )
 from app.models.enums import (
     EmailStatus,
+    FeedbackKind,
+    FeedbackStatus,
     LoyaltyTier,
     NotificationKind,
     OfferAudience,
@@ -34,14 +37,19 @@ from app.models.rewards import Referral, ScratchCard, Wallet, WalletEntry
 
 __all__ = [
     "Address",
+    "AuditLog",
     "Base",
     "Brand",
     "Category",
     "EmailMessage",
     "EmailStatus",
+    "Feedback",
+    "FeedbackKind",
+    "FeedbackStatus",
     "LoyaltyTier",
     "Notification",
     "NotificationKind",
+    "Offer",
     "OfferAudience",
     "Order",
     "OrderEvent",

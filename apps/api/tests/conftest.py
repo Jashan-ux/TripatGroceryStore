@@ -200,6 +200,12 @@ async def _wipe_profiles() -> None:
     async with sessionmaker() as session:
         await session.execute(text("DELETE FROM email_messages"))
         await session.execute(text("DELETE FROM notifications"))
+        # Phase 5 rows: the feedback inbox, sent offers and the audit trail. The
+        # audit log is written by nearly every Phase 5 test, so leaving it behind
+        # would make "newest first" assertions depend on test order.
+        await session.execute(text("DELETE FROM feedback"))
+        await session.execute(text("DELETE FROM offers"))
+        await session.execute(text("DELETE FROM audit_log"))
         await session.execute(text("DELETE FROM orders"))
         await session.execute(text("DELETE FROM addresses"))
         await session.execute(text("DELETE FROM profiles"))

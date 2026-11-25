@@ -10,7 +10,7 @@ status board; `docs/ACCEPTANCE_REPORT.md` carries the scenario-level evidence.
 | 2 | Cart, addresses, checkout, COD orders, stock, min-order + pincode rules, customer order pages | ✅ **done** — 0003 applied live, CI green |
 | 3 | Admin orders, notifications (in-app, email, red dot), per-order delivery days, customer cancel | ✅ **done** — order queue + transitions (Phase 2), then bell, email outbox, red dots and per-order delivery days; `0004` applied live |
 | 4 | Wallet, referrals, scratch cards, returns, loyalty badges | ✅ **done** — wallet ledger + checkout spend, referral programme, server-side scratch cards, two-step returns (approve → received → credit), loyalty tiers; `0005` applied live, rewards hub and admin returns queue shipped |
-| 5 | Admin catalogue tools (inline add, bulk add, categories, brands), offers, settings, feedback | ⬜ |
+| 5 | Admin catalogue tools (inline add, bulk add, categories, brands), offers, settings, feedback | ✅ **done** — `0006` applied live (22 tables, 264/264 columns, digest `999d3e5e…2458`); 76 new API tests and 19 new web tests green |
 | 6 | Analytics with drill-downs, customer profiles | ⬜ |
 | 7 | PWA polish: install prompt, web push, offline, Lighthouse | ⬜ |
 | 8 | Security hardening, full acceptance run, deploy, DEPLOY.md, ACCEPTANCE_REPORT.md | ⬜ |

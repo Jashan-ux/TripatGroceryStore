@@ -157,6 +157,33 @@ function safeJson(text: string): unknown {
   }
 }
 
+/**
+ * Multipart upload. Separate from `apiFetch` because the browser must set the
+ * boundary itself: the moment code sets `Content-Type`, the request breaks.
+ */
+export async function apiUpload<T>(path: string, form: FormData): Promise<T> {
+  const token = await tokenProvider();
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  let response: Response;
+  try {
+    response = await fetch(buildUrl(path), {
+      method: 'POST',
+      headers,
+      body: form,
+      credentials: 'same-origin',
+    });
+  } catch {
+    throw new ApiError(0, 'network_error', 'We could not reach the store. Please try again.');
+  }
+
+  const text = await response.text();
+  const payload: unknown = text ? safeJson(text) : null;
+  if (!response.ok) throw parseError(response.status, payload);
+  return payload as T;
+}
+
 /** Typed helpers used by feature modules. */
 export const api = {
   get: <T>(path: string, options?: Omit<RequestOptions, 'method' | 'body'>) =>

@@ -15,8 +15,8 @@
 ### Running the database tests on your own machine
 
 `pgserver` gives you a real, throwaway PostgreSQL without Docker. That is how the
-Phase 4 migration (and its `0005` round-trip) and the 94 database tests were
-checked before CI:
+Phase 5 migration (and its `0006` round-trip) and the 170 database-marked tests
+were checked before CI:
 
 ```bash
 cd apps/api && pip install pgserver
@@ -38,7 +38,7 @@ done
 export DATABASE_URL="postgresql+asyncpg://postgres@/tripat_test?host=/tmp/pgdata"
 export TEST_DATABASE_URL="$DATABASE_URL"
 alembic upgrade head && alembic downgrade base && alembic upgrade head
-pytest            # 320 passed, 1 skipped
+pytest            # 396 passed, 1 skipped
 ```
 
 One test skips there on purpose: the `anon`-role RLS probe needs Supabase's roles,
@@ -93,9 +93,25 @@ It **refuses to run** when `ENVIRONMENT=production` and prints why.
 | Real iOS install (16.4+) | Safari → Share → Add to Home Screen → open standalone → push permission prompt appears |
 | Real Web Push on Android | install, subscribe, place an order from another device, notification arrives |
 | Real email delivery | Resend dashboard shows `delivered`, check spam folder once |
+| Real photo upload | Admin → Products → edit → choose a phone photo; the returned URL must open from a different device (needs `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and the public `catalog` bucket) |
 | Lighthouse PWA installability | Chrome DevTools → Lighthouse, throttled 4G, mobile |
 | securityheaders.com grade A | production URL |
 | Restore drill | `docs/DEPLOY.md` §9 |
+
+## What Phase 5 added, and where it lives
+
+| File | Tests | What it proves |
+|---|---|---|
+| `tests/test_admin_catalogue.py` | 18 | inline add reaches the storefront, slugs stay unique, edit is audited, variants are replaced wholesale, delete vs deactivate, category reassign and nesting, brand guards, listing filters/pages |
+| `tests/test_bulk_import.py` | 10 | all-or-nothing, per-row line numbers, exact rupee→paise, dry run writes nothing, BOM tolerance, header/empty/row-cap refusals, SSRF-filtered image URLs |
+| `tests/test_uploads.py` | 28 | type allowlist, SVG/polyglot/GIF refusal, size and dimension caps, EXIF stripped, unique dated keys, `https`-only remote links, storage-not-configured |
+| `tests/test_admin_offers_settings_feedback.py` | 19 | tier audience fan-out, public banner, offer href restriction, settings apply to the next checkout, set-level validation, feedback inbox + bell + email, audit trail order and privacy |
+
+The web side adds `ContactPage.test.tsx`, `OfferBanner.test.tsx`,
+`AdminProductsPage.test.tsx`, `AdminSettingsPage.test.tsx` and
+`AdminOffersFeedback.test.tsx` — 19 tests that hold the screens to the promises
+the API makes (rupees in / paise out, preview-before-commit, "hidden, not
+deleted", dismissal that survives a reload).
 
 ## Writing a new test
 

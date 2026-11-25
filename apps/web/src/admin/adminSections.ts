@@ -1,11 +1,14 @@
 import {
   BarChart3,
   Boxes,
+  History,
+  Inbox,
   LayoutGrid,
   Megaphone,
   PackageX,
   ReceiptText,
   Settings,
+  Tag,
   Users,
 } from 'lucide-react';
 
@@ -29,6 +32,21 @@ export const adminSections = [
     end: false,
     mobile: false,
   },
+  { to: '/admin/brands', labelKey: 'admin.brands', icon: Tag, end: false, mobile: false },
   { to: '/admin/offers', labelKey: 'admin.offers', icon: Megaphone, end: false, mobile: false },
+  {
+    to: '/admin/feedback',
+    labelKey: 'admin.feedback',
+    icon: Inbox,
+    end: false,
+    mobile: false,
+  },
+  {
+    to: '/admin/activity',
+    labelKey: 'admin.activity',
+    icon: History,
+    end: false,
+    mobile: false,
+  },
   { to: '/admin/settings', labelKey: 'admin.settings', icon: Settings, end: false, mobile: true },
 ] as const;

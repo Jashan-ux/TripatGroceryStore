@@ -29,6 +29,7 @@ venv/
 .coverage
 coverage.xml
 htmlcov/
+apps/web/coverage/
 .tox/
 
 # Test artifacts

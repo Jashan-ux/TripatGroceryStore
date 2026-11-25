@@ -109,6 +109,33 @@ its own page; the owner gets a new **Returns** tab.
   must stay unchanged. Tap *Goods received · credit wallet*: the money appears,
   once. That second tap is the only thing that pays a customer back.
 
+## 2c. Phase 5 — done for you, four things to try
+
+Migration `0006_owner_tools` is applied to the **live** project (verified
+2026-11-25: 22 tables, RLS on 22/22, 264/264 columns matching the code, digest
+`999d3e5e…2458`, `alembic_version` = `0006_owner_tools`). The admin side now has
+**Products**, **Categories**, **Brands**, **Offers**, **Inbox** and **Activity**
+tabs, and the storefront has a real **Contact** page.
+
+- ☐ **Add one item the way you actually will.** *Admin → Products*, type a name,
+  pick the shelf, type the price in rupees, press *Add product*. Open the shop in
+  another tab: it is there, no waiting. (This is A-07.)
+- ☐ **Paste a sheet and break one line on purpose.** *Admin → Products → Bulk
+  add*. Put a real category slug on one line and nonsense on another, press
+  *Preview*. It must tell you the line number and refuse to save anything.
+  Fix the bad line, preview again, then save. (A-08.)
+- ☐ **Delete something that has been ordered.** Delete a product you have sold.
+  It will say it was *hidden* rather than deleted — open the old order and the item
+  is still named there. That is deliberate. (A-09.)
+- ☐ **Change a number and watch it bite.** *Admin → Settings*, raise the minimum
+  order, save, then try to check out a smaller cart as a customer. It is refused
+  straight away, and *Activity* shows the old and new value next to your email.
+  (A-15, S-12.)
+- ☐ 🕒 **Photo upload needs one thing from you.** Create/confirm the public
+  Storage bucket named `catalog` and send me the **service-role** key for the
+  backend (never the frontend). Until then the upload button answers
+  *"Image storage is not configured"* and you can still paste an image URL.
+
 ## 3. Domain
 
 - ☐ 🔑 Buy the domain (suggest `tripatpansari.in` / `msgstore.in`).

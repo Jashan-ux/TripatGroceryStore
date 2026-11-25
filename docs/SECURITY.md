@@ -63,6 +63,38 @@ Run in this workspace on 2026-11-25:
 - Docker build, Playwright, Postgres-backed tests: **not run here** (no Docker, no
   browser, no Postgres in this environment) — they run in CI on every push.
 
+## Phase 5 additions
+
+**Uploads (S-08).** The server never trusts a file. `apps/api/app/services/uploads.py`
+decodes with Pillow, allows only `JPEG`/`PNG`/`WEBP`, refuses anything above 2 MB or
+4000 px on a side, and then **throws the original bytes away** and writes its own
+1600 px WebP at quality 82. That single step defeats the classic bypasses: an SVG
+(script-carrying), a PHP file, a JPEG with `<?php …` appended, and EXIF metadata all
+come out the other side as pixels. The stored key is random and dated
+(`products/YYYY/MM/<hex>.webp`) so a visitor's filename never becomes a path, and
+writes use the service-role key from the backend only — the bucket is public-read,
+never public-write.
+
+**Remote image URLs (SSRF, A-08).** A CSV may reference a hosted image, so
+`image_url` is filtered before it is ever fetched: `https` only, no bare IP, and
+`localhost` / `*.local` / private / loopback / link-local / reserved ranges are
+refused (`169.254.169.254` included). Twelve URL cases are pinned in
+`tests/test_uploads.py`.
+
+**Audit trail (S-12).** `audit_log` is append-only by construction (no
+`updated_at`, no update path in the API). It stores the actor's **email** at write
+time and `actor_id` with `ON DELETE SET NULL`, so removing a profile does not
+rewrite history. Every admin mutation in this phase writes exactly one row in the
+same transaction — a rolled-back change leaves no audit row, and a no-op edit says
+`no change` instead of inventing a diff.
+
+**Feedback is public.** `POST /api/v1/feedback` needs no token, which is the
+point (a complaint should not require an account). Its abuse surface is bounded
+instead of gated: 5–4000 characters, an enum `kind`, one bell line per owner and
+one email per message with a dedupe key. Rate limiting for this route is still
+**not enabled** (S-06): the limiter exists but the app does not install it, so no
+decorator is claimed here that the runtime would ignore.
+
 ## Threat notes
 
 - **XSS is the crown jewel.** Supabase JS keeps the session in `localStorage`, so

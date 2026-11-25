@@ -87,6 +87,8 @@ class NotificationKind(enum.StrEnum):
     order_cancelled = "order_cancelled"
     #: Owner: an order came in.
     new_order = "new_order"
+    #: Customer: a message the shop composed (offers, announcements).
+    offer = "offer"
     #: Anything the shop wants to tell people later (offers, low stock).
     system = "system"
 
@@ -104,3 +106,17 @@ class OfferAudience(enum.StrEnum):
     gold = "gold"
     platinum = "platinum"
     diamond = "diamond"
+
+
+class FeedbackKind(enum.StrEnum):
+    general = "general"
+    order = "order"
+    product = "product"
+    other = "other"
+
+
+class FeedbackStatus(enum.StrEnum):
+    #: Nobody has looked at it yet.
+    new = "new"
+    #: The owner has read it (the row keeps the time it happened).
+    read = "read"
