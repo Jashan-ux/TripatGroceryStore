@@ -38,9 +38,12 @@ class ProfileUpdateIn(APIModel):
 
 
 class PhoneIn(APIModel):
+    # Deliberately permissive: the service validates and answers with the
+    # domain error code (`invalid_phone`), so every bad number gets the same
+    # answer whether it is too short, too long or not a mobile number at all.
     phone: str = Field(
-        min_length=10,
-        max_length=20,
+        min_length=1,
+        max_length=32,
         examples=["+91 87089-73386"],
         description="Indian mobile number; +91, spaces and dashes are accepted.",
     )
