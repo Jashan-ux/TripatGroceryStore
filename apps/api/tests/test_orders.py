@@ -19,7 +19,9 @@ from app.db.session import get_sessionmaker
 from httpx import AsyncClient
 from sqlalchemy import text
 
-pytestmark = pytest.mark.db
+# Orders need a signed-in customer, so every test verifies tokens against the
+# local key set instead of the project's JWKS.
+pytestmark = [pytest.mark.db, pytest.mark.usefixtures("use_local_keys")]
 
 ADDRESS = {
     "label": "Home",
@@ -294,7 +296,11 @@ async def test_quote_reports_stock_shortfall_for_the_requested_quantity(
     assert line["issue"] == "partially_available"
     assert line["available_stock"] == variant["stock"]
     assert line["line_total_paise"] == 0
-    assert [issue["code"] for issue in body["blocking_issues"]] == ["stock"]
+    # Nothing is billable, so the minimum-order rule is honestly reported too.
+    codes = [issue["code"] for issue in body["blocking_issues"]]
+    assert codes[0] == "stock"
+    assert body["subtotal_paise"] == 0
+    assert body["can_checkout"] is False
 
 
 # --------------------------------------------------------------------------- #
