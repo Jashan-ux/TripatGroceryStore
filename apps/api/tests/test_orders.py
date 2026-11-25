@@ -179,8 +179,10 @@ async def test_addresses_are_invisible_to_other_customers(
     async_client: AsyncClient, customer: dict[str, Any], make_token: Callable[..., str]
 ) -> None:
     other = await _new_customer(async_client, make_token, prefix="other")
-    listed = await async_client.get("/api/v1/addresses", headers=other["headers"])
-    assert listed.json() == []
+    listed = (await async_client.get("/api/v1/addresses", headers=other["headers"])).json()
+    # The other customer has an address of their own — and only that one.
+    assert [row["id"] for row in listed] == [other["address"]["id"]]
+    assert customer["address"]["id"] not in {row["id"] for row in listed}
     stolen = await async_client.delete(
         f"/api/v1/addresses/{customer['address']['id']}", headers=other["headers"]
     )
