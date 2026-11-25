@@ -89,38 +89,6 @@ test.describe('A-16 admin shell separation', () => {
   });
 });
 
-test.describe('P-01 PWA installability', () => {
-  test('manifest declares name, icons, start_url and scope', async ({ request }) => {
-    const response = await request.get('/manifest.webmanifest');
-    expect(response.ok()).toBeTruthy();
-    const manifest = (await response.json()) as {
-      name: string;
-      short_name: string;
-      start_url: string;
-      scope: string;
-      theme_color: string;
-      icons: { sizes: string; purpose?: string; src: string }[];
-    };
-    expect(manifest.name).toBe('Tripat Pansari · MSG Store');
-    expect(manifest.short_name).toBe('MSG');
-    expect(manifest.start_url).toBe('/');
-    expect(manifest.scope).toBe('/');
-    expect(manifest.theme_color.toUpperCase()).toBe('#B91C1C');
-    const sizes = manifest.icons.map((icon) => icon.sizes);
-    expect(sizes).toContain('192x192');
-    expect(sizes).toContain('512x512');
-    expect(manifest.icons.some((icon) => icon.purpose === 'maskable')).toBe(true);
-  });
-
-  test('service worker is served and never caches the API', async ({ request }) => {
-    const sw = await request.get('/sw.js');
-    expect(sw.ok()).toBeTruthy();
-    const body = await sw.text();
-    expect(body).toContain('skipWaiting');
-    expect(body).toMatch(/NetworkOnly/);
-  });
-});
-
 test.describe('S-09 security headers on the app origin', () => {
   test('CSP, HSTS-equivalent and frame protections are present in the built config', async ({
     page,

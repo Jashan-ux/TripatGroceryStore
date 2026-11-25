@@ -9,6 +9,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 const WEB_PORT = Number(process.env.E2E_WEB_PORT ?? 5173);
 const API_PORT = Number(process.env.E2E_API_PORT ?? 8000);
+const PREVIEW_PORT = Number(process.env.E2E_PREVIEW_PORT ?? 4173);
 
 export default defineConfig({
   testDir: './e2e',
@@ -56,6 +57,14 @@ export default defineConfig({
       url: `http://127.0.0.1:${WEB_PORT}`,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
+      env: { VITE_PROXY_API_ORIGIN: `http://127.0.0.1:${API_PORT}` },
+    },
+    {
+      // The manifest and service worker only exist in a production build.
+      command: `npm run build:only && npm run preview -- --port ${PREVIEW_PORT}`,
+      url: `http://127.0.0.1:${PREVIEW_PORT}`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
       env: { VITE_PROXY_API_ORIGIN: `http://127.0.0.1:${API_PORT}` },
     },
   ],
