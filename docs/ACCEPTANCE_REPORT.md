@@ -37,7 +37,7 @@ venv; the `db`-marked tests run in CI, where a Postgres exists.
 | Node dependency audit | `npm audit` | ✅ **0 vulnerabilities** |
 | Secret scan | `gitleaks detect --log-opts=--all` (CI) | ✅ clean across all history |
 | Schema/type sync | `python -m app.scripts.dump_openapi` + `npm run api:types` | ✅ **28 paths, 36 aliases**, no drift (CI diff-gates it) |
-| CI run (Phase 3 head) | [45635579868](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45635579868) | ✅ **5/5 jobs green** — Web (44 tests), API (297 tests incl. all 71 db tests against Postgres), API container, Security, E2E (guest-cart journey included) |
+| CI run (Phase 3 head) | [45636378146](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45636378146) | ✅ **5/5 jobs green** — Web (44 tests), API (298 tests incl. all 72 db tests against Postgres), API container, Security, E2E (guest-cart journey included) |
 | Live schema inventory | SQL via the Supabase connector | ✅ **13 tables** + `alembic_version`, 2 Phase 3 tables (10 + 11 columns), 3 indexes on them, 2 new triggers, 5 enums |
 | Live seed | SQL via the Supabase connector | ✅ 41 categories (10 departments), 30 brands, 70 products (12 unbranded), 44 variants |
 | Live drift check | SQLAlchemy metadata (83 columns) vs `information_schema` | ✅ 83/83 — no missing, no extra column |
