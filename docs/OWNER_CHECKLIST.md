@@ -7,6 +7,25 @@ env values (or paste them into the host's secret store), and I wire it up.
 Legend: ☐ to do · 🔑 needs a secret/env value from you · 🕒 can be done in
 parallel with development.
 
+## 0. Two one-minute actions that unblock hosted checks
+
+Both are needed before the hosted database can be verified from CI (the
+workflow `DB ops · Supabase` uses them):
+
+- ☐ 🔑 **Actions secret `SUPABASE_DB_URL`** — Settings → Secrets and variables →
+  Actions → *Secrets* → New repository secret. Value: the **direct** connection
+  string (port 5432, `postgresql+asyncpg://postgres.<ref>:<password>@...`). An
+  access token with admin rights is required to write secrets; the agent's token
+  can set variables but not secrets (GitHub returns 403).
+- ☐ 🔑 **Actions variable `ADMIN_EMAILS`** — same screen, *Variables* tab.
+  Value: comma-separated owner addresses, e.g.
+  `tripatinsan029@gmail.com,jashaninsan777@gmail.com`.
+
+Once they exist, run **Actions → DB ops · Supabase → Run workflow → verify**.
+It prints the connection target, `alembic current`, the drift check and the
+inventory (rows per table, RLS off count, PostgREST grant count) and fails if
+any of those guards regress.
+
 ## 1. Supabase (database, auth, storage)
 
 - ☐ 🔑 Create **two** projects (or one now, one at staging time):
