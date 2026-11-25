@@ -12,6 +12,7 @@ import io
 from collections.abc import Callable
 from typing import Any
 
+import httpx
 import pytest
 from app.core.errors import ValidationError
 from app.services import uploads
@@ -132,10 +133,44 @@ def test_object_keys_are_unique_and_dated() -> None:
     assert "my-photo" not in first, "the customer's filename must not survive verbatim"
 
 
-async def test_storing_without_storage_configured_says_so_plainly() -> None:
+async def test_storing_without_storage_configured_says_so_plainly(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """No bucket credentials is a clear 503, not a stack trace.
+
+    The settings are forced empty here: whether the *developer's* environment has
+    a Supabase URL must not decide what this test proves.
+    """
+
+    class NoStorage:
+        SUPABASE_URL = ""
+        SUPABASE_SERVICE_ROLE_KEY = ""
+        SUPABASE_STORAGE_BUCKET = "catalog"
+
+    monkeypatch.setattr(uploads, "get_settings", lambda: NoStorage)
     image = uploads.normalise_image(_image_bytes())
     with pytest.raises(Exception) as exc:  # UnavailableError
         await uploads.store_image(image, original_name="a.png")
+    assert getattr(exc.value, "code", None) == "storage_not_configured"
+
+
+async def test_a_broken_upload_is_a_plain_503_not_a_crash(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Configured but unreachable storage is still a readable failure."""
+    monkeypatch.setattr(
+        uploads,
+        "_storage_ready",
+        lambda: ("https://project.supabase.co", "svc-key", "catalog"),
+    )
+
+    class Refusing:
+        async def post(self, *args: Any, **kwargs: Any) -> Any:
+            raise httpx.ConnectError("no route to host")
+
+    image = uploads.normalise_image(_image_bytes())
+    with pytest.raises(Exception) as exc:
+        await uploads.store_image(image, original_name="a.png", client=Refusing())  # type: ignore[arg-type]
     assert getattr(exc.value, "code", None) == "image_upload_unavailable"
 
 

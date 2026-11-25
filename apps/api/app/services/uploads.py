@@ -89,8 +89,8 @@ def normalise_image(raw: bytes) -> NormalisedImage:
 
     # `verify()` leaves the file object unusable, so the real work reopens it.
     try:
-        with Image.open(io.BytesIO(raw)) as image:
-            width, height = image.size
+        with Image.open(io.BytesIO(raw)) as source:
+            width, height = source.size
             if width > MAX_SOURCE_EDGE or height > MAX_SOURCE_EDGE:
                 raise ValidationError(
                     f"Photos must be at most {MAX_SOURCE_EDGE}px on each side.",
@@ -103,7 +103,8 @@ def normalise_image(raw: bytes) -> NormalisedImage:
                     code="image_too_small",
                     details={"width": width, "height": height},
                 )
-            image = image.convert("RGBA" if image.mode in {"RGBA", "LA", "P"} else "RGB")
+            # A copy, so the WebP below carries pixels and nothing else.
+            image = source.convert("RGBA" if source.mode in {"RGBA", "LA", "P"} else "RGB")
             image.thumbnail((OUTPUT_MAX_EDGE, OUTPUT_MAX_EDGE), Image.Resampling.LANCZOS)
             out = io.BytesIO()
             # No `exif`, no `icc_profile`: the re-encode keeps pixels only.

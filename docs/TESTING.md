@@ -15,7 +15,7 @@
 ### Running the database tests on your own machine
 
 `pgserver` gives you a real, throwaway PostgreSQL without Docker. That is how the
-Phase 5 migration (and its `0006` round-trip) and the 170 database-marked tests
+Phase 5 migration (and its `0006` round-trip) and the 171 database-marked tests
 were checked before CI:
 
 ```bash
@@ -38,7 +38,7 @@ done
 export DATABASE_URL="postgresql+asyncpg://postgres@/tripat_test?host=/tmp/pgdata"
 export TEST_DATABASE_URL="$DATABASE_URL"
 alembic upgrade head && alembic downgrade base && alembic upgrade head
-pytest            # 396 passed, 1 skipped
+pytest            # 397 passed, 1 skipped
 ```
 
 One test skips there on purpose: the `anon`-role RLS probe needs Supabase's roles,
@@ -104,7 +104,7 @@ It **refuses to run** when `ENVIRONMENT=production` and prints why.
 |---|---|---|
 | `tests/test_admin_catalogue.py` | 18 | inline add reaches the storefront, slugs stay unique, edit is audited, variants are replaced wholesale, delete vs deactivate, category reassign and nesting, brand guards, listing filters/pages |
 | `tests/test_bulk_import.py` | 10 | all-or-nothing, per-row line numbers, exact rupee→paise, dry run writes nothing, BOM tolerance, header/empty/row-cap refusals, SSRF-filtered image URLs |
-| `tests/test_uploads.py` | 28 | type allowlist, SVG/polyglot/GIF refusal, size and dimension caps, EXIF stripped, unique dated keys, `https`-only remote links, storage-not-configured |
+| `tests/test_uploads.py` | 29 | type allowlist, SVG/polyglot/GIF refusal, size and dimension caps, EXIF stripped, unique dated keys, `https`-only remote links, storage-not-configured |
 | `tests/test_admin_offers_settings_feedback.py` | 19 | tier audience fan-out, public banner, offer href restriction, settings apply to the next checkout, set-level validation, feedback inbox + bell + email, audit trail order and privacy |
 
 The web side adds `ContactPage.test.tsx`, `OfferBanner.test.tsx`,

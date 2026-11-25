@@ -20,7 +20,7 @@ dependencies = [
     # Product images are re-encoded server-side before they are stored: that is
     # what makes a polyglot upload harmless, so it is a runtime dependency, not
     # an optional integration.
-    "pillow==11.0.0",
+    "pillow==13.0.0",
 ]
 
 [project.optional-dependencies]
