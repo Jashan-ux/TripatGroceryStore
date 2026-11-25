@@ -15,7 +15,7 @@
 ### Running the database tests on your own machine
 
 `pgserver` gives you a real, throwaway PostgreSQL without Docker. That is how the
-Phase 5 migration (and its `0006` round-trip) and the 171 database-marked tests
+`0006`/`0007` migrations (round-tripped up/down/up) and the 182 database-marked tests
 were checked before CI:
 
 ```bash
@@ -38,7 +38,7 @@ done
 export DATABASE_URL="postgresql+asyncpg://postgres@/tripat_test?host=/tmp/pgdata"
 export TEST_DATABASE_URL="$DATABASE_URL"
 alembic upgrade head && alembic downgrade base && alembic upgrade head
-pytest            # 397 passed, 1 skipped
+pytest            # 412 passed, 1 skipped
 ```
 
 One test skips there on purpose: the `anon`-role RLS probe needs Supabase's roles,
@@ -106,6 +106,17 @@ It **refuses to run** when `ENVIRONMENT=production` and prints why.
 | `tests/test_bulk_import.py` | 10 | all-or-nothing, per-row line numbers, exact rupee→paise, dry run writes nothing, BOM tolerance, header/empty/row-cap refusals, SSRF-filtered image URLs |
 | `tests/test_uploads.py` | 29 | type allowlist, SVG/polyglot/GIF refusal, size and dimension caps, EXIF stripped, unique dated keys, `https`-only remote links, storage-not-configured |
 | `tests/test_admin_offers_settings_feedback.py` | 19 | tier audience fan-out, public banner, offer href restriction, settings apply to the next checkout, set-level validation, feedback inbox + bell + email, audit trail order and privacy |
+
+## What the rate-limit work added (Phase 5.1)
+
+| File | Tests | What it proves |
+|---|---|---|
+| `tests/test_rate_limit.py` | 15 | window boundaries are clock-aligned so every worker agrees; `Retry-After` wording a person can act on; the sixth message is `429` **and not stored**; `X-RateLimit-*` on success; one caller's exhausted budget leaves the next alone; a new window restores the budget; three wrong referral codes burn three guesses; the upload ceiling trips before storage; switched off means zero rows; an unreachable counter table **fails open**; expired windows are swept while live ones survive |
+
+The part worth reading twice is the pair at the bottom of that table: a limiter is
+a *security* control, but the suite also asserts it can never become an
+*availability* problem, and that turning it off leaves no rows behind for a later
+test to trip over.
 
 The web side adds `ContactPage.test.tsx`, `OfferBanner.test.tsx`,
 `AdminProductsPage.test.tsx`, `AdminSettingsPage.test.tsx` and

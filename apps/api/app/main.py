@@ -51,7 +51,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         version=__version__,
         environment=settings.ENVIRONMENT,
         rate_limiting=settings.RATE_LIMIT_ENABLED,
-        redis=bool(settings.REDIS_URL),
+        rate_limit_window_seconds=settings.RATE_LIMIT_WINDOW_SECONDS,
     )
     started = time.monotonic()
     try:

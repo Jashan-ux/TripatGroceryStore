@@ -10,9 +10,15 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Header, Request, status
+from fastapi import APIRouter, Depends, Header, Request, status
 
-from app.api.deps import CurrentUserDep, OptionalUserDep, SessionDep
+from app.api.deps import (
+    CurrentUserDep,
+    OptionalUserDep,
+    SessionDep,
+    rate_limit_ip,
+    rate_limit_user,
+)
 from app.schemas.orders import OrderIn, OrderOut, QuoteIn, QuoteOut
 from app.services import orders as service
 
@@ -35,6 +41,7 @@ IdempotencyKey = Annotated[
     "/checkout/quote",
     response_model=QuoteOut,
     summary="Price a cart (signed in: also the referral discount and wallet)",
+    dependencies=[Depends(rate_limit_ip("quote"))],
 )
 async def quote_cart(
     session: SessionDep, payload: QuoteIn, user: OptionalUserDep = None
@@ -47,6 +54,9 @@ async def quote_cart(
     response_model=OrderOut,
     status_code=status.HTTP_201_CREATED,
     summary="Place a cash-on-delivery order",
+    # Ten orders an hour per customer: far above what a household does, far below
+    # what a script needs to tie up the kitchen.
+    dependencies=[Depends(rate_limit_user("orders"))],
 )
 async def place_order(
     request: Request,

@@ -150,8 +150,9 @@ tabs, and the storefront has a real **Contact** page.
 - ☐ 🔑 Backend host — pick one: **Render** (recommended: always-on Starter),
   Railway or Fly.io. Create the service from `infra/`, send me the deploy hook URL
   and the service URL.
-- ☐ 🔑 Upstash Redis (free tier is enough) → send `REDIS_URL`. Required in
-  production: in-memory rate limits are per-instance and reset on deploy.
+- ✅ No cache service to buy. Rate limits are counted in your own database, so
+  there is no Upstash/Redis signup and no key to send. (Earlier drafts of this
+  list asked for one; that requirement is gone.)
 
 ## 5. Bot protection (only if we enable Turnstile)
 

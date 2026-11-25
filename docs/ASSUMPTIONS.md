@@ -53,9 +53,11 @@ and why. Each line states the safer option where security was involved.
 12. **Backend host: Render, Starter plan, Singapore/Mumbai region, always-on.**
     Fly.io config included as an alternative (`infra/fly.toml`); Vercel Python
     functions are explicitly *not* used (cold starts, no background work).
-13. **Redis (Upstash)** is mandatory in production; boot fails without it when
-    rate limiting is enabled. Rationale: per-instance memory counters are not a
-    rate limit.
+13. **No cache service.** Rate limits are counted in Postgres
+    (`rate_limit_counters`), so nothing extra has to be bought, and no deploy
+    resets a budget. This replaced an earlier assumption that Upstash Redis was
+    mandatory; requiring a service to *protect* the shop, and refusing to boot
+    without it, was the wrong shape for one merchant with one API container.
 14. **Sentry** is optional (`SENTRY_DSN` empty = disabled) and is configured with
     `send_default_pii=False`, no request bodies and no breadcrumbs.
 15. **Email** is Resend only; every send goes through one service with HTML +

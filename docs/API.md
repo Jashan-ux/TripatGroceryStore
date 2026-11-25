@@ -47,7 +47,7 @@ failures return `code: "validation_error"` with
 | 404 | `not_found`, `order_not_found`, `address_not_found` |
 | 409 | `insufficient_stock`, `minimum_order_not_met`*, `phone_required`, `order_not_cancellable`, `invalid_status_transition`, `already_credited` |
 | 422 | `validation_error` |
-| 429 | `rate_limited` (with `Retry-After`) |
+| 429 | `rate_limited` (with `Retry-After`; `details` = `{scope, limit, retry_after_seconds, window_seconds}`) |
 | 500 | `internal_error` (no stack trace in production) |
 
 ## Endpoint groups (target surface)
@@ -308,6 +308,40 @@ whole group:
 | `GET /admin/feedback?status=new\|read` | The inbox, newest first. |
 | `POST /admin/feedback/{id}/read` | Marks one read (idempotent). |
 | `GET /admin/audit?entity=&page=` | `actor_email`, `action`, `entity`, `entity_id`, `summary`, `before`, `after`, `note`, `created_at` — newest first. |
+
+## Rate limits — what a client sees
+
+Every limited route answers the same way, so a client can throttle itself instead
+of discovering the ceiling by hitting it:
+
+```
+200/201  X-RateLimit-Limit: 5      X-RateLimit-Remaining: 3      X-RateLimit-Reset: 1764118800
+429      Retry-After: 1830
+         {"error": {"code": "rate_limited",
+                    "message": "That's 5 in this window — please try again in 31 minutes.",
+                    "details": {"scope": "feedback", "limit": 5,
+                                "retry_after_seconds": 1830, "window_seconds": 3600},
+                    "request_id": "…"}}
+```
+
+Windows are clock-aligned and shared by every worker, so `X-RateLimit-Reset` is a
+real timestamp, not an estimate. **Failed attempts count**: a wrong referral code
+ends in `404 referral_code_not_found` *and* spends a guess. A refusal happens
+before the handler runs, so a limited request never writes anything.
+
+| Route | Key | Default |
+|---|---|---|
+| `POST /orders` | customer | 10 / hour |
+| `POST /checkout/quote` | address | 240 / hour |
+| `POST /feedback` | address | 5 / hour |
+| `POST /rewards/referral` | customer | 10 / hour |
+| `POST /rewards/scratch-cards/{id}/reveal` | customer | 30 / hour |
+| `POST /admin/catalogue/images` | admin | 60 / hour |
+
+Tuning is configuration, not a deploy: `RATE_LIMIT_*` (see `.env.example`), `0`
+per route to switch one off, `RATE_LIMIT_ENABLED=false` for all of them. The
+counters live in Postgres (`rate_limit_counters`, migration `0007`) — there is no
+Redis to run.
 
 ## Regenerating the typed client
 

@@ -9,9 +9,9 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Path, Query
+from fastapi import APIRouter, Depends, Path, Query
 
-from app.api.deps import CurrentUserDep, SessionDep
+from app.api.deps import CurrentUserDep, SessionDep, rate_limit_user
 from app.schemas.rewards import (
     ReferralJoinIn,
     ReferralProgramOut,
@@ -47,7 +47,14 @@ async def wallet_statement(
     return await wallet_service.statement(session, user.profile, page=page, page_size=page_size)
 
 
-@router.post("/referral", response_model=ReferralProgramOut, summary="Use a friend's code")
+@router.post(
+    "/referral",
+    response_model=ReferralProgramOut,
+    summary="Use a friend's code",
+    # A wrong code counts against the budget, which is the point: codes are short,
+    # so the only real defence against guessing them is that guesses cost time.
+    dependencies=[Depends(rate_limit_user("referral"))],
+)
 async def join_referral(
     user: CurrentUserDep, session: SessionDep, payload: ReferralJoinIn
 ) -> ReferralProgramOut:
@@ -65,6 +72,7 @@ async def list_cards(user: CurrentUserDep, session: SessionDep) -> ScratchCardLi
     "/scratch-cards/{card_id}/reveal",
     response_model=ScratchRevealOut,
     summary="Rub a card off (once)",
+    dependencies=[Depends(rate_limit_user("scratch"))],
 )
 async def reveal_card(
     user: CurrentUserDep, session: SessionDep, card_id: CardId

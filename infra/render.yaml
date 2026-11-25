@@ -23,8 +23,6 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
-      - key: REDIS_URL
-        sync: false
       - key: RESEND_API_KEY
         sync: false
       - key: STORE_MAPS_URL

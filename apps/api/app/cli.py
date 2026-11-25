@@ -32,7 +32,12 @@ async def _doctor() -> int:
     print(f"database         : {'configured' if settings.DATABASE_URL else 'MISSING'}")
     print(f"database direct  : {'configured' if settings.DATABASE_DIRECT_URL else 'fallback'}")
     print(f"supabase url     : {settings.SUPABASE_URL or 'MISSING'}")
-    print(f"rate limiting    : {settings.RATE_LIMIT_ENABLED} (redis={bool(settings.REDIS_URL)})")
+    window = settings.RATE_LIMIT_WINDOW_SECONDS
+    print(
+        f"rate limiting    : {settings.RATE_LIMIT_ENABLED} "
+        f"(window={window}s, feedback={settings.RATE_LIMIT_FEEDBACK}, "
+        f"orders={settings.RATE_LIMIT_ORDERS})"
+    )
     print(f"admin emails     : {len(settings.admin_emails)}")
     if settings.DATABASE_URL:
         ok = await ping_database()

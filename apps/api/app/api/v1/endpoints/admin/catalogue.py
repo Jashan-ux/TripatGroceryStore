@@ -12,9 +12,9 @@ import math
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, File, Path, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Path, Query, UploadFile, status
 
-from app.api.deps import AdminUserDep, SessionDep
+from app.api.deps import AdminUserDep, SessionDep, rate_limit_user
 from app.core.errors import ValidationError
 from app.repositories import admin_tools as repo
 from app.schemas.admin_catalogue import (
@@ -259,6 +259,9 @@ async def delete_brand(
     response_model=ImageOut,
     status_code=status.HTTP_201_CREATED,
     summary="Upload a product photo (validated, re-encoded, then stored)",
+    # Sixty an hour is about two a minute sustained — past that the owner is
+    # bulk-loading a supplier's folder, which belongs in the bulk import instead.
+    dependencies=[Depends(rate_limit_user("uploads"))],
 )
 async def upload_image(
     _: AdminUserDep,

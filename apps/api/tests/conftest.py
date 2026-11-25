@@ -206,6 +206,8 @@ async def _wipe_profiles() -> None:
         await session.execute(text("DELETE FROM feedback"))
         await session.execute(text("DELETE FROM offers"))
         await session.execute(text("DELETE FROM audit_log"))
+        # Rate-limit windows would otherwise leak a budget from one test into the next.
+        await session.execute(text("DELETE FROM rate_limit_counters"))
         await session.execute(text("DELETE FROM orders"))
         await session.execute(text("DELETE FROM addresses"))
         await session.execute(text("DELETE FROM profiles"))

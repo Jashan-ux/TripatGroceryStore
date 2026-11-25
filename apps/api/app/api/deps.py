@@ -11,15 +11,16 @@ fetching a row and comparing afterwards.
 from __future__ import annotations
 
 import uuid
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
 from typing import Annotated
 
-from fastapi import Depends, Request
+from fastapi import Depends, Request, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ForbiddenError
+from app.core.rate_limit import caller_key, enforce, headers_for
 from app.core.security import TokenClaims, verify_token
 from app.db.session import get_session, get_sessionmaker
 from app.models.catalogue import Profile
@@ -145,3 +146,37 @@ async def require_admin(user: CurrentUserDep) -> CurrentUser:
 
 
 AdminUserDep = Annotated[CurrentUser, Depends(require_admin)]
+
+
+# --------------------------------------------------------------------------- #
+# Rate limits
+#
+# Attach one of these to the *route* (``dependencies=[Depends(...)]``), not to the
+# body, so the counter runs before any of the endpoint's own work — including
+# before a validation failure. A wrong referral code has to cost the caller
+# something, which only works if failed attempts are counted.
+#
+# The mechanism lives in ``app.core.rate_limit``; these two wrappers exist because
+# *who* is calling differs: a stranger is identified by address, a customer by
+# their user id (an address is spoofable, a user id is not).
+# --------------------------------------------------------------------------- #
+def rate_limit_ip(scope: str) -> Callable[..., Awaitable[None]]:
+    """Limit a public route per client address."""
+
+    async def dependency(request: Request, response: Response) -> None:
+        decision = await enforce(scope, caller_key(request, prefix="ip"))
+        for header, value in headers_for(decision).items():
+            response.headers[header] = value
+
+    return dependency
+
+
+def rate_limit_user(scope: str) -> Callable[..., Awaitable[None]]:
+    """Limit an authenticated route per customer."""
+
+    async def dependency(request: Request, response: Response, user: CurrentUserDep) -> None:
+        decision = await enforce(scope, f"user:{user.profile.id}")
+        for header, value in headers_for(decision).items():
+            response.headers[header] = value
+
+    return dependency

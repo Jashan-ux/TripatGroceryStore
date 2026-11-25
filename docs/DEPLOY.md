@@ -109,7 +109,6 @@ select tgname from pg_trigger where tgname = 'trg_harden_public_table';
    | `DATABASE_URL` | pooled URL (§1) |
    | `DATABASE_DIRECT_URL` | direct URL (§1) |
    | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | §1 |
-   | `REDIS_URL` | §4 |
    | `RESEND_API_KEY`, `SUPPORT_EMAIL_FROM` | §2 |
    | `STORE_MAPS_URL` | owner-supplied short link |
    | `ADMIN_EMAILS` | owner's login email(s), comma separated |
@@ -128,12 +127,26 @@ select tgname from pg_trigger where tgname = 'trg_harden_public_table';
 
 ---
 
-## 4. Redis (Upstash)
+## 4. Rate limiting (nothing external to buy)
 
-1. <https://console.upstash.com> → **Create database** → region closest to the API
-   (Mumbai/Singapore), TLS enabled.
-2. Copy the **TLS** connection string (`rediss://…`) → `REDIS_URL`.
-3. Production boot fails without it on purpose: in-memory limits are per-instance.
+Limits are counted in Postgres, in the `rate_limit_counters` table created by
+migration `0007`. There is **no Redis/Upstash step**: the only requirement is the
+database you already configured in §1.
+
+Defaults per hour — orders 10 per customer, quote 240 per address, feedback 5 per
+address, referral code 10 per customer, scratch reveal 30 per customer, image
+upload 60 per admin. Tune them with `RATE_LIMIT_*` env vars (`0` switches one
+route off); `RATE_LIMIT_ENABLED=false` turns the whole thing off. Successful
+responses carry `X-RateLimit-*` headers and a refusal carries `Retry-After`, so a
+misconfigured limit is visible in one `curl`:
+
+```bash
+for i in $(seq 1 6); do
+  curl -s -o /dev/null -w '%{http_code} ' -X POST \
+    "https://<api-host>/api/v1/feedback" -H 'content-type: application/json' \
+    -d '{"message":"limit check"}'
+done; echo   # expect 201 201 201 201 201 429
+```
 
 ---
 

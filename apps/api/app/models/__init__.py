@@ -31,6 +31,7 @@ from app.models.enums import (
     WalletReason,
 )
 from app.models.notifications import EmailMessage, Notification
+from app.models.ops import RateLimitCounter
 from app.models.orders import Address, Order, OrderEvent, OrderItem
 from app.models.returns import OrderReturn, ReturnItem
 from app.models.rewards import Referral, ScratchCard, Wallet, WalletEntry
@@ -61,6 +62,7 @@ __all__ = [
     "Product",
     "ProductVariant",
     "Profile",
+    "RateLimitCounter",
     "Referral",
     "ReferralStatus",
     "ReturnItem",

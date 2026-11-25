@@ -57,12 +57,18 @@ class Settings(BaseSettings):
     SUPABASE_JWT_ISSUER: str = ""
     SUPABASE_STORAGE_BUCKET: str = "catalog"
 
-    # --- Redis / rate limiting ---------------------------------------------
-    REDIS_URL: str = ""
+    # --- Rate limiting (counted in Postgres; no cache service to buy) -------
     RATE_LIMIT_ENABLED: bool = True
-    #: slowapi limit strings, overridable per environment.
-    RATE_LIMIT_DEFAULT: str = "120/minute"
-    RATE_LIMIT_AUTHED: str = "240/minute"
+    #: Length of a window, in seconds. Every route shares it, aligned to the clock.
+    RATE_LIMIT_WINDOW_SECONDS: int = Field(default=3600, ge=0, le=86_400)
+    #: Hits allowed per window. 0 disables that one route.
+    RATE_LIMIT_DEFAULT: int = Field(default=120, ge=0, le=100_000)
+    RATE_LIMIT_FEEDBACK: int = Field(default=5, ge=0, le=100_000)
+    RATE_LIMIT_ORDERS: int = Field(default=10, ge=0, le=100_000)
+    RATE_LIMIT_QUOTE: int = Field(default=240, ge=0, le=100_000)
+    RATE_LIMIT_REFERRAL: int = Field(default=10, ge=0, le=100_000)
+    RATE_LIMIT_SCRATCH: int = Field(default=30, ge=0, le=100_000)
+    RATE_LIMIT_UPLOADS: int = Field(default=60, ge=0, le=100_000)
 
     # --- Store / contact (seeded into store_settings, never hard-coded) -----
     STORE_PHONE: str = "+91 87089-73386"
@@ -153,9 +159,9 @@ class Settings(BaseSettings):
                 problems.append("CORS_EXTRA_ORIGINS may not contain '*'")
             if not self.admin_emails:
                 problems.append("ADMIN_EMAILS is required in production")
-            if self.RATE_LIMIT_ENABLED and not self.REDIS_URL:
+            if self.RATE_LIMIT_ENABLED and self.RATE_LIMIT_WINDOW_SECONDS <= 0:
                 problems.append(
-                    "REDIS_URL is required in production: in-memory rate limits are per-instance"
+                    "RATE_LIMIT_WINDOW_SECONDS must be positive when rate limiting is on"
                 )
             if problems:
                 raise ValueError("Invalid production configuration: " + "; ".join(problems))

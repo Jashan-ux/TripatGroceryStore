@@ -52,6 +52,7 @@ class AppError(Exception):
         code: str | None = None,
         status_code: int | None = None,
         details: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None:
         super().__init__(message)
         self.message = message
@@ -60,6 +61,8 @@ class AppError(Exception):
         if status_code is not None:
             self.status_code = status_code
         self.details = details or {}
+        #: Response headers that belong with this failure (`Retry-After` on a 429).
+        self.headers = headers or {}
 
 
 class NotFoundError(AppError):
@@ -136,6 +139,7 @@ def register_error_handlers(app: FastAPI) -> None:
                 details=exc.details,
                 request_id=_request_id(request),
             ),
+            headers=exc.headers or None,
         )
 
     @app.exception_handler(RequestValidationError)

@@ -91,9 +91,53 @@ same transaction — a rolled-back change leaves no audit row, and a no-op edit 
 **Feedback is public.** `POST /api/v1/feedback` needs no token, which is the
 point (a complaint should not require an account). Its abuse surface is bounded
 instead of gated: 5–4000 characters, an enum `kind`, one bell line per owner and
-one email per message with a dedupe key. Rate limiting for this route is still
-**not enabled** (S-06): the limiter exists but the app does not install it, so no
-decorator is claimed here that the runtime would ignore.
+one email per message with a dedupe key, and **5 messages per hour per address**
+(see "Rate limits" below).
+
+## Rate limits (S-06) — enforced, and counted in Postgres
+
+Phase 5 shipped a limiter that existed but was never installed, and whose storage
+was Redis, a service this deployment does not have. Two things were wrong with
+that: a documented control the runtime ignored, and a production boot that would
+have failed without an Upstash URL. Both are gone.
+
+The counter is a table, `rate_limit_counters`, in the database the shop already
+runs. A window is aligned to the clock (`floor(now / window) * window`), so two
+workers in two containers agree on where it starts without talking to each other;
+a hit is one `INSERT … ON CONFLICT DO UPDATE … RETURNING hits`; a refusal reads
+`Retry-After` from the stored `window_end`. Nothing is held in process memory, so
+a redeploy does not reset anybody's budget.
+
+| Route | Key | Default per hour |
+|---|---|---|
+| `POST /api/v1/orders` | customer id | 10 |
+| `POST /api/v1/checkout/quote` | client address | 240 |
+| `POST /api/v1/feedback` | client address | 5 |
+| `POST /api/v1/rewards/referral` | customer id | 10 |
+| `POST /api/v1/rewards/scratch-cards/{id}/reveal` | customer id | 30 |
+| `POST /api/v1/admin/catalogue/images` | admin id | 60 |
+
+Three decisions worth knowing:
+
+* **Failed attempts count.** The counter commits before the route runs, so a
+  wrong referral code costs a guess even though the request ends in a 404. That is
+  the entire defence for short codes: guessing must cost time.
+* **It fails open.** If the counter table is unreachable the request is allowed
+  and a `rate_limit_unavailable` warning is logged. A limiter that takes the shop
+  down when its own bookkeeping hiccups is worse than no limiter, and every route
+  behind it is authorised and validated anyway.
+* **Per-address keys are best effort behind a proxy.** `request.client` comes from
+  `X-Forwarded-For` (uvicorn `--proxy-headers`), and a spoofer can mint a fresh
+  bucket. That is why the authenticated routes key on the user id instead. Signup
+  and login brute force is Supabase Auth's own limiter, not this one.
+
+Every refusal is the single error shape with `code: "rate_limited"`, plus
+`details.{scope, limit, retry_after_seconds, window_seconds}` and a `Retry-After`
+header; successful responses carry `X-RateLimit-Limit`, `X-RateLimit-Remaining`
+and `X-RateLimit-Reset` so a client can slow itself down before it is refused.
+Client addresses are stored **hashed** and swept an hour after their window
+closes, so the table is not a durable visitor log. All of it is tunable from
+config (`RATE_LIMIT_*`); `0` switches a single route off.
 
 ## Threat notes
 

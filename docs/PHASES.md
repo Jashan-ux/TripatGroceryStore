@@ -11,6 +11,7 @@ status board; `docs/ACCEPTANCE_REPORT.md` carries the scenario-level evidence.
 | 3 | Admin orders, notifications (in-app, email, red dot), per-order delivery days, customer cancel | ✅ **done** — order queue + transitions (Phase 2), then bell, email outbox, red dots and per-order delivery days; `0004` applied live |
 | 4 | Wallet, referrals, scratch cards, returns, loyalty badges | ✅ **done** — wallet ledger + checkout spend, referral programme, server-side scratch cards, two-step returns (approve → received → credit), loyalty tiers; `0005` applied live, rewards hub and admin returns queue shipped |
 | 5 | Admin catalogue tools (inline add, bulk add, categories, brands), offers, settings, feedback | ✅ **done** — `0006` applied live (22 tables, 264/264 columns, digest `999d3e5e…2458`); 76 new API tests and 19 new web tests green |
+| 5.1 | Hardening: rate limits that actually run (order, feedback, code guessing, uploads) | ✅ **done** — `0007` applied live (23 tables, 268/268 columns, digest `e1e60b83…a0bc97c3`); replaces the un-installed slowapi shell and removes the Redis requirement |
 | 6 | Analytics with drill-downs, customer profiles | ⬜ |
 | 7 | PWA polish: install prompt, web push, offline, Lighthouse | ⬜ |
 | 8 | Security hardening, full acceptance run, deploy, DEPLOY.md, ACCEPTANCE_REPORT.md | ⬜ |
@@ -36,7 +37,8 @@ status board; `docs/ACCEPTANCE_REPORT.md` carries the scenario-level evidence.
 - Alembic baseline: extensions, `set_updated_at()`, and a **DDL event trigger**
   that enables RLS and revokes `anon`/`authenticated` grants on every new public
   table — the Supabase REST API is dark by construction.
-- Rate-limit scaffolding with a Redis-backed store and user-or-IP keys.
+- Rate-limit scaffolding (replaced in 5.1 by a Postgres-backed limiter that the
+  app actually installs — see below).
 - Non-root slim Dockerfile with a healthcheck; `/docs`-free production schema.
 
 **Frontend (`apps/web`)**

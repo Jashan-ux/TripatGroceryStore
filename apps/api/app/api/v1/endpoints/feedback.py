@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 
-from app.api.deps import OptionalSessionDep, OptionalUserDep
+from app.api.deps import OptionalSessionDep, OptionalUserDep, rate_limit_ip
 from app.core.errors import UnavailableError
 from app.schemas.admin_ops import FeedbackIn, FeedbackOut
 from app.services import feedback as service
@@ -18,6 +18,9 @@ router = APIRouter(prefix="/feedback", tags=["feedback"])
     response_model=FeedbackOut,
     status_code=status.HTTP_201_CREATED,
     summary="Send the shop a message",
+    # Five messages an hour from one address: a person writes once or twice, so
+    # the ceiling only ever catches a script.
+    dependencies=[Depends(rate_limit_ip("feedback"))],
 )
 async def send_feedback(
     payload: FeedbackIn,
@@ -32,8 +35,3 @@ async def send_feedback(
     )
     await session.commit()
     return row
-
-
-# Rate limiting is not applied here yet: the limiter exists in ``app.core.rate_limit``
-# but the app does not install it (see docs/ACCEPTANCE_REPORT.md, S-06). Wiring a
-# decorator that the app never enforces would be a promise the code cannot keep.
