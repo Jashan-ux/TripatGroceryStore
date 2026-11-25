@@ -6,6 +6,7 @@ import { BrandMark, Wordmark } from '@/components/common/BrandMark';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/features/auth/useAuth';
+import { useCart } from '@/features/cart/useCart';
 import { t } from '@/i18n';
 
 /**
@@ -17,6 +18,7 @@ export function SiteHeader() {
   const navigate = useNavigate();
   const [term, setTerm] = useState('');
   const { status, profile } = useAuth();
+  const { itemCount } = useCart();
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
@@ -57,8 +59,16 @@ export function SiteHeader() {
             aria-label={t('nav.cart')}
             className="hidden sm:inline-flex"
           >
-            <Link to="/cart">
+            <Link to="/cart" className="relative">
               <ShoppingCart aria-hidden="true" />
+              {itemCount > 0 && (
+                <span
+                  className="absolute -right-1 -top-1 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] font-bold leading-4 text-primary-foreground"
+                  aria-hidden="true"
+                >
+                  {itemCount > 99 ? '99+' : itemCount}
+                </span>
+              )}
             </Link>
           </Button>
           <Button asChild variant="ghost" size="icon" aria-label={t('nav.menu')}>

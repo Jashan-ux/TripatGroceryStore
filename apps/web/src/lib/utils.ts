@@ -37,6 +37,20 @@ export function formatIst(
   return new Intl.DateTimeFormat('en-IN', { ...options, timeZone: 'Asia/Kolkata' }).format(date);
 }
 
+/**
+ * Format a *date-only* string (`2026-11-26`, as the API sends `deliver_by`)
+ * without timezone drift: parse it as noon UTC so no offset can move the day.
+ */
+export function formatDateOnly(
+  iso: string,
+  options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' },
+): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!match) return formatIst(iso, options);
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12));
+  return new Intl.DateTimeFormat('en-IN', { ...options, timeZone: 'Asia/Kolkata' }).format(date);
+}
+
 /** Tel-safe href: "+91 87089-73386" → "tel:+918708973386". */
 export function toTelHref(phone: string): string {
   return `tel:${phone.replace(/[^\d+]/g, '')}`;

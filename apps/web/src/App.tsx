@@ -24,6 +24,11 @@ const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
 const SignInPage = lazy(() => import('@/pages/auth/SignInPage'));
 const SignUpPage = lazy(() => import('@/pages/auth/SignUpPage'));
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
+// Cart and orders are their own chunks: browsing never pays for checkout.
+const CartPage = lazy(() => import('@/pages/CartPage'));
+const CheckoutPage = lazy(() => import('@/pages/CheckoutPage'));
+const OrdersPage = lazy(() => import('@/pages/OrdersPage'));
+const OrderDetailPage = lazy(() => import('@/pages/OrderDetailPage'));
 
 /** One suspension boundary for every lazily-loaded route. */
 function deferred(node: ReactNode) {
@@ -103,8 +108,19 @@ export default function App() {
         <Route path="sign-in" element={deferred(<SignInPage />)} />
         <Route path="sign-up" element={deferred(<SignUpPage />)} />
         <Route path="forgot-password" element={deferred(<ForgotPasswordPage />)} />
-        <Route path="cart" element={<ComingSoonPage titleKey="nav.cart" />} />
-        <Route path="orders" element={<ComingSoonPage titleKey="nav.orders" />} />
+        <Route path="cart" element={deferred(<CartPage />)} />
+        <Route
+          path="checkout"
+          element={<ProtectedRoute>{deferred(<CheckoutPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="orders"
+          element={<ProtectedRoute>{deferred(<OrdersPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="orders/:orderId"
+          element={<ProtectedRoute>{deferred(<OrderDetailPage />)}</ProtectedRoute>}
+        />
         <Route
           path="profile"
           element={<ProtectedRoute>{deferred(<ProfilePage />)}</ProtectedRoute>}

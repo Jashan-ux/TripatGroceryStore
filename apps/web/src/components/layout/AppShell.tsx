@@ -2,10 +2,12 @@ import { Outlet, useLocation } from 'react-router-dom';
 
 import { OfflineBanner } from '@/components/common/OfflineBanner';
 import { UpdatePrompt } from '@/components/common/UpdatePrompt';
+import { CartBar } from '@/components/cart/CartBar';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { PhonePrompt } from '@/features/auth/PhonePrompt';
+import { CartProvider } from '@/features/cart/CartProvider';
 import { t } from '@/i18n';
 import { cn } from '@/lib/utils';
 
@@ -21,24 +23,29 @@ export function AppShell() {
   const location = useLocation();
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
-      >
-        {t('nav.skipToContent')}
-      </a>
-      <UpdatePrompt />
-      <OfflineBanner />
-      <SiteHeader />
-      <main id="main" tabIndex={-1} className={cn('flex-1 outline-none')}>
-        <div key={location.pathname} className="animate-none">
-          <Outlet />
-        </div>
-      </main>
-      <SiteFooter />
-      <BottomNav />
-      <PhonePrompt />
-    </div>
+    // The cart is guest state kept on the device, so it lives in the shell and
+    // survives navigation (and reloads) without a server round trip.
+    <CartProvider>
+      <div className="flex min-h-dvh flex-col">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+        >
+          {t('nav.skipToContent')}
+        </a>
+        <UpdatePrompt />
+        <OfflineBanner />
+        <SiteHeader />
+        <main id="main" tabIndex={-1} className={cn('flex-1 outline-none')}>
+          <div key={location.pathname} className="animate-none">
+            <Outlet />
+          </div>
+        </main>
+        <SiteFooter />
+        <CartBar />
+        <BottomNav />
+        <PhonePrompt />
+      </div>
+    </CartProvider>
   );
 }

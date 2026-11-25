@@ -1,6 +1,7 @@
 import { Home, LayoutGrid, ReceiptText, ShoppingBag, User } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
+import { useCart } from '@/features/cart/useCart';
 import { t } from '@/i18n';
 import { cn } from '@/lib/utils';
 
@@ -18,6 +19,8 @@ const items = [
  * bar can never cover content or the footer.
  */
 export function BottomNav() {
+  const { itemCount } = useCart();
+
   return (
     <nav
       aria-label={t('nav.primary')}
@@ -39,8 +42,27 @@ export function BottomNav() {
             >
               {({ isActive }) => (
                 <>
-                  <Icon className="size-5" aria-hidden="true" strokeWidth={isActive ? 2.4 : 1.9} />
-                  <span>{t(labelKey)}</span>
+                  <span className="relative">
+                    <Icon
+                      className="size-5"
+                      aria-hidden="true"
+                      strokeWidth={isActive ? 2.4 : 1.9}
+                    />
+                    {to === '/cart' && itemCount > 0 && (
+                      <span
+                        className="absolute -right-2 -top-1.5 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] font-bold leading-4 text-primary-foreground"
+                        aria-hidden="true"
+                      >
+                        {itemCount > 99 ? '99+' : itemCount}
+                      </span>
+                    )}
+                  </span>
+                  <span>
+                    {t(labelKey)}
+                    {to === '/cart' && itemCount > 0 && (
+                      <span className="sr-only">, {itemCount} items</span>
+                    )}
+                  </span>
                 </>
               )}
             </NavLink>

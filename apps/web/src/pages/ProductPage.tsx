@@ -3,6 +3,7 @@ import { Check, ChevronLeft, Phone, ShieldCheck, Star, Truck } from 'lucide-reac
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import { AddToCart } from '@/components/cart/AddToCart';
 import { CallStoreButton } from '@/components/common/CallStoreButton';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ProductThumb } from '@/components/catalogue/ProductCard';
@@ -16,10 +17,8 @@ import { cn, discountPercent, formatPaise } from '@/lib/utils';
 /**
  * Product detail.
  *
- * Phase 1 ships browsing only, so the primary action is the one that works
- * today: calling the store. There is deliberately no cart button until the cart
- * and checkout services exist (Phase 2) — a button that does nothing would be a
- * worse experience than no button.
+ * Adding to the cart is the primary action; calling the store stays available as
+ * the secondary one for shoppers who would rather ask first.
  */
 export default function ProductPage() {
   const { slug } = useParams();
@@ -176,7 +175,27 @@ export default function ProductPage() {
               </fieldset>
             )}
 
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <div className="mt-4">
+              <AddToCart
+                size="md"
+                className="w-full"
+                label="Add to cart"
+                disabledReason={stock === 0 ? 'Out of stock' : undefined}
+                line={{
+                  productId: item.id,
+                  variantId: selectedVariant?.id ?? null,
+                  slug: item.slug,
+                  name: item.name,
+                  unitLabel: item.unit_label,
+                  variantLabel: selectedVariant?.label ?? '',
+                  imageUrl: item.image_url ?? null,
+                  pricePaise,
+                  maxQuantity: stock,
+                }}
+              />
+            </div>
+
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
               <CallStoreButton className="sm:flex-1" />
               {config.data?.store_maps_url && (
                 <a
@@ -190,7 +209,7 @@ export default function ProductPage() {
               )}
             </div>
             <p className="mt-2 text-center text-xs text-muted-foreground">
-              Ordering online — with cash on delivery — opens in the next release.
+              Cash on delivery · no delivery charge. Prefer to talk? Call the store.
             </p>
           </div>
 

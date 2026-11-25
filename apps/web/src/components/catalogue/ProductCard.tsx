@@ -11,7 +11,9 @@ import type { ProductCardOut } from '@tripat/api-client';
 import { Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { AddToCart } from '@/components/cart/AddToCart';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { cn, discountPercent, formatPaise } from '@/lib/utils';
 
 /** Brand-tinted tile derived from the product name, used when there is no photo. */
@@ -143,6 +145,31 @@ export function ProductCard({
             {product.has_variants && <span aria-hidden="true">· sizes</span>}
           </span>
           {lowStock && <Badge tone="warning">Only {product.stock} left</Badge>}
+        </div>
+
+        {/* A product with sizes cannot be added blind: send the shopper to pick one. */}
+        <div className="pt-1.5">
+          {product.has_variants ? (
+            <Button asChild variant="outline" size="sm" className="w-full">
+              <Link to={`/products/${product.slug}`}>Choose size</Link>
+            </Button>
+          ) : (
+            <AddToCart
+              className="w-full"
+              disabledReason={soldOut ? 'Out of stock' : undefined}
+              line={{
+                productId: product.id,
+                variantId: null,
+                slug: product.slug,
+                name: product.name,
+                unitLabel: product.unit_label,
+                variantLabel: '',
+                imageUrl: product.image_url ?? null,
+                pricePaise: product.price_paise,
+                maxQuantity: product.stock,
+              }}
+            />
+          )}
         </div>
       </div>
     </article>
