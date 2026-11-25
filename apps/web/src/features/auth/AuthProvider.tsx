@@ -23,8 +23,9 @@ import { AuthContext, PROFILE_QUERY_KEY, type AuthContextValue, type AuthStatus 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const configQuery = useStoreConfig();
-  const [session, setSession] = useState<Session | null>(null);
-  const [status, setStatus] = useState<AuthStatus>('loading');
+  // `undefined` = not read yet, `null` = signed out. Status is derived from this
+  // rather than stored, so an effect never has to write state synchronously.
+  const [session, setSession] = useState<Session | null | undefined>(undefined);
 
   const supabaseConfig = useMemo(
     () =>
@@ -56,19 +57,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [client]);
 
   useEffect(() => {
-    if (!client) {
-      setStatus('anonymous');
-      return;
-    }
+    if (!client) return;
     let active = true;
     void client.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      setSession(data.session);
-      setStatus(data.session ? 'authenticated' : 'anonymous');
+      if (active) setSession(data.session);
     });
     const { data: subscription } = client.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession);
-      setStatus(nextSession ? 'authenticated' : 'anonymous');
       if (event === 'SIGNED_OUT') {
         queryClient.removeQueries({ queryKey: PROFILE_QUERY_KEY });
       }
@@ -78,6 +73,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.subscription.unsubscribe();
     };
   }, [client, queryClient]);
+
+  const status: AuthStatus = !authAvailable
+    ? configQuery.isPending
+      ? 'loading'
+      : 'anonymous'
+    : session === undefined
+      ? 'loading'
+      : session
+        ? 'authenticated'
+        : 'anonymous';
 
   const profileQuery = useQuery<ProfileOut, ApiError>({
     queryKey: [...PROFILE_QUERY_KEY, session?.user.id],
@@ -152,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       status,
-      session,
+      session: session ?? null,
       user: session?.user ?? null,
       profile: profileQuery.data ?? null,
       isAdmin: profileQuery.data?.role === 'admin',

@@ -330,7 +330,9 @@ export interface components {
             /** Code */
             code: string;
             /** Details */
-            details?: Record<string, never>;
+            details?: {
+                [key: string]: unknown;
+            };
             /** Message */
             message: string;
             /** Request Id */
@@ -548,7 +550,9 @@ export interface components {
             /** Name */
             name: string;
             /** Notification Prefs */
-            notification_prefs?: Record<string, never>;
+            notification_prefs?: {
+                [key: string]: unknown;
+            };
             /** Phone */
             phone?: string | null;
             /** Referral Code */

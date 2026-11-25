@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, type ReactNode } from 'react';
 import { Link, Route, Routes } from 'react-router-dom';
 
 import { AppShell } from '@/components/layout/AppShell';
@@ -11,17 +11,24 @@ import ComingSoonPage from '@/pages/ComingSoonPage';
 import HomePage from '@/pages/HomePage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import ProductPage from '@/pages/ProductPage';
-import ProfilePage from '@/pages/ProfilePage';
 import SearchPage from '@/pages/SearchPage';
-import AuthCallbackPage from '@/pages/auth/AuthCallbackPage';
-import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
-import SignInPage from '@/pages/auth/SignInPage';
-import SignUpPage from '@/pages/auth/SignUpPage';
 import { ProtectedRoute } from '@/routes/ProtectedRoute';
 
-// Admin code is a separate chunk: `React.lazy` + a dynamic import means the
-// customer bundle never contains admin modules.
+// Browsing (home, categories, search, product) ships in the first load; admin,
+// account and auth screens are separate chunks. Auth pages carry the form and
+// validation libraries, so keeping them out of the entry chunk is what keeps the
+// initial budget honest.
 const AdminRoutes = lazy(() => import('@/admin/AdminRoutes'));
+const AuthCallbackPage = lazy(() => import('@/pages/auth/AuthCallbackPage'));
+const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'));
+const SignInPage = lazy(() => import('@/pages/auth/SignInPage'));
+const SignUpPage = lazy(() => import('@/pages/auth/SignUpPage'));
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
+
+/** One suspension boundary for every lazily-loaded route. */
+function deferred(node: ReactNode) {
+  return <Suspense fallback={<RouteFallback />}>{node}</Suspense>;
+}
 
 /** `/categories` is a real index of every department, not a placeholder. */
 function CategoryIndexPage() {
@@ -86,25 +93,21 @@ export default function App() {
           </Suspense>
         }
       />
-      <Route path="/auth/callback" element={<AuthCallbackPage />} />
+      <Route path="/auth/callback" element={deferred(<AuthCallbackPage />)} />
       <Route element={<AppShell />}>
         <Route index element={<HomePage />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="categories" element={<CategoryIndexPage />} />
         <Route path="categories/:slug" element={<CategoryPage />} />
         <Route path="products/:slug" element={<ProductPage />} />
-        <Route path="sign-in" element={<SignInPage />} />
-        <Route path="sign-up" element={<SignUpPage />} />
-        <Route path="forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="sign-in" element={deferred(<SignInPage />)} />
+        <Route path="sign-up" element={deferred(<SignUpPage />)} />
+        <Route path="forgot-password" element={deferred(<ForgotPasswordPage />)} />
         <Route path="cart" element={<ComingSoonPage titleKey="nav.cart" />} />
         <Route path="orders" element={<ComingSoonPage titleKey="nav.orders" />} />
         <Route
           path="profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
+          element={<ProtectedRoute>{deferred(<ProfilePage />)}</ProtectedRoute>}
         />
         <Route path="notifications" element={<ComingSoonPage titleKey="nav.notifications" />} />
         <Route path="menu" element={<ComingSoonPage titleKey="nav.menu" />} />

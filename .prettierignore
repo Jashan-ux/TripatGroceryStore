@@ -6,3 +6,6 @@ test-results
 packages/api-client/generated
 apps/web/dev-dist
 docs
+# Generated or data files: the API exports them, Prettier must not rewrite them.
+packages/api-client/openapi.json
+apps/api/seeds/catalogue.json

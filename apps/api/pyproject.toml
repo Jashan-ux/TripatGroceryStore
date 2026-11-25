@@ -4,19 +4,19 @@ version = "0.1.0"
 description = "Tripat Pansari · MSG Store — FastAPI backend"
 requires-python = ">=3.11,<3.13"
 dependencies = [
-    "fastapi==0.115.6",
-    "uvicorn[standard]==0.32.1",
-    "pydantic==2.10.4",
-    "pydantic-settings==2.7.1",
+    "fastapi==0.165.0",
+    "uvicorn[standard]==0.54.0",
+    "pydantic==2.14.4",
+    "pydantic-settings==2.16.3",
     "sqlalchemy[asyncio]==2.0.36",
     "asyncpg==0.30.0",
     "alembic==1.14.0",
     "httpx==0.28.1",
-    "pyjwt[crypto]==2.10.1",
+    "pyjwt[crypto]==2.15.1",
     "structlog==24.4.0",
     "slowapi==0.1.9",
     "redis==5.2.1",
-    "python-multipart==0.0.20",
+    "python-multipart==0.0.34",
 ]
 
 [project.optional-dependencies]
@@ -29,11 +29,11 @@ integrations = [
     "pillow==11.0.0",
 ]
 dev = [
-    "pytest==8.3.4",
-    "pytest-asyncio==0.25.0",
-    "pytest-cov==6.0.0",
-    "ruff==0.8.4",
-    "mypy==1.13.0",
+    "pytest==9.2.0",
+    "pytest-asyncio==1.5.0",
+    "pytest-cov==7.1.0",
+    "ruff==0.17.6",
+    "mypy==2.4.1",
     "types-redis==4.6.0.20241004",
 ]
 

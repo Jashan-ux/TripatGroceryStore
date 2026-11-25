@@ -126,14 +126,20 @@ export default defineConfig({
     reportCompressedSize: true,
     rollupOptions: {
       output: {
+        // Only what the first paint needs may live in a chunk the entry
+        // preloads. Form/validation code is reachable from the lazy auth pages
+        // and Supabase from the sign-in client, so they get their own chunks and
+        // load when a route actually asks for them.
         manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react-router')) return 'router';
-            if (id.includes('@tanstack')) return 'query';
-            if (id.includes('lucide-react')) return 'icons';
-            return 'vendor';
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('react-router')) return 'router';
+          if (id.includes('@tanstack')) return 'query';
+          if (id.includes('lucide-react')) return 'icons';
+          if (id.includes('zod') || id.includes('react-hook-form') || id.includes('@hookform')) {
+            return 'forms';
           }
-          return undefined;
+          if (id.includes('@supabase')) return 'supabase';
+          return 'vendor';
         },
       },
     },

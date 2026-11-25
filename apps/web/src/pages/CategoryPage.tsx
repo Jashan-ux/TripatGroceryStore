@@ -1,6 +1,8 @@
 import { PackageSearch } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+
+import type { CategoryTreeOut } from '@tripat/api-client';
 
 import { CallStoreButton } from '@/components/common/CallStoreButton';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -14,6 +16,24 @@ import { cn } from '@/lib/utils';
 const PAGE_SIZE = 24;
 
 /**
+ * Find a category by slug, whether it is a department or a department's child.
+ * Cheap enough to run per render (one pass over ~40 rows) and it keeps the
+ * component free of memoisation the React compiler would have to unpick.
+ */
+function findCategory(
+  tree: CategoryTreeOut[] | undefined,
+  slug: string,
+): CategoryTreeOut | undefined {
+  for (const parent of tree ?? []) {
+    const children = parent.children ?? [];
+    if (parent.slug === slug) return { ...parent, children };
+    const child = children.find((entry) => entry.slug === slug);
+    if (child) return { ...child, children: [] };
+  }
+  return undefined;
+}
+
+/**
  * Category listing. URL parameters are the state (`?sort=&page=`), so a shared
  * link reproduces exactly what the sender saw and back/forward behaves.
  */
@@ -25,15 +45,7 @@ export default function CategoryPage() {
   const inStockOnly = params.get('in_stock') === 'true';
 
   const categories = useCategories();
-  const category = useMemo(() => {
-    for (const parent of categories.data ?? []) {
-      const children = parent.children ?? [];
-      if (parent.slug === slug) return { ...parent, children };
-      const child = children.find((entry) => entry.slug === slug);
-      if (child) return { ...child, children: [] };
-    }
-    return undefined;
-  }, [categories.data, slug]);
+  const category = findCategory(categories.data, slug);
 
   usePageTitle(category ? undefined : 'nav.category', category?.name);
 
@@ -75,7 +87,9 @@ export default function CategoryPage() {
           <p className="mt-1 text-sm text-muted-foreground">{category.description}</p>
         )}
         <p className="mt-1 text-sm text-muted-foreground" aria-live="polite">
-          {products.data ? `${products.data.total} product${products.data.total === 1 ? '' : 's'}` : 'Loading…'}
+          {products.data
+            ? `${products.data.total} product${products.data.total === 1 ? '' : 's'}`
+            : 'Loading…'}
         </p>
       </header>
 

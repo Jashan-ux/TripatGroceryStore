@@ -85,7 +85,7 @@ class ValidationError(AppError):
         {"error": {"code": "invalid_phone", "details": {"field": "phone"}}}
     """
 
-    status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+    status_code = status.HTTP_422_UNPROCESSABLE_CONTENT
     code = "validation_error"
 
 
@@ -151,7 +151,7 @@ def register_error_handlers(app: FastAPI) -> None:
                 }
             )
         return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             content=error_body(
                 code="validation_error",
                 message="Some fields need fixing.",

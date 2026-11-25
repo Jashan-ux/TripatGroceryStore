@@ -354,7 +354,7 @@ def upgrade() -> None:
         sa.CheckConstraint("minimum_order_paise >= 0", name="minimum_order_non_negative"),
         sa.CheckConstraint("scratch_min_paise <= scratch_max_paise", name="scratch_range_ordered"),
         sa.CheckConstraint(
-            "tier_gold_paise < tier_platinum_paise " "AND tier_platinum_paise < tier_diamond_paise",
+            "tier_gold_paise < tier_platinum_paise AND tier_platinum_paise < tier_diamond_paise",
             name="tiers_ordered",
         ),
         sa.CheckConstraint("default_delivery_days >= 0", name="delivery_days_non_negative"),

@@ -86,7 +86,7 @@ function parseError(status: number, payload: unknown): ApiError {
       status,
       error.code ?? 'error',
       error.message ?? 'Something went wrong.',
-      (error.details as Record<string, unknown>) ?? {},
+      error.details ?? {},
       error.request_id ?? null,
     );
   }

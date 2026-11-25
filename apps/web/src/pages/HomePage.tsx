@@ -61,7 +61,11 @@ export default function HomePage() {
             <div className="flex flex-wrap items-center gap-2">
               <CallStoreButton className="border-transparent bg-white text-primary-800 hover:bg-primary-50" />
               {config.data?.store_maps_url ? (
-                <Button asChild variant="ghost" className="text-white hover:bg-white/15 hover:text-white">
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="text-white hover:bg-white/15 hover:text-white"
+                >
                   <a href={config.data.store_maps_url} target="_blank" rel="noreferrer noopener">
                     <MapPin aria-hidden="true" />
                     Open in Maps
@@ -81,9 +85,13 @@ export default function HomePage() {
             {t('footer.openNow')}
           </span>
           {health.data ? (
-            <span>{health.data.status === 'ok' ? 'Store online' : 'Store partially available'}</span>
+            <span>
+              {health.data.status === 'ok' ? 'Store online' : 'Store partially available'}
+            </span>
           ) : null}
-          {config.data ? <span className="hidden sm:inline">{config.data.store_address}</span> : null}
+          {config.data ? (
+            <span className="hidden sm:inline">{config.data.store_address}</span>
+          ) : null}
         </div>
       </section>
 

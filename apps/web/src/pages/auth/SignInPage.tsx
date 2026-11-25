@@ -36,7 +36,7 @@ export default function SignInPage() {
     setServerError(null);
     try {
       await signInWithPassword(values.email.trim().toLowerCase(), values.password);
-      navigate(next, { replace: true });
+      void navigate(next, { replace: true });
     } catch (error) {
       setServerError(authErrorMessage(error, 'We could not sign you in. Please try again.'));
     }
@@ -92,7 +92,9 @@ export default function SignInPage() {
             {...form.register('password')}
           />
           {form.formState.errors.password && (
-            <p className="mt-1 text-xs text-primary-700">{form.formState.errors.password.message}</p>
+            <p className="mt-1 text-xs text-primary-700">
+              {form.formState.errors.password.message}
+            </p>
           )}
         </div>
 

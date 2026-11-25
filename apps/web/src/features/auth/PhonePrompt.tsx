@@ -1,5 +1,5 @@
 import { PhoneCall } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -20,20 +20,19 @@ export function PhonePrompt() {
   const [dismissed, setDismissed] = useState(() =>
     typeof sessionStorage === 'undefined' ? false : sessionStorage.getItem(DISMISS_KEY) === '1',
   );
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    setOpen(status === 'authenticated' && needsPhone && !dismissed);
-  }, [status, needsPhone, dismissed]);
+  // Derived, never mirrored in an effect: the prompt is open exactly when the
+  // customer is signed in, has no number, and has not waved it away.
+  const [openOverride, setOpenOverride] = useState(false);
+  const open = openOverride || (status === 'authenticated' && needsPhone && !dismissed);
 
   const dismiss = () => {
     sessionStorage.setItem(DISMISS_KEY, '1');
     setDismissed(true);
-    setOpen(false);
+    setOpenOverride(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={(next) => (next ? setOpen(true) : dismiss())}>
+    <Dialog open={open} onOpenChange={(next) => (next ? setOpenOverride(true) : dismiss())}>
       <DialogContent>
         <PhoneCall className="mb-2 size-8 text-primary" aria-hidden="true" />
         <DialogTitle>Add your mobile number</DialogTitle>
@@ -45,8 +44,8 @@ export function PhonePrompt() {
           <Button
             className="sm:flex-1"
             onClick={() => {
-              setOpen(false);
-              navigate('/profile#phone');
+              setOpenOverride(false);
+              void navigate('/profile#phone');
             }}
           >
             Add number

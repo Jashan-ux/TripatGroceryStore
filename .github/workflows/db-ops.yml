@@ -22,12 +22,12 @@ on:
         required: true
         default: verify
         options:
-          - verify        # alembic check + inventory (read-only)
-          - migrate       # alembic upgrade head
-          - stamp         # alembic stamp head (schema applied outside Alembic)
-          - seed          # catalogue seed (idempotent)
-          - admins        # grant admin to ADMIN_EMAILS profiles
-          - migrate-seed  # migrate then seed
+          - verify # alembic check + inventory (read-only)
+          - migrate # alembic upgrade head
+          - stamp # alembic stamp head (schema applied outside Alembic)
+          - seed # catalogue seed (idempotent)
+          - admins # grant admin to ADMIN_EMAILS profiles
+          - migrate-seed # migrate then seed
   push:
     branches: [main]
     paths:
@@ -75,11 +75,8 @@ jobs:
           fi
 
       - name: Show connection target (no password)
-        run: python - <<'PY'
-          import os, urllib.parse
-          url = urllib.parse.urlparse(os.environ["DATABASE_URL"])
-          print(f"host={url.hostname} port={url.port} db={url.path.lstrip('/')} user={url.username}")
-      PY
+        working-directory: apps/api
+        run: python -m app.scripts.db_target
 
       - name: Alembic current
         working-directory: apps/api
@@ -90,33 +87,7 @@ jobs:
         working-directory: apps/api
         run: |
           alembic check || echo "::warning::alembic check reported drift — review the diff above"
-          python - <<'PY'
-          import asyncio
-          from sqlalchemy import text
-          from app.db.session import dispose_engine, get_sessionmaker
-
-          async def main() -> None:
-              async with get_sessionmaker()() as session:
-                  for label, sql in {
-                      "categories": "select count(*) from public.categories",
-                      "brands": "select count(*) from public.brands",
-                      "products": "select count(*) from public.products where is_active",
-                      "variants": "select count(*) from public.product_variants",
-                      "rls_off": (
-                          "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace "
-                          "where n.nspname='public' and c.relkind='r' and not c.relrowsecurity"
-                      ),
-                      "api_grants": (
-                          "select count(*) from information_schema.role_table_grants "
-                          "where table_schema='public' and grantee in ('anon','authenticated')"
-                      ),
-                  }.items():
-                      value = await session.scalar(text(sql))
-                      print(f"{label:12s} {value}")
-              await dispose_engine()
-
-          asyncio.run(main())
-          PY
+          python -m app.scripts.db_inventory
 
       - name: Migrate
         if: ${{ github.event.inputs.task == 'migrate' || github.event.inputs.task == 'migrate-seed' }}

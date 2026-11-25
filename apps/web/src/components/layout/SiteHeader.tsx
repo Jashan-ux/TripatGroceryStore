@@ -41,7 +41,9 @@ export function SiteHeader() {
             asChild
             variant="ghost"
             size="icon"
-            aria-label={status === 'authenticated' ? `${profile?.name || 'My account'}` : t('nav.profile')}
+            aria-label={
+              status === 'authenticated' ? `${profile?.name || 'My account'}` : t('nav.profile')
+            }
           >
             <Link to={status === 'authenticated' ? '/profile' : '/sign-in'}>
               <User aria-hidden="true" />
@@ -74,7 +76,7 @@ export function SiteHeader() {
           onSubmit={(event) => {
             event.preventDefault();
             const query = term.trim();
-            navigate(query ? `/search?q=${encodeURIComponent(query)}` : '/search');
+            void navigate(query ? `/search?q=${encodeURIComponent(query)}` : '/search');
           }}
         >
           <label htmlFor="store-search" className="sr-only">

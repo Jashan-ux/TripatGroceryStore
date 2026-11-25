@@ -76,7 +76,9 @@ def create_app() -> FastAPI:
     )
 
     # Middleware (last added = outermost).
-    app.add_middleware(SecurityHeadersMiddleware)
+    # Starlette 1.10 types `add_middleware` as a factory of ASGI callables and
+    # does not accept BaseHTTPMiddleware subclasses that override `__init__`.
+    app.add_middleware(SecurityHeadersMiddleware)  # type: ignore[arg-type]
     app.add_middleware(RequestContextMiddleware)
     if not settings.is_production or settings.CORS_EXTRA_ORIGINS:
         app.add_middleware(

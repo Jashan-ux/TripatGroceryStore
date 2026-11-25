@@ -300,7 +300,7 @@ ON CONFLICT (slug) DO UPDATE
                 f"""
 INSERT INTO public.categories (slug, name, sort_order, description, parent_id, is_active)
 VALUES ({_quote(child_slug)}, {_quote(child_name)}, {child_order},
-        {_quote(child_name + ' at MSG Store')},
+        {_quote(child_name + " at MSG Store")},
         (SELECT id FROM public.categories WHERE slug = {_quote(category.slug)}), true)
 ON CONFLICT (slug) DO UPDATE
    SET name = EXCLUDED.name, sort_order = EXCLUDED.sort_order,

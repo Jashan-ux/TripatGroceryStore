@@ -26,7 +26,10 @@ const phoneSchema = z.object({
     .string()
     .trim()
     .min(10, 'Enter a 10-digit mobile number')
-    .regex(/^(\+?91[\s-]?)?[6-9]\d{9}$|^0?[6-9]\d{9}$/, 'That does not look like an Indian mobile number'),
+    .regex(
+      /^(\+?91[\s-]?)?[6-9]\d{9}$|^0?[6-9]\d{9}$/,
+      'That does not look like an Indian mobile number',
+    ),
 });
 type PhoneValues = z.infer<typeof phoneSchema>;
 
@@ -116,7 +119,9 @@ export default function ProfilePage() {
           <UserRound className="size-6" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-lg font-extrabold tracking-tight">{profile.name || 'Your account'}</h1>
+          <h1 className="truncate text-lg font-extrabold tracking-tight">
+            {profile.name || 'Your account'}
+          </h1>
           <p className="truncate text-sm text-muted-foreground">{profile.email}</p>
         </div>
         <BadgeCheck className="size-5 text-success" aria-label="Account verified" />
@@ -125,7 +130,9 @@ export default function ProfilePage() {
       <section className="grid gap-3 sm:grid-cols-3" aria-label="Account summary">
         <div className="rounded-xl border border-border bg-card p-3">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Tier</p>
-          <p className="mt-1 text-base font-bold">{TIER_LABELS[profile.loyalty_tier] ?? 'Member'}</p>
+          <p className="mt-1 text-base font-bold">
+            {TIER_LABELS[profile.loyalty_tier] ?? 'Member'}
+          </p>
         </div>
         <div className="rounded-xl border border-border bg-card p-3">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Lifetime spend</p>
@@ -166,7 +173,9 @@ export default function ProfilePage() {
               {...phoneForm.register('phone')}
             />
             {phoneForm.formState.errors.phone && (
-              <p className="mt-1 text-xs text-primary-700">{phoneForm.formState.errors.phone.message}</p>
+              <p className="mt-1 text-xs text-primary-700">
+                {phoneForm.formState.errors.phone.message}
+              </p>
             )}
           </div>
           <Button type="submit" disabled={updatePhone.isPending}>
@@ -195,7 +204,9 @@ export default function ProfilePage() {
               {...nameForm.register('name')}
             />
             {nameForm.formState.errors.name && (
-              <p className="mt-1 text-xs text-primary-700">{nameForm.formState.errors.name.message}</p>
+              <p className="mt-1 text-xs text-primary-700">
+                {nameForm.formState.errors.name.message}
+              </p>
             )}
           </div>
           <Button type="submit" variant="outline" disabled={updateName.isPending}>

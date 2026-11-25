@@ -16,7 +16,10 @@ import { cn, discountPercent, formatPaise } from '@/lib/utils';
 
 /** Brand-tinted tile derived from the product name, used when there is no photo. */
 function monogram(name: string): { initials: string; tone: string } {
-  const words = name.replace(/[^A-Za-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean);
+  const words = name
+    .replace(/[^A-Za-z0-9 ]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
   const initials = words
     .slice(0, 2)
     .map((word) => word[0]?.toUpperCase() ?? '')
@@ -72,7 +75,13 @@ export function ProductThumb({
   );
 }
 
-export function ProductCard({ product, priority = false }: { product: ProductCardOut; priority?: boolean }) {
+export function ProductCard({
+  product,
+  priority = false,
+}: {
+  product: ProductCardOut;
+  priority?: boolean;
+}) {
   const off = product.discount_percent || discountPercent(product.mrp_paise, product.price_paise);
   const soldOut = !product.in_stock;
   const lowStock = product.in_stock && product.stock <= 5;
@@ -117,7 +126,9 @@ export function ProductCard({ product, priority = false }: { product: ProductCar
         <p className="text-xs text-muted-foreground">{product.unit_label}</p>
 
         <div className="mt-auto flex flex-wrap items-baseline gap-x-2 pt-1">
-          <span className="text-base font-bold text-foreground">{formatPaise(product.price_paise)}</span>
+          <span className="text-base font-bold text-foreground">
+            {formatPaise(product.price_paise)}
+          </span>
           {product.mrp_paise > product.price_paise && (
             <span className="text-xs text-muted-foreground line-through">
               {formatPaise(product.mrp_paise)}

@@ -14,11 +14,11 @@ python -m app.scripts.seed --print-sql  > seeds/catalogue.sql    # readable SQL 
 
 ## Apply
 
-| Target | Command |
-| --- | --- |
-| Local / CI / anywhere with a DB URL | `python -m app.scripts.seed` |
-| Hosted Supabase, SQL only | run `load_catalogue.sql` in the SQL editor or the connector |
-| Owner laptop | `python -m app.scripts.seed --with-users` (also creates staging logins) |
+| Target                              | Command                                                                 |
+| ----------------------------------- | ----------------------------------------------------------------------- |
+| Local / CI / anywhere with a DB URL | `python -m app.scripts.seed`                                            |
+| Hosted Supabase, SQL only           | run `load_catalogue.sql` in the SQL editor or the connector             |
+| Owner laptop                        | `python -m app.scripts.seed --with-users` (also creates staging logins) |
 
 Both paths are idempotent: rows are keyed on `slug` (and `(product_id, label)` for
 variants), so re-running updates prices and stock instead of duplicating them.

@@ -202,6 +202,7 @@
             "type": "string"
           },
           "details": {
+            "additionalProperties": true,
             "title": "Details",
             "type": "object"
           },
@@ -736,6 +737,7 @@
             "type": "string"
           },
           "notification_prefs": {
+            "additionalProperties": true,
             "title": "Notification Prefs",
             "type": "object"
           },

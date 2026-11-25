@@ -9,21 +9,21 @@ from __future__ import annotations
 import enum
 
 
-class UserRole(str, enum.Enum):
+class UserRole(enum.StrEnum):
     customer = "customer"
     admin = "admin"
     #: Reserved for a later delivery-person view. No code path assigns it yet.
     delivery = "delivery"
 
 
-class LoyaltyTier(str, enum.Enum):
+class LoyaltyTier(enum.StrEnum):
     none = "none"
     gold = "gold"
     platinum = "platinum"
     diamond = "diamond"
 
 
-class OrderStatus(str, enum.Enum):
+class OrderStatus(enum.StrEnum):
     processing = "processing"
     shipped = "shipped"
     out_for_delivery = "out_for_delivery"
@@ -32,23 +32,23 @@ class OrderStatus(str, enum.Enum):
     returned = "returned"
 
 
-class PaymentMethod(str, enum.Enum):
+class PaymentMethod(enum.StrEnum):
     cod = "cod"
 
 
-class PaymentStatus(str, enum.Enum):
+class PaymentStatus(enum.StrEnum):
     pending = "pending"
     paid = "paid"
 
 
-class ReturnStatus(str, enum.Enum):
+class ReturnStatus(enum.StrEnum):
     requested = "requested"
     approved = "approved"
     rejected = "rejected"
     received_credited = "received_credited"
 
 
-class ScratchCardStatus(str, enum.Enum):
+class ScratchCardStatus(enum.StrEnum):
     locked = "locked"
     ready = "ready"
     revealed = "revealed"
@@ -56,7 +56,7 @@ class ScratchCardStatus(str, enum.Enum):
     void = "void"
 
 
-class OfferAudience(str, enum.Enum):
+class OfferAudience(enum.StrEnum):
     all = "all"
     gold = "gold"
     platinum = "platinum"

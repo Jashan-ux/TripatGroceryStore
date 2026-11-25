@@ -48,7 +48,9 @@ export default function SignUpPage() {
       );
       setDone(result);
     } catch (error) {
-      setServerError(authErrorMessage(error, 'We could not create your account. Please try again.'));
+      setServerError(
+        authErrorMessage(error, 'We could not create your account. Please try again.'),
+      );
     }
   });
 
@@ -65,7 +67,9 @@ export default function SignUpPage() {
             : 'Your account is ready.'}
         </p>
         <Button asChild className="mt-6 w-full" size="lg">
-          <Link to={next ?? '/profile'}>{done.needsEmailConfirmation ? 'Go to profile' : 'Continue'}</Link>
+          <Link to={next ?? '/profile'}>
+            {done.needsEmailConfirmation ? 'Go to profile' : 'Continue'}
+          </Link>
         </Button>
       </div>
     );
