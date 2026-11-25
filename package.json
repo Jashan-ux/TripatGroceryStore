@@ -1,0 +1,28 @@
+{
+  "name": "tripat-msgstore",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Tripat Pansari · MSG Store — storefront and admin PWA plus FastAPI backend",
+  "workspaces": [
+    "apps/web",
+    "packages/api-client"
+  ],
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace @tripat/web",
+    "build": "npm run build --workspace @tripat/web",
+    "preview": "npm run preview --workspace @tripat/web",
+    "lint": "npm run lint --workspace @tripat/web",
+    "typecheck": "npm run typecheck --workspace @tripat/web && npm run typecheck --workspace @tripat/api-client",
+    "test": "npm run test --workspace @tripat/web",
+    "test:e2e": "npm run test:e2e --workspace @tripat/web",
+    "api:types": "node packages/api-client/scripts/generate.mjs",
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,css,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,css,md,yml,yaml}\""
+  },
+  "devDependencies": {
+    "prettier": "3.3.3"
+  }
+}
