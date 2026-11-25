@@ -26,22 +26,22 @@ venv; the `db`-marked tests run in CI, where a Postgres exists.
 |---|---|---|
 | API lint + format | `cd apps/api && ruff check . && ruff format --check .` | ✅ clean (69 files formatted) |
 | API types | `cd apps/api && mypy app` | ✅ `no issues found in 55 source files` |
-| API tests (local) | `cd apps/api && pytest` | ✅ **226 passed, 54 skipped** — the 54 are the `db` tests, which skip without `TEST_DATABASE_URL` |
-| API tests (CI, real Postgres) | CI job *API · lint, types, tests* | ✅ **280 tests** (226 + 54 db) after `alembic upgrade head` → `downgrade base` → `upgrade head`; the db set is 16 Phase 1 + 25 Phase 2 + 13 admin-order tests |
+| API tests (local, no database) | `cd apps/api && pytest` | ✅ **226 passed, 67 skipped** — the 67 are the `db` tests, which skip without `TEST_DATABASE_URL` |
+| API tests (real Postgres) | CI job *API · lint, types, tests*, and locally against PostgreSQL 16 | ✅ **293 tests collected** (226 + 67 db): 292 passed, 1 skipped (the `anon`-role RLS probe needs Supabase's roles). The db set is 16 Phase 1 + 25 Phase 2 + 13 admin-order + 13 Phase 3 notification/outbox tests, run after `alembic upgrade head` → `downgrade base` → `upgrade head` — all three steps verified against real Postgres 16 before merging |
 | Python dependency audit | `pip-audit --skip-editable` | ✅ `No known vulnerabilities found` |
 | Web types | `npm run typecheck` | ✅ clean (web + api-client) |
 | Web lint | `npm run lint` | ✅ clean, `--max-warnings 0` |
-| Web unit tests | `npm test` | ✅ `5 files, 40 tests passed` (cart reducer/storage 13, cart page 5) |
+| Web unit tests | `npm test` | ✅ `6 files, 44 tests passed` (cart reducer/storage 13, cart page 5, notifications page 4) |
 | Production build | `npm run build` | ✅ SW + manifest, 37 precache entries; cart/checkout/orders are separate lazy chunks |
-| Bundle budget (P‑01) | `node apps/web/scripts/check-bundle-size.mjs` | ✅ **179.5 KB / 200 KB** gzip initial JS |
+| Bundle budget (P‑01) | `node apps/web/scripts/check-bundle-size.mjs` | ✅ **180.0 KB / 200 KB** gzip initial JS |
 | Node dependency audit | `npm audit` | ✅ **0 vulnerabilities** |
 | Secret scan | `gitleaks detect --log-opts=--all` (CI) | ✅ clean across all history |
-| Schema/type sync | `python -m app.scripts.dump_openapi` + `npm run api:types` | ✅ **23 paths, 31 aliases**, no drift (CI diff-gates it) |
-| CI run (Phase 2 head) | [45620329190](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45620329190) | ✅ **5/5 jobs green** — Web, API (280 tests incl. all 54 db tests against Postgres), API container, Security, E2E (guest-cart journey included) |
-| Live schema inventory | SQL via the Supabase connector | ✅ **11 tables** + `alembic_version`, 58 Phase 2 columns, 11 indexes on the new tables, 2 new triggers, 3 enums |
+| Schema/type sync | `python -m app.scripts.dump_openapi` + `npm run api:types` | ✅ **27 paths, 35 aliases**, no drift (CI diff-gates it) |
+| CI run (Phase 3 head) | [45634273933](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45634273933) | ✅ **5/5 jobs green** — Web (44 tests), API (293 tests incl. all 67 db tests against Postgres), API container, Security, E2E (guest-cart journey included) |
+| Live schema inventory | SQL via the Supabase connector | ✅ **13 tables** + `alembic_version`, 2 Phase 3 tables (10 + 11 columns), 3 indexes on them, 2 new triggers, 5 enums |
 | Live seed | SQL via the Supabase connector | ✅ 41 categories (10 departments), 30 brands, 70 products (12 unbranded), 44 variants |
 | Live drift check | SQLAlchemy metadata (83 columns) vs `information_schema` | ✅ 83/83 — no missing, no extra column |
-| Live security posture | SQL via the Supabase connector | ✅ RLS on **11/11** tables (4/4 new), 0 grants to `anon`/`authenticated`, `alembic_version` = **`0003_orders_and_addresses`** |
+| Live security posture | SQL via the Supabase connector | ✅ RLS on **13/13** tables (2/2 new), 0 grants to `anon`/`authenticated`, `alembic_version` = **`0004_notifications_and_email`** |
 
 ### Two things this sandbox cannot prove, and how they are covered
 

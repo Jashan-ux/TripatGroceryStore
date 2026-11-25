@@ -12,6 +12,37 @@
 | Secrets | gitleaks (pre-commit + CI) | local, CI | `gitleaks detect --config .gitleaks.toml` |
 | Supply chain | `pip-audit`, `npm audit --audit-level=high` | CI | see `ci.yml` |
 
+### Running the database tests on your own machine
+
+`pgserver` gives you a real, throwaway PostgreSQL without Docker. That is how the
+Phase 3 migration and the 67 database tests were checked before CI:
+
+```bash
+cd apps/api && pip install pgserver
+
+# 1. start a server in /tmp/pgdata and create the test database once
+python -c "import pathlib,pgserver; pathlib.Path('/tmp/pgdata').mkdir(exist_ok=True); \
+pgserver.get_server('/tmp/pgdata', cleanup_mode=None).psql('CREATE DATABASE tripat_test OWNER postgres;')"
+
+# 2. the bundled server ships without contrib; the migrations need pg_trgm and
+#    unaccent, so build them from the matching Postgres source (REL_16_2 here)
+PG_CONFIG=$(python -c "import os,pgserver;print(os.path.join(os.path.dirname(pgserver.__file__),'pginstall/bin/pg_config'))")
+curl -sL https://codeload.github.com/postgres/postgres/tar.gz/refs/tags/REL_16_2 | tar xz
+for ext in pg_trgm unaccent; do
+  (cd "postgres-REL_16_2/contrib/$ext" && make USE_PGXS=1 PG_CONFIG="$PG_CONFIG" && \
+   make USE_PGXS=1 PG_CONFIG="$PG_CONFIG" install)
+done
+
+# 3. migrate both ways, then run everything
+export DATABASE_URL="postgresql+asyncpg://postgres@/tripat_test?host=/tmp/pgdata"
+export TEST_DATABASE_URL="$DATABASE_URL"
+alembic upgrade head && alembic downgrade base && alembic upgrade head
+pytest            # 292 passed, 1 skipped
+```
+
+One test skips there on purpose: the `anon`-role RLS probe needs Supabase's roles,
+so it only runs against a Supabase database.
+
 ## Honest skipping
 
 Tests that need infrastructure are **skipped with a reason**, never silently
