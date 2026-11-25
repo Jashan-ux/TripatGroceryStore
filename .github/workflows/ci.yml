@@ -72,9 +72,21 @@ jobs:
           DATABASE_DIRECT_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/tripat_test
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/tripat_test
         run: |
-          alembic upgrade head
-          alembic downgrade base
-          alembic upgrade head
+          # Surface the actual database error: log archives are not always
+          # downloadable, annotations always are.
+          step() {
+            if "$@" > /tmp/alembic.txt 2>&1; then
+              echo "ok: $*"
+            else
+              tail -25 /tmp/alembic.txt | while IFS= read -r line; do
+                echo "::error title=alembic $*::$line"
+              done
+              return 1
+            fi
+          }
+          step alembic upgrade head
+          step alembic downgrade base
+          step alembic upgrade head
       - name: Pytest
         working-directory: apps/api
         env:

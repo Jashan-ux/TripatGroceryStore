@@ -24,6 +24,12 @@ regexes = [
   '''re_test''',
 ]
 
+# jwt.io's published sample token is used in a logging test to prove that
+# scrubbing works. It is not a credential; the rule stays on everywhere else.
+[[allowlists]]
+description = "Public jwt.io sample token used by the log-scrubbing test"
+paths = ['''apps/api/tests/test_logging[.]py$''']
+
 [[rules]]
 id = "supabase-service-role-key"
 description = "Supabase service-role JWT must never be committed"
