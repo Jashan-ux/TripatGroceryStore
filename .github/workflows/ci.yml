@@ -192,10 +192,24 @@ jobs:
           curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
             | tar -xz -C /usr/local/bin gitleaks
           gitleaks version
+          set +e
           gitleaks detect --source . --config .gitleaks.toml --redact --no-banner \
             --report-format json --report-path gitleaks-report.json --exit-code 1 \
             --log-opts="--all"
-        continue-on-error: false
+          status=$?
+          if [ "$status" -ne 0 ] && [ -s gitleaks-report.json ]; then
+            python - <<'PY'
+          import json
+
+          for finding in json.load(open("gitleaks-report.json")):
+              print(
+                  "::error title=gitleaks::"
+                  f"{finding['RuleID']} in {finding['File']}:{finding['StartLine']} "
+                  f"- {finding.get('Description', '')}"
+              )
+          PY
+          fi
+          exit "$status"
       - uses: actions/setup-python@v5.3.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
