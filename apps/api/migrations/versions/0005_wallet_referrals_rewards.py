@@ -431,8 +431,7 @@ def upgrade() -> None:
         "- discount_paise - wallet_paise)"
     )
     op.execute(
-        "ALTER TABLE orders ADD CONSTRAINT ck_orders_wallet_non_negative "
-        "CHECK (wallet_paise >= 0)"
+        "ALTER TABLE orders ADD CONSTRAINT ck_orders_wallet_non_negative CHECK (wallet_paise >= 0)"
     )
     op.execute(
         "ALTER TABLE orders ADD CONSTRAINT ck_orders_wallet_within_order CHECK ("

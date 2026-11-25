@@ -1,5 +1,6 @@
 import { AdminLayout } from '@/admin/AdminLayout';
 import { AdminOrdersPage } from '@/admin/AdminOrdersPage';
+import { AdminReturnsPage } from '@/admin/AdminReturnsPage';
 import { AdminSectionPage } from '@/admin/AdminSectionPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import { Route, Routes } from 'react-router-dom';
@@ -28,6 +29,7 @@ export default function AdminRoutes() {
           }
         />
         <Route path="orders" element={<AdminOrdersPage />} />
+        <Route path="returns" element={<AdminReturnsPage />} />
         <Route
           path="products"
           element={

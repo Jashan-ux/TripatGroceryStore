@@ -1,7 +1,7 @@
 import type { ProfileOut } from '@tripat/api-client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { BadgeCheck, Copy, LogOut, Phone, Settings, UserRound } from 'lucide-react';
+import { BadgeCheck, Copy, LogOut, Phone, Settings, Trophy, UserRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useLocation } from 'react-router-dom';
@@ -237,6 +237,13 @@ export default function ProfilePage() {
           </Button>
         </div>
       </section>
+
+      <Button asChild variant="outline" className="w-full">
+        <Link to="/rewards">
+          <Trophy aria-hidden="true" />
+          Wallet, cards and returns
+        </Link>
+      </Button>
 
       <div className="flex flex-col gap-2 pt-1 sm:flex-row">
         {isAdmin && (

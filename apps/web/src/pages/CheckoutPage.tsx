@@ -25,6 +25,13 @@ import { ApiError, api } from '@/lib/api';
 import { cn, formatPaise } from '@/lib/utils';
 
 /**
+ * Ask the quote to use no more than this: the server clamps to the balance *and*
+ * to what is payable, so one request answers "is there wallet money here?" and
+ * "what would it cover?" without a second endpoint.
+ */
+const MAX_WALLET_ASK = 1_00_00_000;
+
+/**
  * Checkout.
  *
  * Order of operations mirrors the API: pick an address → quote that pincode →
@@ -51,6 +58,7 @@ export default function CheckoutPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [phoneDraft, setPhoneDraft] = useState('');
   const [orderError, setOrderError] = useState<ApiError | null>(null);
+  const [useWallet, setUseWallet] = useState(false);
 
   const savedAddresses = addresses.data ?? [];
   const selected =
@@ -63,14 +71,20 @@ export default function CheckoutPage() {
   // One key per attempt: a double tap or a reconnect retry replays the first
   // order instead of charging for a second one.
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
-  // Any change to the address (the only thing that can change the payload while
-  // this page is open) starts a new attempt with a fresh key.
+  // The payload can change while this page is open — a different address, or the
+  // wallet switched on — so each of those starts a new attempt with a fresh key.
+  const newAttempt = () => setIdempotencyKey(crypto.randomUUID());
   const chooseAddress = (id: string | null) => {
     setSelectedId(id);
-    setIdempotencyKey(crypto.randomUUID());
+    newAttempt();
   };
 
-  const quote = useQuote(items, selected?.pincode);
+  // Ask for the wallet *first* (with a big number the server clamps), because the
+  // balance decides whether the switch is even offered.
+  const preview = useQuote(items, selected?.pincode, MAX_WALLET_ASK);
+  const balance = preview.data?.wallet_available_paise ?? 0;
+  const walletAsk = useWallet ? balance : 0;
+  const quote = useQuote(items, selected?.pincode, walletAsk);
 
   const savePhone = useMutation<ProfileOut, ApiError, string>({
     mutationFn: (phone) => api.post<ProfileOut>('/api/v1/me/phone', { phone }),
@@ -124,7 +138,13 @@ export default function CheckoutPage() {
     if (!selected) return;
     setOrderError(null);
     placeOrder.mutate(
-      { addressId: selected.id, idempotencyKey, customerNote: note, items },
+      {
+        addressId: selected.id,
+        idempotencyKey,
+        customerNote: note,
+        items,
+        useWalletPaise: useWallet ? balance : 0,
+      },
       {
         onSuccess: (order) => {
           cart.clear();
@@ -369,6 +389,8 @@ export default function CheckoutPage() {
                 subtotalPaise={quote.data.subtotal_paise}
                 deliveryFeePaise={quote.data.delivery_fee_paise}
                 discountPaise={quote.data.discount_paise}
+                discountReason={quote.data.discount_reason}
+                walletPaise={quote.data.wallet_applied_paise}
                 totalPaise={quote.data.total_paise}
                 itemCount={quote.data.item_count}
               />
@@ -394,6 +416,30 @@ export default function CheckoutPage() {
                 {issue.message}
               </p>
             ))}
+
+            {balance > 0 && (
+              <div className="mt-3 flex items-start gap-2 rounded-lg bg-muted/60 p-2.5 text-sm">
+                <input
+                  id="use-wallet"
+                  type="checkbox"
+                  className="mt-0.5 size-4 accent-primary"
+                  checked={useWallet}
+                  onChange={(event) => {
+                    setUseWallet(event.target.checked);
+                    newAttempt();
+                  }}
+                  aria-describedby="wallet-help"
+                />
+                <label htmlFor="use-wallet">
+                  <span className="font-semibold">Use {formatPaise(balance)} from your wallet</span>
+                  <span id="wallet-help" className="block text-xs text-muted-foreground">
+                    {useWallet && quote.data
+                      ? `${formatPaise(quote.data.wallet_applied_paise)} applied · ${formatPaise(quote.data.total_paise)} left to pay in person.`
+                      : 'Applies to this order; the rest is cash on delivery.'}
+                  </span>
+                </label>
+              </div>
+            )}
 
             {quote.data?.can_checkout && (
               <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -432,7 +478,9 @@ export default function CheckoutPage() {
                 : 'Place order'}
           </Button>
           <p className="text-center text-xs text-muted-foreground">
-            You pay {quote.data ? formatPaise(quote.data.total_paise) : '—'} in cash on delivery.
+            {quote.data && quote.data.total_paise === 0
+              ? 'Your wallet covers this order — nothing to pay on delivery.'
+              : `You pay ${quote.data ? formatPaise(quote.data.total_paise) : '—'} in cash on delivery.`}{' '}
             You can cancel until the order is out for delivery.
           </p>
         </aside>

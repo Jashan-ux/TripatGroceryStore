@@ -28,6 +28,7 @@ const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 const CartPage = lazy(() => import('@/pages/CartPage'));
 const CheckoutPage = lazy(() => import('@/pages/CheckoutPage'));
 const NotificationsPage = lazy(() => import('@/pages/NotificationsPage'));
+const RewardsPage = lazy(() => import('@/pages/RewardsPage'));
 const OrdersPage = lazy(() => import('@/pages/OrdersPage'));
 const OrderDetailPage = lazy(() => import('@/pages/OrderDetailPage'));
 
@@ -131,7 +132,10 @@ export default function App() {
           element={<ProtectedRoute>{deferred(<NotificationsPage />)}</ProtectedRoute>}
         />
         <Route path="menu" element={<ComingSoonPage titleKey="nav.menu" />} />
-        <Route path="rewards" element={<ComingSoonPage titleKey="footer.rewards" />} />
+        <Route
+          path="rewards"
+          element={<ProtectedRoute>{deferred(<RewardsPage />)}</ProtectedRoute>}
+        />
         <Route path="contact" element={<ComingSoonPage titleKey="footer.contactUs" />} />
         <Route path="policies/privacy" element={<ComingSoonPage titleKey="footer.privacy" />} />
         <Route path="policies/terms" element={<ComingSoonPage titleKey="footer.terms" />} />

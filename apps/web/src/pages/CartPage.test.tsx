@@ -90,6 +90,10 @@ function quote(overrides: Partial<QuoteOut> = {}): QuoteOut {
     subtotal_paise: 10500,
     delivery_fee_paise: 0,
     discount_paise: 0,
+    discount_reason: '',
+    wallet_available_paise: 0,
+    wallet_applied_paise: 0,
+    payable_before_wallet_paise: 10500,
     total_paise: 10500,
     item_count: 3,
     minimum_order_paise: 50000,
@@ -169,6 +173,8 @@ describe('cart page', () => {
           },
         ],
         pincode: null,
+        // The cart never spends the wallet; checkout is where that choice lives.
+        use_wallet_paise: 0,
       });
     });
   });

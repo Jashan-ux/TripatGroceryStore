@@ -85,6 +85,7 @@ export const en = {
     orders: 'Orders',
     products: 'Products',
     customers: 'Customers',
+    returns: 'Returns',
     offers: 'Offers',
     categories: 'Categories',
     settings: 'Settings',

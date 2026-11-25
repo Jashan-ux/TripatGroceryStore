@@ -6,6 +6,7 @@ import { ProductThumb } from '@/components/catalogue/ProductCard';
 import { EmptyState } from '@/components/common/EmptyState';
 import { OrderTotals } from '@/components/orders/OrderTotals';
 import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
+import { ReturnPanel } from '@/components/orders/ReturnPanel';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCancelOrder, useOrder } from '@/features/orders/queries';
@@ -154,6 +155,8 @@ export default function OrderDetailPage() {
                 subtotalPaise={data.subtotal_paise}
                 deliveryFeePaise={data.delivery_fee_paise}
                 discountPaise={data.discount_paise}
+                discountReason={data.discount_reason}
+                walletPaise={data.wallet_paise}
                 totalPaise={data.total_paise}
                 itemCount={data.item_count}
               />
@@ -231,6 +234,8 @@ export default function OrderDetailPage() {
               {data.payment_status === 'paid' ? 'paid' : 'to be paid on delivery'}
             </p>
           </section>
+
+          <ReturnPanel order={data} />
 
           {cancellable && (
             <section className="rounded-xl border border-border bg-card p-4">
