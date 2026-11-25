@@ -11,6 +11,7 @@ fetching a row and comparing afterwards.
 from __future__ import annotations
 
 import uuid
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from typing import Annotated
 
@@ -20,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ForbiddenError
 from app.core.security import TokenClaims, verify_token
-from app.db.session import get_session
+from app.db.session import get_session, get_sessionmaker
 from app.models.catalogue import Profile
 from app.models.enums import UserRole
 from app.repositories.profiles import get_profile
@@ -32,6 +33,25 @@ bearer_scheme = HTTPBearer(
 )
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
+
+
+async def get_optional_session() -> AsyncIterator[AsyncSession | None]:
+    """A session, or ``None`` when no database is configured.
+
+    Used by endpoints that must answer even on a cold, unconfigured instance
+    (``/config``, health). Everything that reads or writes real data uses the
+    required ``SessionDep`` and fails closed.
+    """
+    try:
+        sessionmaker = get_sessionmaker()
+    except RuntimeError:
+        yield None
+        return
+    async with sessionmaker() as session:
+        yield session
+
+
+OptionalSessionDep = Annotated[AsyncSession | None, Depends(get_optional_session)]
 
 
 async def get_token_claims(

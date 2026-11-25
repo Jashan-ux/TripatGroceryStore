@@ -87,8 +87,12 @@ async def home_rails(
 ) -> list[tuple[Category, list[Product]]]:
     """Top-level categories that actually have products, each with a short rail."""
     nodes = await category_tree(session)
-    ids = [node.category.id for node in nodes]
-    grouped = await repo.products_for_categories(session, ids, per_category=per_category)
+    # A department rail includes everything filed under its subcategories.
+    groups = {
+        node.category.id: [node.category.id, *(child.id for child in node.children)]
+        for node in nodes
+    }
+    grouped = await repo.products_for_categories(session, groups, per_category=per_category)
     return [
         (node.category, grouped.get(node.category.id, []))
         for node in nodes

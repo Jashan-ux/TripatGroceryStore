@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     CheckConstraint,
     ForeignKey,
@@ -20,6 +21,9 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
     text,
+)
+from sqlalchemy import (
+    Enum as SAEnum,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
@@ -41,16 +45,26 @@ class Profile(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(120), nullable=False, server_default="")
     email: Mapped[str] = mapped_column(String(320), nullable=False)
     phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    # The PostgreSQL type is `user_role` (created by the migration); without the
+    # explicit name SQLAlchemy would look for `userrole`.
     role: Mapped[UserRole] = mapped_column(
-        nullable=False, server_default=text("'customer'::user_role")
+        SAEnum(UserRole, name="user_role", values_callable=lambda enum: [m.value for m in enum]),
+        nullable=False,
+        server_default=text("'customer'::user_role"),
     )
     referral_code: Mapped[str] = mapped_column(String(12), nullable=False)
     referred_by: Mapped[uuid.UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("profiles.id", ondelete="SET NULL"), nullable=True
     )
-    lifetime_spend_paise: Mapped[int] = mapped_column(nullable=False, server_default=text("0"))
+    lifetime_spend_paise: Mapped[int] = mapped_column(
+        BigInteger, nullable=False, server_default=text("0")
+    )
     loyalty_tier: Mapped[LoyaltyTier] = mapped_column(
-        nullable=False, server_default=text("'none'::loyalty_tier")
+        SAEnum(
+            LoyaltyTier, name="loyalty_tier", values_callable=lambda enum: [m.value for m in enum]
+        ),
+        nullable=False,
+        server_default=text("'none'::loyalty_tier"),
     )
     notification_prefs: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")

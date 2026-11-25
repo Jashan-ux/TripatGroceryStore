@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Response, status
 
 from app import __version__
-from app.api.deps import SessionDep
+from app.api.deps import OptionalSessionDep
 from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.core.openapi import ERROR_RESPONSES
@@ -87,7 +87,7 @@ async def api_status() -> StatusResponse:
 
 
 @router.get("/config", response_model=PublicConfig, summary="Public runtime configuration")
-async def public_config(session: SessionDep) -> PublicConfig:
+async def public_config(session: OptionalSessionDep) -> PublicConfig:
     """Non-secret values the frontend needs (store contact, Supabase URL/anon key).
 
     Store contact comes from ``store_settings`` — the merchant can change the
@@ -99,11 +99,12 @@ async def public_config(session: SessionDep) -> PublicConfig:
     """
     settings = get_settings()
     payload = settings.public_config()
-    try:
-        store = await get_store_settings(session)
-    except Exception:  # pragma: no cover - database unavailable
-        logger.warning("config_store_settings_unavailable")
-        store = None
+    store = None
+    if session is not None:
+        try:
+            store = await get_store_settings(session)
+        except Exception:  # pragma: no cover - database unreachable
+            logger.warning("config_store_settings_unavailable")
     if store is not None:
         payload.update(
             {

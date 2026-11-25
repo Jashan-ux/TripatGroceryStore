@@ -140,21 +140,34 @@ async def get_product(session: AsyncSession, product_id: uuid.UUID) -> Product |
 
 
 async def products_for_categories(
-    session: AsyncSession, category_ids: list[uuid.UUID], *, per_category: int = 8
+    session: AsyncSession,
+    groups: dict[uuid.UUID, list[uuid.UUID]],
+    *,
+    per_category: int = 8,
 ) -> dict[uuid.UUID, list[Product]]:
-    """One rail per top-level category, in a single round trip."""
-    if not category_ids:
+    """One rail per top-level category, in a single round trip.
+
+    ``groups`` maps a department to itself plus its subcategories, because a
+    product is filed under "Mustard Oil" while the rail is "Edible Oils & Ghee".
+    """
+    if not groups:
         return {}
+    parent_of: dict[uuid.UUID, uuid.UUID] = {}
+    for parent_id, category_ids in groups.items():
+        for category_id in category_ids:
+            parent_of[category_id] = parent_id
+
     stmt = (
         select(Product)
-        .where(Product.category_id.in_(category_ids), Product.is_active.is_(True))
-        .order_by(Product.category_id, Product.rating.desc(), Product.name)
+        .where(Product.category_id.in_(list(parent_of)), Product.is_active.is_(True))
+        .order_by(Product.rating.desc(), Product.name)
         .options(selectinload(Product.variants))
     )
     rows = list((await session.scalars(stmt)).unique().all())
     grouped: dict[uuid.UUID, list[Product]] = {}
     for product in rows:
-        bucket = grouped.setdefault(product.category_id, [])
+        parent_id = parent_of[product.category_id]
+        bucket = grouped.setdefault(parent_id, [])
         if len(bucket) < per_category:
             bucket.append(product)
     return grouped

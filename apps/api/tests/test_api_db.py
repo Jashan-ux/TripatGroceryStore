@@ -468,10 +468,40 @@ async def test_demoting_the_profile_revokes_admin_immediately(
 async def test_public_tables_have_no_anon_access(catalogue: dict[str, Any]) -> None:
     """S‑01: even with the anon key, PostgREST callers get nothing.
 
-    Run as the `anon` role inside a rolled-back transaction so the assertion is
-    about privileges, not about the connection's own role.
+    RLS is asserted on every public table first — that holds on any Postgres.
+    The `anon` role only exists where PostgREST runs, so that probe is skipped
+    elsewhere rather than being asserted against a role that is not there.
     """
     sessionmaker = get_sessionmaker()
+    async with sessionmaker() as session:
+        unguarded = (
+            await session.scalars(
+                text(
+                    """
+                    SELECT c.relname
+                    FROM pg_class c
+                    JOIN pg_namespace n ON n.oid = c.relnamespace
+                    WHERE n.nspname = 'public'
+                      AND c.relkind = 'r'
+                      AND NOT c.relrowsecurity
+                    ORDER BY c.relname
+                    """
+                )
+            )
+        ).all()
+        assert unguarded == [], f"row level security is off on {unguarded}"
+
+        has_anon = bool(
+            await session.scalar(
+                text("SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon')")
+            )
+        )
+
+    if not has_anon:
+        pytest.skip("no PostgREST `anon` role in this database; the RLS check above stands")
+
+    # Run as the `anon` role inside a rolled-back transaction so the assertion is
+    # about privileges, not about the connection's own role.
     async with sessionmaker() as session:
         transaction = await session.begin()
         try:
