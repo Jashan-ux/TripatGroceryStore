@@ -77,6 +77,18 @@ class ForbiddenError(AppError):
     code = "forbidden"
 
 
+class ValidationError(AppError):
+    """A business validation failure (not a Pydantic schema failure).
+
+    Carries the offending field so the form can highlight it::
+
+        {"error": {"code": "invalid_phone", "details": {"field": "phone"}}}
+    """
+
+    status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+    code = "validation_error"
+
+
 class ConflictError(AppError):
     status_code = status.HTTP_409_CONFLICT
     code = "conflict"

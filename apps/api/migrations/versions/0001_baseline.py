@@ -1,16 +1,20 @@
-"""Baseline: extensions, timestamp trigger, and automatic table hardening.
+"""Baseline: extensions, timestamp trigger, and table hardening.
 
 Nothing business-specific lives here — each phase adds its own revision. What
-this revision *does* establish is the security posture that must hold for every
+this revision establishes is the security posture that must hold for every
 future table:
 
-* ``pgcrypto`` (``gen_random_uuid()``), ``pg_trgm`` + ``unaccent`` (search).
+* ``pg_trgm`` + ``unaccent`` for search (installed into the ``extensions``
+  schema on Supabase, ``public`` on a plain Postgres).
 * a ``set_updated_at()`` trigger function used by all tables.
-* ``harden_public_table()`` plus an event trigger that runs it for **every**
-  table created in ``public``, so a developer can never forget to enable RLS or
-  to revoke grants from ``anon`` / ``authenticated``. The Supabase REST API is
-  therefore dark by construction: no policies exist for those roles, so
-  PostgREST returns nothing even with the public anon key.
+* ``app_harden_public_tables()``, which enables RLS and revokes every grant from
+  ``anon`` / ``authenticated`` on all tables in ``public``. Every later migration
+  calls it at the end, and ``tests/test_rls.py`` fails the build if any table is
+  left unhardened.
+
+Why a function and not a DDL event trigger: creating event triggers requires a
+superuser, and the Supabase ``postgres`` role is not one (verified:
+``current_setting('is_superuser') = off``).
 
 Revision ID: 0001_baseline
 Revises:
@@ -30,89 +34,88 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto")
-    op.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
-    op.execute("CREATE EXTENSION IF NOT EXISTS unaccent")
-
-    # --- updated_at maintenance ------------------------------------------------
-    op.execute(
-        """
-        CREATE OR REPLACE FUNCTION set_updated_at() RETURNS trigger
-        LANGUAGE plpgsql AS $$
-        BEGIN
-            NEW.updated_at := now();
-            RETURN NEW;
-        END;
-        $$;
-        """
-    )
-
-    # --- automatic hardening ---------------------------------------------------
-    op.execute(
-        """
-        CREATE OR REPLACE FUNCTION harden_public_table() RETURNS event_trigger
-        LANGUAGE plpgsql AS $$
-        DECLARE
-            obj record;
-            role_name text;
-        BEGIN
-            FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands()
-                WHERE command_tag = 'CREATE TABLE'
-                  AND schema_name = 'public'
-            LOOP
-                EXECUTE format('ALTER TABLE %s ENABLE ROW LEVEL SECURITY', obj.object_identity);
-                -- Defense in depth: even if a policy is added by mistake, the
-                -- auto-generated API roles have no table privileges at all.
-                FOREACH role_name IN ARRAY ARRAY['anon', 'authenticated'] LOOP
-                    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = role_name) THEN
-                        EXECUTE format(
-                            'REVOKE ALL ON TABLE %s FROM %I', obj.object_identity, role_name
-                        );
-                    END IF;
-                END LOOP;
-            END LOOP;
-        END;
-        $$;
-        """
-    )
-    op.execute("DROP EVENT TRIGGER IF EXISTS trg_harden_public_table")
-    op.execute(
-        """
-        CREATE EVENT TRIGGER trg_harden_public_table
-        ON ddl_command_end
-        WHEN TAG IN ('CREATE TABLE')
-        EXECUTE FUNCTION harden_public_table()
-        """
-    )
-
-    # --- Supabase role hygiene -------------------------------------------------
-    # The Supabase REST API roles must never see our data. Service-role usage is
-    # limited to Storage uploads performed by the backend.
+    # --- extensions -----------------------------------------------------------
+    # Supabase keeps extensions in a dedicated schema; plain Postgres does not.
     op.execute(
         """
         DO $$
         BEGIN
-            IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
-                EXECUTE 'REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon';
-                EXECUTE 'REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM anon';
-                EXECUTE 'REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM anon';
-                EXECUTE 'ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM anon';
-            END IF;
-            IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
-                EXECUTE 'REVOKE ALL ON ALL TABLES IN SCHEMA public FROM authenticated';
-                EXECUTE 'REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM authenticated';
-                EXECUTE 'REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM authenticated';
-                EXECUTE 'ALTER DEFAULT PRIVILEGES IN SCHEMA public '
-                        'REVOKE ALL ON TABLES FROM authenticated';
+            IF EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'extensions') THEN
+                EXECUTE 'CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA extensions';
+                EXECUTE 'CREATE EXTENSION IF NOT EXISTS unaccent SCHEMA extensions';
+            ELSE
+                EXECUTE 'CREATE EXTENSION IF NOT EXISTS pg_trgm';
+                EXECUTE 'CREATE EXTENSION IF NOT EXISTS unaccent';
             END IF;
         END $$;
         """
     )
 
+    # --- updated_at maintenance ----------------------------------------------
+    op.execute(
+        """
+        CREATE OR REPLACE FUNCTION set_updated_at() RETURNS trigger
+        LANGUAGE plpgsql AS $fn$
+        BEGIN
+            NEW.updated_at := now();
+            RETURN NEW;
+        END;
+        $fn$;
+        """
+    )
+
+    # --- hardening ------------------------------------------------------------
+    op.execute(
+        """
+        CREATE OR REPLACE FUNCTION app_harden_public_tables() RETURNS void
+        LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp AS $fn$
+        DECLARE
+            t record;
+            has_anon boolean := EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon');
+            has_authed boolean := EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated');
+        BEGIN
+            FOR t IN SELECT tablename FROM pg_tables WHERE schemaname = 'public' LOOP
+                EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t.tablename);
+                IF has_anon THEN
+                    EXECUTE format('REVOKE ALL ON TABLE public.%I FROM anon', t.tablename);
+                END IF;
+                IF has_authed THEN
+                    EXECUTE format('REVOKE ALL ON TABLE public.%I FROM authenticated', t.tablename);
+                END IF;
+            END LOOP;
+
+            FOR t IN SELECT sequencename FROM pg_sequences WHERE schemaname = 'public' LOOP
+                IF has_anon THEN
+                    EXECUTE format('REVOKE ALL ON SEQUENCE public.%I FROM anon', t.sequencename);
+                END IF;
+                IF has_authed THEN
+                    EXECUTE format(
+                        'REVOKE ALL ON SEQUENCE public.%I FROM authenticated', t.sequencename
+                    );
+                END IF;
+            END LOOP;
+
+            -- Applies to tables created later by this role as well.
+            IF has_anon THEN
+                EXECUTE 'ALTER DEFAULT PRIVILEGES IN SCHEMA public '
+                        'REVOKE ALL ON TABLES FROM anon';
+                EXECUTE 'ALTER DEFAULT PRIVILEGES IN SCHEMA public '
+                        'REVOKE ALL ON SEQUENCES FROM anon';
+            END IF;
+            IF has_authed THEN
+                EXECUTE 'ALTER DEFAULT PRIVILEGES IN SCHEMA public '
+                        'REVOKE ALL ON TABLES FROM authenticated';
+                EXECUTE 'ALTER DEFAULT PRIVILEGES IN SCHEMA public '
+                        'REVOKE ALL ON SEQUENCES FROM authenticated';
+            END IF;
+        END;
+        $fn$;
+        """
+    )
+    op.execute("SELECT app_harden_public_tables()")
+
 
 def downgrade() -> None:
-    op.execute("DROP EVENT TRIGGER IF EXISTS trg_harden_public_table")
-    op.execute("DROP FUNCTION IF EXISTS harden_public_table()")
+    op.execute("DROP FUNCTION IF EXISTS app_harden_public_tables()")
     op.execute("DROP FUNCTION IF EXISTS set_updated_at()")
-    # Extensions are intentionally left installed: other databases in the same
-    # cluster (and Supabase internals) may rely on them.
+    # Extensions are intentionally left installed: Supabase internals may use them.

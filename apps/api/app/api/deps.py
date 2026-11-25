@@ -1,0 +1,96 @@
+"""Request dependencies: authentication, the current profile, and admin access.
+
+Authorisation is deny-by-default. Only routers that explicitly depend on
+``CurrentUser`` or ``AdminUser`` are protected; everything else is public
+read-only catalogue data.
+
+Ownership is enforced inside queries (``user_id`` in the ``WHERE``), never by
+fetching a row and comparing afterwards.
+"""
+
+from __future__ import annotations
+
+import uuid
+from dataclasses import dataclass
+from typing import Annotated
+
+from fastapi import Depends, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.errors import ForbiddenError
+from app.core.security import TokenClaims, verify_token
+from app.db.session import get_session
+from app.models.catalogue import Profile
+from app.models.enums import UserRole
+from app.repositories.profiles import get_profile
+from app.services.profiles import ensure_profile
+
+bearer_scheme = HTTPBearer(
+    auto_error=False,
+    description="Supabase access token (`Authorization: Bearer <jwt>`).",
+)
+
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
+
+
+async def get_token_claims(
+    request: Request,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
+) -> TokenClaims:
+    if credentials is None or not credentials.credentials:
+        from app.core.errors import UnauthenticatedError
+
+        raise UnauthenticatedError("Please sign in to continue.")
+    claims = verify_token(credentials.credentials)
+    request.state.token_claims = claims
+    return claims
+
+
+ClaimsDep = Annotated[TokenClaims, Depends(get_token_claims)]
+
+
+@dataclass(frozen=True)
+class CurrentUser:
+    """The authenticated caller: verified claims plus our own profile row."""
+
+    claims: TokenClaims
+    profile: Profile
+
+    @property
+    def id(self) -> uuid.UUID:
+        return self.profile.id
+
+    @property
+    def is_admin(self) -> bool:
+        return self.profile.role is UserRole.admin
+
+    @property
+    def has_phone(self) -> bool:
+        return bool(self.profile.phone)
+
+
+async def get_current_user(
+    request: Request,
+    claims: ClaimsDep,
+    session: SessionDep,
+) -> CurrentUser:
+    profile = await get_profile(session, claims.sub)
+    if profile is None:
+        # First authenticated request for this user: create the profile row.
+        profile = await ensure_profile(session, claims)
+    request.state.user = profile
+    return CurrentUser(claims=claims, profile=profile)
+
+
+CurrentUserDep = Annotated[CurrentUser, Depends(get_current_user)]
+
+
+async def require_admin(user: CurrentUserDep) -> CurrentUser:
+    """Single gate for every admin route. Role comes from ``profiles.role``."""
+    if user.profile.role is not UserRole.admin:
+        raise ForbiddenError("This area is for the store owner only.", code="admin_only")
+    return user
+
+
+AdminUserDep = Annotated[CurrentUser, Depends(require_admin)]

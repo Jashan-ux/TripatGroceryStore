@@ -13,10 +13,15 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Response, status
 
 from app import __version__
+from app.api.deps import SessionDep
 from app.core.config import get_settings
+from app.core.logging import get_logger
 from app.core.openapi import ERROR_RESPONSES
 from app.db.session import ping_database
 from app.schemas.common import HealthComponent, HealthResponse, PublicConfig, StatusResponse
+from app.services.settings import get_store_settings
+
+logger = get_logger(__name__)
 
 router = APIRouter(tags=["system"], responses=ERROR_RESPONSES)
 
@@ -82,9 +87,34 @@ async def api_status() -> StatusResponse:
 
 
 @router.get("/config", response_model=PublicConfig, summary="Public runtime configuration")
-async def public_config() -> PublicConfig:
+async def public_config(session: SessionDep) -> PublicConfig:
     """Non-secret values the frontend needs (store contact, Supabase URL/anon key).
+
+    Store contact comes from ``store_settings`` — the merchant can change the
+    phone, address or Maps link without a deploy. If the database is not
+    reachable yet (cold boot, health check) we fall back to the seeded env
+    values so the storefront still renders a phone number.
 
     The anon key is public by design; the service-role key never leaves the server.
     """
-    return PublicConfig.model_validate(get_settings().public_config())
+    settings = get_settings()
+    payload = settings.public_config()
+    try:
+        store = await get_store_settings(session)
+    except Exception:  # pragma: no cover - database unavailable
+        logger.warning("config_store_settings_unavailable")
+        store = None
+    if store is not None:
+        payload.update(
+            {
+                "store_name": store.store_name,
+                "store_phone": store.store_phone,
+                "store_address": store.store_address,
+                "store_maps_url": store.store_maps_url,
+                "feedback_email": store.feedback_email,
+                "minimum_order_paise": store.minimum_order_paise,
+                "serviceable_pincodes": list(store.serviceable_pincodes),
+                "default_delivery_days": store.default_delivery_days,
+            }
+        )
+    return PublicConfig.model_validate(payload)

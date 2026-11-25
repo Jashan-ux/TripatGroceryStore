@@ -1,0 +1,1949 @@
+{
+ "version": 1,
+ "generated_by": "apps/api/app/scripts/seed.py",
+ "categories": [
+  {
+   "slug": "edible-oils-ghee",
+   "name": "Edible Oils & Ghee",
+   "emoji": "🫙",
+   "sort_order": 1,
+   "description": "Kachi ghani mustard oil, refined oils, desi ghee and vanaspati.",
+   "parent_slug": null
+  },
+  {
+   "slug": "mustard-oil",
+   "name": "Mustard Oil",
+   "emoji": null,
+   "sort_order": 1,
+   "description": "Mustard Oil at MSG Store",
+   "parent_slug": "edible-oils-ghee"
+  },
+  {
+   "slug": "refined-oil",
+   "name": "Refined Oil",
+   "emoji": null,
+   "sort_order": 2,
+   "description": "Refined Oil at MSG Store",
+   "parent_slug": "edible-oils-ghee"
+  },
+  {
+   "slug": "desi-ghee",
+   "name": "Desi Ghee",
+   "emoji": null,
+   "sort_order": 3,
+   "description": "Desi Ghee at MSG Store",
+   "parent_slug": "edible-oils-ghee"
+  },
+  {
+   "slug": "vanaspati",
+   "name": "Vanaspati",
+   "emoji": null,
+   "sort_order": 4,
+   "description": "Vanaspati at MSG Store",
+   "parent_slug": "edible-oils-ghee"
+  },
+  {
+   "slug": "ayurvedic-herbs",
+   "name": "Ayurvedic Herbs & Powders",
+   "emoji": "🌿",
+   "sort_order": 2,
+   "description": "Loose Ayurvedic herbs, roots and churna — weighed fresh at the counter.",
+   "parent_slug": null
+  },
+  {
+   "slug": "single-herbs",
+   "name": "Single Herbs",
+   "emoji": null,
+   "sort_order": 1,
+   "description": "Single Herbs at MSG Store",
+   "parent_slug": "ayurvedic-herbs"
+  },
+  {
+   "slug": "herbal-powders",
+   "name": "Herbal Powders",
+   "emoji": null,
+   "sort_order": 2,
+   "description": "Herbal Powders at MSG Store",
+   "parent_slug": "ayurvedic-herbs"
+  },
+  {
+   "slug": "churna-kadha",
+   "name": "Churna & Kadha",
+   "emoji": null,
+   "sort_order": 3,
+   "description": "Churna & Kadha at MSG Store",
+   "parent_slug": "ayurvedic-herbs"
+  },
+  {
+   "slug": "pulses-dals",
+   "name": "Pulses & Dals",
+   "emoji": "🫘",
+   "sort_order": 3,
+   "description": "Toor, moong, chana, masoor and rajma — cleaned and machine sorted.",
+   "parent_slug": null
+  },
+  {
+   "slug": "toor-moong",
+   "name": "Toor & Moong",
+   "emoji": null,
+   "sort_order": 1,
+   "description": "Toor & Moong at MSG Store",
+   "parent_slug": "pulses-dals"
+  },
+  {
+   "slug": "chana-rajma",
+   "name": "Chana & Rajma",
+   "emoji": null,
+   "sort_order": 2,
+   "description": "Chana & Rajma at MSG Store",
+   "parent_slug": "pulses-dals"
+  },
+  {
+   "slug": "masoor-others",
+   "name": "Masoor & Others",
+   "emoji": null,
+   "sort_order": 3,
+   "description": "Masoor & Others at MSG Store",
+   "parent_slug": "pulses-dals"
+  },
+  {
+   "slug": "spices-masale",
+   "name": "Spices & Masale",
+   "emoji": "🌶️",
+   "sort_order": 4,
+   "description": "Whole spices ground to order, plus trusted masala blends.",
+   "parent_slug": null
+  },
+  {
+   "slug": "whole-spices",
+   "name": "Whole Spices",
+   "emoji": null,
+   "sort_order": 1,
+   "description": "Whole Spices at MSG Store",
+   "parent_slug": "spices-masale"
+  },
+  {
+   "slug": "ground-masale",
+   "name": "Ground Masale",
+   "emoji": null,
+   "sort_order": 2,
+   "description": "Ground Masale at MSG Store",
+   "parent_slug": "spices-masale"
+  },
+  {
+   "slug": "blended-masala",
+   "name": "Blended Masala",
+   "emoji": null,
+   "sort_order": 3,
+   "description": "Blended Masala at MSG Store",
+   "parent_slug": "spices-masale"
+  },
+  {
+   "slug": "dairy",
+   "name": "Dairy",
+   "emoji": "🥛",
+   "sort_order": 5,
+   "description": "Fresh milk, curd, paneer and butter — delivered cold every morning.",
+   "parent_slug": null
+  },
+  {
+   "slug": "milk",
+   "name": "Milk",
+   "emoji": null,
+   "sort_order": 1,
+   "description": "Milk at MSG Store",
+   "parent_slug": "dairy"
+  },
+  {
+   "slug": "curd-paneer",
+   "name": "Curd & Paneer",
+   "emoji": null,
+   "sort_order": 2,
+   "description": "Curd & Paneer at MSG Store",
+   "parent_slug": "dairy"
+  },
+  {
+   "slug": "butter-cheese",
+   "name": "Butter & Cheese",
+   "emoji": null,
+   "sort_order": 3,
+   "description": "Butter & Cheese at MSG Store",
+   "parent_slug": "dairy"
+  },
+  {
+   "slug": "atta-rice-pantry",
+   "name": "Atta, Rice & Pantry",
+   "emoji": "🍚",
+   "sort_order": 6,
+   "description": "Atta, basmati and everyday rice, sugar, salt and cooking staples.",
+   "parent_slug": null
+  },
+  {
+   "slug": "atta-flour",
+   "name": "Atta & Flour",
+   "emoji": null,
+   "sort_order": 1,
+   "description": "Atta & Flour at MSG Store",
+   "parent_slug": "atta-rice-pantry"
+  },
+  {
+   "slug": "rice",
+   "name": "Rice",
+   "emoji": null,
+   "sort_order": 2,
+   "description": "Rice at MSG Store",
+   "parent_slug": "atta-rice-pantry"
+  },
+  {
+   "slug": "sugar-salt",
+   "name": "Sugar, Salt & Staples",
+   "emoji": null,
+   "sort_order": 3,
+   "description": "Sugar, Salt & Staples at MSG Store",
+   "parent_slug": "atta-rice-pantry"
+  },
+  {
+   "slug": "snacks-biscuits",
+   "name": "Snacks & Biscuits",
+   "emoji": "🍪",
+   "sort_order": 7,
+   "description": "Biscuits, namkeen and chips for the evening chai.",
+   "parent_slug": null
+  },
+  {
+   "slug": "biscuits",
+   "name": "Biscuits",
+   "emoji": null,
+   "sort_order": 1,
+   "description": "Biscuits at MSG Store",
+   "parent_slug": "snacks-biscuits"
+  },
+  {
+   "slug": "namkeen",
+   "name": "Namkeen",
+   "emoji": null,
+   "sort_order": 2,
+   "description": "Namkeen at MSG Store",
+   "parent_slug": "snacks-biscuits"
+  },
+  {
+   "slug": "chips",
+   "name": "Chips & Wafers",
+   "emoji": null,
+   "sort_order": 3,
+   "description": "Chips & Wafers at MSG Store",
+   "parent_slug": "snacks-biscuits"
+  },
+  {
+   "slug": "beverages",
+   "name": "Beverages",
+   "emoji": "🥤",
+   "sort_order": 8,
+   "description": "Tea, coffee, cold drinks and juices.",
+   "parent_slug": null
+  },
+  {
+   "slug": "tea",
+   "name": "Tea",
+   "emoji": null,
+   "sort_order": 1,
+   "description": "Tea at MSG Store",
+   "parent_slug": "beverages"
+  },
+  {
+   "slug": "cold-drinks",
+   "name": "Cold Drinks",
+   "emoji": null,
+   "sort_order": 2,
+   "description": "Cold Drinks at MSG Store",
+   "parent_slug": "beverages"
+  },
+  {
+   "slug": "juices",
+   "name": "Juices",
+   "emoji": null,
+   "sort_order": 3,
+   "description": "Juices at MSG Store",
+   "parent_slug": "beverages"
+  },
+  {
+   "slug": "beauty-personal-care",
+   "name": "Beauty & Personal Care",
+   "emoji": "🧴",
+   "sort_order": 9,
+   "description": "Hair, skin and oral care from brands you already trust.",
+   "parent_slug": null
+  },
+  {
+   "slug": "hair-care",
+   "name": "Hair Care",
+   "emoji": null,
+   "sort_order": 1,
+   "description": "Hair Care at MSG Store",
+   "parent_slug": "beauty-personal-care"
+  },
+  {
+   "slug": "skin-care",
+   "name": "Skin Care",
+   "emoji": null,
+   "sort_order": 2,
+   "description": "Skin Care at MSG Store",
+   "parent_slug": "beauty-personal-care"
+  },
+  {
+   "slug": "oral-care",
+   "name": "Oral Care",
+   "emoji": null,
+   "sort_order": 3,
+   "description": "Oral Care at MSG Store",
+   "parent_slug": "beauty-personal-care"
+  },
+  {
+   "slug": "soaps-detergents",
+   "name": "Soaps & Detergents",
+   "emoji": "🧼",
+   "sort_order": 10,
+   "description": "Bathing soaps, detergent powder and household cleaning.",
+   "parent_slug": null
+  },
+  {
+   "slug": "bathing-soaps",
+   "name": "Bathing Soaps",
+   "emoji": null,
+   "sort_order": 1,
+   "description": "Bathing Soaps at MSG Store",
+   "parent_slug": "soaps-detergents"
+  },
+  {
+   "slug": "detergents",
+   "name": "Detergents",
+   "emoji": null,
+   "sort_order": 2,
+   "description": "Detergents at MSG Store",
+   "parent_slug": "soaps-detergents"
+  },
+  {
+   "slug": "household-cleaning",
+   "name": "Household Cleaning",
+   "emoji": null,
+   "sort_order": 3,
+   "description": "Household Cleaning at MSG Store",
+   "parent_slug": "soaps-detergents"
+  }
+ ],
+ "brands": [
+  {
+   "slug": "amul",
+   "name": "Amul"
+  },
+  {
+   "slug": "mother-dairy",
+   "name": "Mother Dairy"
+  },
+  {
+   "slug": "fortune",
+   "name": "Fortune"
+  },
+  {
+   "slug": "saffola",
+   "name": "Saffola"
+  },
+  {
+   "slug": "tata",
+   "name": "Tata"
+  },
+  {
+   "slug": "aashirvaad",
+   "name": "Aashirvaad"
+  },
+  {
+   "slug": "patanjali",
+   "name": "Patanjali"
+  },
+  {
+   "slug": "dabur",
+   "name": "Dabur"
+  },
+  {
+   "slug": "mdh",
+   "name": "MDH"
+  },
+  {
+   "slug": "everest",
+   "name": "Everest"
+  },
+  {
+   "slug": "catch",
+   "name": "Catch"
+  },
+  {
+   "slug": "haldirams",
+   "name": "Haldiram's"
+  },
+  {
+   "slug": "britannia",
+   "name": "Britannia"
+  },
+  {
+   "slug": "parle",
+   "name": "Parle"
+  },
+  {
+   "slug": "balaji",
+   "name": "Balaji"
+  },
+  {
+   "slug": "nestle",
+   "name": "Nestlé"
+  },
+  {
+   "slug": "coca-cola",
+   "name": "Coca-Cola"
+  },
+  {
+   "slug": "frooti",
+   "name": "Frooti"
+  },
+  {
+   "slug": "colgate",
+   "name": "Colgate"
+  },
+  {
+   "slug": "lifebuoy",
+   "name": "Lifebuoy"
+  },
+  {
+   "slug": "surf-excel",
+   "name": "Surf Excel"
+  },
+  {
+   "slug": "nirma",
+   "name": "Nirma"
+  },
+  {
+   "slug": "santoor",
+   "name": "Santoor"
+  },
+  {
+   "slug": "dettol",
+   "name": "Dettol"
+  },
+  {
+   "slug": "zandu",
+   "name": "Zandu"
+  },
+  {
+   "slug": "baidyanath",
+   "name": "Baidyanath"
+  },
+  {
+   "slug": "organic-india",
+   "name": "Organic India"
+  },
+  {
+   "slug": "tata-sampann",
+   "name": "Tata Sampann"
+  },
+  {
+   "slug": "pepsico",
+   "name": "Lay's"
+  },
+  {
+   "slug": "itc",
+   "name": "Bingo"
+  }
+ ],
+ "products": [
+  {
+   "slug": "fortune-kachi-ghani-mustard-oil-1l",
+   "name": "Fortune Kachi Ghani Mustard Oil 1L",
+   "description": "Pungent kachi ghani mustard oil, cold pressed in small batches. The everyday cooking oil for Haryana kitchens.",
+   "brand_slug": "fortune",
+   "category_slug": "mustard-oil",
+   "mrp_paise": 19500,
+   "price_paise": 18000,
+   "unit_label": "1 L",
+   "stock": 64,
+   "tags": [
+    "bestseller",
+    "kachi-ghani"
+   ],
+   "rating": 4.5,
+   "variants": []
+  },
+  {
+   "slug": "patanjali-kachi-ghani-mustard-oil-5l",
+   "name": "Patanjali Kachi Ghani Mustard Oil 5L",
+   "description": "Family jar of kachi ghani mustard oil. Best value per litre.",
+   "brand_slug": "patanjali",
+   "category_slug": "mustard-oil",
+   "mrp_paise": 98000,
+   "price_paise": 92500,
+   "unit_label": "5 L",
+   "stock": 22,
+   "tags": [
+    "value-pack",
+    "kachi-ghani"
+   ],
+   "rating": 4.4,
+   "variants": []
+  },
+  {
+   "slug": "saffola-gold-refined-oil-1l",
+   "name": "Saffola Gold Refined Oil 1L",
+   "description": "Blend of rice bran and sunflower oil with vitamins A and D.",
+   "brand_slug": "saffola",
+   "category_slug": "refined-oil",
+   "mrp_paise": 17500,
+   "price_paise": 16200,
+   "unit_label": "1 L",
+   "stock": 48,
+   "tags": [
+    "heart-health"
+   ],
+   "rating": 4.3,
+   "variants": []
+  },
+  {
+   "slug": "fortune-sunflower-refined-oil-1l",
+   "name": "Fortune Sunflower Refined Oil 1L",
+   "description": "Light sunflower oil for everyday frying and tempering.",
+   "brand_slug": "fortune",
+   "category_slug": "refined-oil",
+   "mrp_paise": 15500,
+   "price_paise": 14200,
+   "unit_label": "1 L",
+   "stock": 70,
+   "tags": [
+    "light"
+   ],
+   "rating": 4.2,
+   "variants": []
+  },
+  {
+   "slug": "amul-pure-ghee-500ml",
+   "name": "Amul Pure Ghee 500 ml",
+   "description": "Grainy, aromatic cow ghee in a tin. Ideal for dal, halwa and parathas.",
+   "brand_slug": "amul",
+   "category_slug": "desi-ghee",
+   "mrp_paise": 34000,
+   "price_paise": 32200,
+   "unit_label": "500 ml",
+   "stock": 38,
+   "tags": [
+    "bestseller",
+    "ghee"
+   ],
+   "rating": 4.8,
+   "variants": []
+  },
+  {
+   "slug": "amul-pure-ghee-1l",
+   "name": "Amul Pure Ghee 1 L",
+   "description": "One litre tin of Amul pure ghee — the festive and wedding-season pack.",
+   "brand_slug": "amul",
+   "category_slug": "desi-ghee",
+   "mrp_paise": 66500,
+   "price_paise": 64000,
+   "unit_label": "1 L",
+   "stock": 26,
+   "tags": [
+    "festive",
+    "ghee"
+   ],
+   "rating": 4.8,
+   "variants": []
+  },
+  {
+   "slug": "patanjali-cow-ghee-1l",
+   "name": "Patanjali Cow Ghee 1 L",
+   "description": "Cow ghee made from fresh cream, packed in a jar.",
+   "brand_slug": "patanjali",
+   "category_slug": "desi-ghee",
+   "mrp_paise": 62000,
+   "price_paise": 58500,
+   "unit_label": "1 L",
+   "stock": 18,
+   "tags": [
+    "cow-ghee"
+   ],
+   "rating": 4.4,
+   "variants": []
+  },
+  {
+   "slug": "fortune-vanaspati-1l",
+   "name": "Fortune Vanaspati 1 L",
+   "description": "Classic vanaspati for sweets and deep frying.",
+   "brand_slug": "fortune",
+   "category_slug": "vanaspati",
+   "mrp_paise": 14500,
+   "price_paise": 13800,
+   "unit_label": "1 L",
+   "stock": 30,
+   "tags": [
+    "budget"
+   ],
+   "rating": 3.9,
+   "variants": []
+  },
+  {
+   "slug": "ashwagandha-powder-loose",
+   "name": "Ashwagandha Powder (Loose)",
+   "description": "Withania somnifera root powder, ground fresh. Traditionally taken with warm milk at night. Weigh options from 100 g to 1 kg.",
+   "brand_slug": "patanjali",
+   "category_slug": "herbal-powders",
+   "mrp_paise": 13000,
+   "price_paise": 11500,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "ayurvedic",
+    "immunity",
+    "loose"
+   ],
+   "rating": 4.7,
+   "variants": [
+    {
+     "label": "100 g",
+     "mrp_paise": 13000,
+     "price_paise": 11500,
+     "stock": 40,
+     "sort_order": 0
+    },
+    {
+     "label": "250 g",
+     "mrp_paise": 30000,
+     "price_paise": 26500,
+     "stock": 28,
+     "sort_order": 1
+    },
+    {
+     "label": "500 g",
+     "mrp_paise": 57000,
+     "price_paise": 50500,
+     "stock": 16,
+     "sort_order": 2
+    },
+    {
+     "label": "1 kg",
+     "mrp_paise": 108000,
+     "price_paise": 96000,
+     "stock": 8,
+     "sort_order": 3
+    }
+   ]
+  },
+  {
+   "slug": "amla-powder-loose",
+   "name": "Amla Powder (Loose)",
+   "description": "Dried Indian gooseberry powder — a traditional source of vitamin C for hair and digestion.",
+   "brand_slug": "patanjali",
+   "category_slug": "herbal-powders",
+   "mrp_paise": 9500,
+   "price_paise": 8400,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "ayurvedic",
+    "hair",
+    "loose"
+   ],
+   "rating": 4.6,
+   "variants": [
+    {
+     "label": "100 g",
+     "mrp_paise": 9500,
+     "price_paise": 8400,
+     "stock": 46,
+     "sort_order": 0
+    },
+    {
+     "label": "250 g",
+     "mrp_paise": 22500,
+     "price_paise": 19800,
+     "stock": 30,
+     "sort_order": 1
+    },
+    {
+     "label": "500 g",
+     "mrp_paise": 43000,
+     "price_paise": 38000,
+     "stock": 14,
+     "sort_order": 2
+    }
+   ]
+  },
+  {
+   "slug": "triphala-churna-loose",
+   "name": "Triphala Churna (Loose)",
+   "description": "Equal parts amla, haritaki and bibhitaki — the classic three-fruit churna.",
+   "brand_slug": "dabur",
+   "category_slug": "churna-kadha",
+   "mrp_paise": 11000,
+   "price_paise": 9600,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "ayurvedic",
+    "digestion",
+    "loose"
+   ],
+   "rating": 4.5,
+   "variants": [
+    {
+     "label": "100 g",
+     "mrp_paise": 11000,
+     "price_paise": 9600,
+     "stock": 38,
+     "sort_order": 0
+    },
+    {
+     "label": "250 g",
+     "mrp_paise": 26000,
+     "price_paise": 23000,
+     "stock": 20,
+     "sort_order": 1
+    },
+    {
+     "label": "500 g",
+     "mrp_paise": 49500,
+     "price_paise": 44000,
+     "stock": 10,
+     "sort_order": 2
+    }
+   ]
+  },
+  {
+   "slug": "neem-powder-loose",
+   "name": "Neem Powder (Loose)",
+   "description": "Shade-dried neem leaf powder for face packs and traditional preparations.",
+   "brand_slug": "patanjali",
+   "category_slug": "herbal-powders",
+   "mrp_paise": 8500,
+   "price_paise": 7400,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "ayurvedic",
+    "skin",
+    "loose"
+   ],
+   "rating": 4.3,
+   "variants": [
+    {
+     "label": "100 g",
+     "mrp_paise": 8500,
+     "price_paise": 7400,
+     "stock": 34,
+     "sort_order": 0
+    },
+    {
+     "label": "250 g",
+     "mrp_paise": 20000,
+     "price_paise": 17500,
+     "stock": 22,
+     "sort_order": 1
+    }
+   ]
+  },
+  {
+   "slug": "shatavari-powder-loose",
+   "name": "Shatavari Powder (Loose)",
+   "description": "Asparagus racemosus root powder, finely ground.",
+   "brand_slug": "baidyanath",
+   "category_slug": "herbal-powders",
+   "mrp_paise": 14500,
+   "price_paise": 12800,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "ayurvedic",
+    "women",
+    "loose"
+   ],
+   "rating": 4.4,
+   "variants": [
+    {
+     "label": "100 g",
+     "mrp_paise": 14500,
+     "price_paise": 12800,
+     "stock": 26,
+     "sort_order": 0
+    },
+    {
+     "label": "250 g",
+     "mrp_paise": 34000,
+     "price_paise": 30000,
+     "stock": 14,
+     "sort_order": 1
+    }
+   ]
+  },
+  {
+   "slug": "tulsi-dried-leaves-loose",
+   "name": "Tulsi Dried Leaves (Loose)",
+   "description": "Holy basil leaves, dried whole. Ideal for kadha and herbal tea.",
+   "brand_slug": "organic-india",
+   "category_slug": "single-herbs",
+   "mrp_paise": 7000,
+   "price_paise": 6000,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "ayurvedic",
+    "immunity",
+    "loose"
+   ],
+   "rating": 4.5,
+   "variants": [
+    {
+     "label": "50 g",
+     "mrp_paise": 7000,
+     "price_paise": 6000,
+     "stock": 44,
+     "sort_order": 0
+    },
+    {
+     "label": "100 g",
+     "mrp_paise": 13000,
+     "price_paise": 11500,
+     "stock": 30,
+     "sort_order": 1
+    }
+   ]
+  },
+  {
+   "slug": "mulethi-root-loose",
+   "name": "Mulethi (Licorice) Root (Loose)",
+   "description": "Whole liquorice root sticks, traditionally chewed for the throat.",
+   "brand_slug": "baidyanath",
+   "category_slug": "single-herbs",
+   "mrp_paise": 12000,
+   "price_paise": 10500,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "ayurvedic",
+    "throat",
+    "loose"
+   ],
+   "rating": 4.4,
+   "variants": [
+    {
+     "label": "100 g",
+     "mrp_paise": 12000,
+     "price_paise": 10500,
+     "stock": 24,
+     "sort_order": 0
+    },
+    {
+     "label": "250 g",
+     "mrp_paise": 28000,
+     "price_paise": 24500,
+     "stock": 12,
+     "sort_order": 1
+    }
+   ]
+  },
+  {
+   "slug": "zandu-chyawanprash-1kg",
+   "name": "Zandu Chyawanprash 1 kg",
+   "description": "Classic chyawanprash with amla, ghee and 40+ herbs. One spoon a day.",
+   "brand_slug": "zandu",
+   "category_slug": "churna-kadha",
+   "mrp_paise": 42000,
+   "price_paise": 38500,
+   "unit_label": "1 kg",
+   "stock": 20,
+   "tags": [
+    "ayurvedic",
+    "immunity"
+   ],
+   "rating": 4.5,
+   "variants": []
+  },
+  {
+   "slug": "dabur-honitus-200ml",
+   "name": "Dabur Honitus Cough Syrup 200 ml",
+   "description": "Honey and tulsi based cough syrup for the whole family.",
+   "brand_slug": "dabur",
+   "category_slug": "churna-kadha",
+   "mrp_paise": 16500,
+   "price_paise": 14800,
+   "unit_label": "200 ml",
+   "stock": 26,
+   "tags": [
+    "ayurvedic",
+    "throat"
+   ],
+   "rating": 4.2,
+   "variants": []
+  },
+  {
+   "slug": "tata-sampann-unpolished-toor-dal-1kg",
+   "name": "Tata Sampann Unpolished Toor Dal 1 kg",
+   "description": "Unpolished arhar dal with no artificial polish — cooks soft and keeps its natural protein.",
+   "brand_slug": "tata-sampann",
+   "category_slug": "toor-moong",
+   "mrp_paise": 21000,
+   "price_paise": 19500,
+   "unit_label": "1 kg",
+   "stock": 58,
+   "tags": [
+    "bestseller",
+    "unpolished"
+   ],
+   "rating": 4.6,
+   "variants": []
+  },
+  {
+   "slug": "tata-sampann-moong-dal-1kg",
+   "name": "Tata Sampann Unpolished Moong Dal 1 kg",
+   "description": "Split yellow moong, washed and sorted.",
+   "brand_slug": "tata-sampann",
+   "category_slug": "toor-moong",
+   "mrp_paise": 17500,
+   "price_paise": 16200,
+   "unit_label": "1 kg",
+   "stock": 52,
+   "tags": [
+    "unpolished"
+   ],
+   "rating": 4.5,
+   "variants": []
+  },
+  {
+   "slug": "loose-chana-dal",
+   "name": "Chana Dal (Loose)",
+   "description": "Bengal gram split dal, sold by weight from the shop's fresh stock.",
+   "brand_slug": null,
+   "category_slug": "chana-rajma",
+   "mrp_paise": 7000,
+   "price_paise": 6200,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "loose",
+    "pulses"
+   ],
+   "rating": 4.4,
+   "variants": [
+    {
+     "label": "500 g",
+     "mrp_paise": 7000,
+     "price_paise": 6200,
+     "stock": 60,
+     "sort_order": 0
+    },
+    {
+     "label": "1 kg",
+     "mrp_paise": 13200,
+     "price_paise": 11800,
+     "stock": 40,
+     "sort_order": 1
+    },
+    {
+     "label": "5 kg",
+     "mrp_paise": 64000,
+     "price_paise": 57500,
+     "stock": 8,
+     "sort_order": 2
+    }
+   ]
+  },
+  {
+   "slug": "loose-rajma-chitra",
+   "name": "Rajma Chitra (Loose)",
+   "description": "Speckled kidney beans that cook creamy — the Sunday rajma.",
+   "brand_slug": null,
+   "category_slug": "chana-rajma",
+   "mrp_paise": 9500,
+   "price_paise": 8500,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "loose",
+    "pulses"
+   ],
+   "rating": 4.5,
+   "variants": [
+    {
+     "label": "500 g",
+     "mrp_paise": 9500,
+     "price_paise": 8500,
+     "stock": 34,
+     "sort_order": 0
+    },
+    {
+     "label": "1 kg",
+     "mrp_paise": 18000,
+     "price_paise": 16200,
+     "stock": 22,
+     "sort_order": 1
+    }
+   ]
+  },
+  {
+   "slug": "loose-masoor-dal",
+   "name": "Masoor Dal (Loose)",
+   "description": "Pink masoor dal, quick cooking and mild.",
+   "brand_slug": null,
+   "category_slug": "masoor-others",
+   "mrp_paise": 7500,
+   "price_paise": 6600,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "loose",
+    "pulses"
+   ],
+   "rating": 4.3,
+   "variants": [
+    {
+     "label": "500 g",
+     "mrp_paise": 7500,
+     "price_paise": 6600,
+     "stock": 44,
+     "sort_order": 0
+    },
+    {
+     "label": "1 kg",
+     "mrp_paise": 14000,
+     "price_paise": 12600,
+     "stock": 30,
+     "sort_order": 1
+    }
+   ]
+  },
+  {
+   "slug": "loose-kabuli-chana",
+   "name": "Kabuli Chana (Loose)",
+   "description": "Large white chickpeas for chole and salads.",
+   "brand_slug": null,
+   "category_slug": "chana-rajma",
+   "mrp_paise": 8000,
+   "price_paise": 7200,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "loose",
+    "pulses"
+   ],
+   "rating": 4.4,
+   "variants": [
+    {
+     "label": "500 g",
+     "mrp_paise": 8000,
+     "price_paise": 7200,
+     "stock": 38,
+     "sort_order": 0
+    },
+    {
+     "label": "1 kg",
+     "mrp_paise": 15000,
+     "price_paise": 13500,
+     "stock": 24,
+     "sort_order": 1
+    }
+   ]
+  },
+  {
+   "slug": "loose-urad-dal",
+   "name": "Urad Dal (Loose)",
+   "description": "Split black gram for dal makhani and idli batters.",
+   "brand_slug": null,
+   "category_slug": "masoor-others",
+   "mrp_paise": 9000,
+   "price_paise": 8000,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "loose",
+    "pulses"
+   ],
+   "rating": 4.3,
+   "variants": [
+    {
+     "label": "500 g",
+     "mrp_paise": 9000,
+     "price_paise": 8000,
+     "stock": 30,
+     "sort_order": 0
+    },
+    {
+     "label": "1 kg",
+     "mrp_paise": 17000,
+     "price_paise": 15200,
+     "stock": 18,
+     "sort_order": 1
+    }
+   ]
+  },
+  {
+   "slug": "mdh-degi-mirch-powder-500g",
+   "name": "MDH Deggi Mirch Powder 500 g",
+   "description": "Mild, deep-red chilli powder that gives colour without heat.",
+   "brand_slug": "mdh",
+   "category_slug": "ground-masale",
+   "mrp_paise": 34000,
+   "price_paise": 31500,
+   "unit_label": "500 g",
+   "stock": 34,
+   "tags": [
+    "bestseller",
+    "chilli"
+   ],
+   "rating": 4.7,
+   "variants": []
+  },
+  {
+   "slug": "everest-turmeric-powder-200g",
+   "name": "Everest Turmeric Powder 200 g",
+   "description": "Bright Salem turmeric, high curcumin, double sealed.",
+   "brand_slug": "everest",
+   "category_slug": "ground-masale",
+   "mrp_paise": 7200,
+   "price_paise": 6400,
+   "unit_label": "200 g",
+   "stock": 62,
+   "tags": [
+    "haldi"
+   ],
+   "rating": 4.6,
+   "variants": []
+  },
+  {
+   "slug": "mdh-garam-masala-100g",
+   "name": "MDH Garam Masala 100 g",
+   "description": "The classic warming blend — add at the end of cooking.",
+   "brand_slug": "mdh",
+   "category_slug": "blended-masala",
+   "mrp_paise": 9200,
+   "price_paise": 8200,
+   "unit_label": "100 g",
+   "stock": 56,
+   "tags": [
+    "blend"
+   ],
+   "rating": 4.6,
+   "variants": []
+  },
+  {
+   "slug": "catch-rajma-masala-100g",
+   "name": "Catch Rajma Masala 100 g",
+   "description": "No added preservatives or artificial colour.",
+   "brand_slug": "catch",
+   "category_slug": "blended-masala",
+   "mrp_paise": 8500,
+   "price_paise": 7400,
+   "unit_label": "100 g",
+   "stock": 40,
+   "tags": [
+    "blend",
+    "no-preservatives"
+   ],
+   "rating": 4.3,
+   "variants": []
+  },
+  {
+   "slug": "loose-jeera-whole",
+   "name": "Jeera (Cumin) Whole (Loose)",
+   "description": "Hand-cleaned cumin seeds, aromatic and fresh.",
+   "brand_slug": null,
+   "category_slug": "whole-spices",
+   "mrp_paise": 6500,
+   "price_paise": 5600,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "whole",
+    "loose"
+   ],
+   "rating": 4.5,
+   "variants": [
+    {
+     "label": "100 g",
+     "mrp_paise": 6500,
+     "price_paise": 5600,
+     "stock": 48,
+     "sort_order": 0
+    },
+    {
+     "label": "250 g",
+     "mrp_paise": 15500,
+     "price_paise": 13500,
+     "stock": 28,
+     "sort_order": 1
+    },
+    {
+     "label": "500 g",
+     "mrp_paise": 30000,
+     "price_paise": 26200,
+     "stock": 12,
+     "sort_order": 2
+    }
+   ]
+  },
+  {
+   "slug": "loose-haldi-whole",
+   "name": "Haldi (Turmeric) Whole (Loose)",
+   "description": "Whole turmeric fingers — we can grind them fresh for you.",
+   "brand_slug": null,
+   "category_slug": "whole-spices",
+   "mrp_paise": 5500,
+   "price_paise": 4800,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "whole",
+    "loose"
+   ],
+   "rating": 4.4,
+   "variants": [
+    {
+     "label": "100 g",
+     "mrp_paise": 5500,
+     "price_paise": 4800,
+     "stock": 42,
+     "sort_order": 0
+    },
+    {
+     "label": "250 g",
+     "mrp_paise": 13000,
+     "price_paise": 11200,
+     "stock": 26,
+     "sort_order": 1
+    },
+    {
+     "label": "500 g",
+     "mrp_paise": 25000,
+     "price_paise": 21800,
+     "stock": 14,
+     "sort_order": 2
+    }
+   ]
+  },
+  {
+   "slug": "loose-sabut-dhania",
+   "name": "Sabut Dhania (Coriander Seeds) (Loose)",
+   "description": "Whole coriander seeds for tempering and fresh grinding.",
+   "brand_slug": null,
+   "category_slug": "whole-spices",
+   "mrp_paise": 4200,
+   "price_paise": 3600,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "whole",
+    "loose"
+   ],
+   "rating": 4.3,
+   "variants": [
+    {
+     "label": "100 g",
+     "mrp_paise": 4200,
+     "price_paise": 3600,
+     "stock": 50,
+     "sort_order": 0
+    },
+    {
+     "label": "250 g",
+     "mrp_paise": 10000,
+     "price_paise": 8800,
+     "stock": 30,
+     "sort_order": 1
+    }
+   ]
+  },
+  {
+   "slug": "loose-laung",
+   "name": "Laung (Cloves) (Loose)",
+   "description": "Hand-picked cloves with full heads and strong aroma.",
+   "brand_slug": null,
+   "category_slug": "whole-spices",
+   "mrp_paise": 9500,
+   "price_paise": 8400,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "whole",
+    "loose"
+   ],
+   "rating": 4.5,
+   "variants": [
+    {
+     "label": "50 g",
+     "mrp_paise": 9500,
+     "price_paise": 8400,
+     "stock": 30,
+     "sort_order": 0
+    },
+    {
+     "label": "100 g",
+     "mrp_paise": 18000,
+     "price_paise": 16000,
+     "stock": 18,
+     "sort_order": 1
+    }
+   ]
+  },
+  {
+   "slug": "amul-taaza-milk-1l",
+   "name": "Amul Taaza Toned Milk 1 L",
+   "description": "Toned milk, pasteurised. Delivered fresh each morning.",
+   "brand_slug": "amul",
+   "category_slug": "milk",
+   "mrp_paise": 7200,
+   "price_paise": 6800,
+   "unit_label": "1 L",
+   "stock": 90,
+   "tags": [
+    "daily",
+    "toned"
+   ],
+   "rating": 4.7,
+   "variants": []
+  },
+  {
+   "slug": "mother-dairy-toned-milk-500ml",
+   "name": "Mother Dairy Toned Milk 500 ml",
+   "description": "Half-litre pouch for chai and cereal.",
+   "brand_slug": "mother-dairy",
+   "category_slug": "milk",
+   "mrp_paise": 3800,
+   "price_paise": 3500,
+   "unit_label": "500 ml",
+   "stock": 76,
+   "tags": [
+    "daily"
+   ],
+   "rating": 4.6,
+   "variants": []
+  },
+  {
+   "slug": "amul-butter-500g",
+   "name": "Amul Butter 500 g",
+   "description": "Salted table butter in the classic pack.",
+   "brand_slug": "amul",
+   "category_slug": "butter-cheese",
+   "mrp_paise": 29500,
+   "price_paise": 27800,
+   "unit_label": "500 g",
+   "stock": 44,
+   "tags": [
+    "bestseller"
+   ],
+   "rating": 4.8,
+   "variants": []
+  },
+  {
+   "slug": "amul-malai-paneer-200g",
+   "name": "Amul Malai Paneer 200 g",
+   "description": "Soft malai paneer, vacuum packed the same day.",
+   "brand_slug": "amul",
+   "category_slug": "curd-paneer",
+   "mrp_paise": 10500,
+   "price_paise": 9500,
+   "unit_label": "200 g",
+   "stock": 36,
+   "tags": [
+    "fresh",
+    "protein"
+   ],
+   "rating": 4.5,
+   "variants": []
+  },
+  {
+   "slug": "mother-dairy-dahi-400g",
+   "name": "Mother Dairy Dahi 400 g",
+   "description": "Set curd with live cultures, mildly sour.",
+   "brand_slug": "mother-dairy",
+   "category_slug": "curd-paneer",
+   "mrp_paise": 5500,
+   "price_paise": 5000,
+   "unit_label": "400 g",
+   "stock": 40,
+   "tags": [
+    "fresh"
+   ],
+   "rating": 4.4,
+   "variants": []
+  },
+  {
+   "slug": "amul-cheese-slices-200g",
+   "name": "Amul Cheese Slices 200 g",
+   "description": "Ten processed cheese slices for sandwiches.",
+   "brand_slug": "amul",
+   "category_slug": "butter-cheese",
+   "mrp_paise": 14500,
+   "price_paise": 13200,
+   "unit_label": "200 g",
+   "stock": 30,
+   "tags": [
+    "kids"
+   ],
+   "rating": 4.4,
+   "variants": []
+  },
+  {
+   "slug": "aashirvaad-atta-5kg",
+   "name": "Aashirvaad Shudh Chakki Atta 5 kg",
+   "description": "100% whole wheat, chakki ground. Soft rotis that stay soft longer.",
+   "brand_slug": "aashirvaad",
+   "category_slug": "atta-flour",
+   "mrp_paise": 29500,
+   "price_paise": 27200,
+   "unit_label": "5 kg",
+   "stock": 58,
+   "tags": [
+    "bestseller",
+    "chakki-fresh"
+   ],
+   "rating": 4.7,
+   "variants": []
+  },
+  {
+   "slug": "aashirvaad-atta-10kg",
+   "name": "Aashirvaad Shudh Chakki Atta 10 kg",
+   "description": "The family bag — best price per kilo.",
+   "brand_slug": "aashirvaad",
+   "category_slug": "atta-flour",
+   "mrp_paise": 57500,
+   "price_paise": 53500,
+   "unit_label": "10 kg",
+   "stock": 30,
+   "tags": [
+    "value-pack"
+   ],
+   "rating": 4.7,
+   "variants": []
+  },
+  {
+   "slug": "aashirvaad-basmati-rice-5kg",
+   "name": "Aashirvaad Basmati Rice 5 kg",
+   "description": "Aged long-grain basmati, cooked grain stays separate.",
+   "brand_slug": "aashirvaad",
+   "category_slug": "rice",
+   "mrp_paise": 85000,
+   "price_paise": 79500,
+   "unit_label": "5 kg",
+   "stock": 22,
+   "tags": [
+    "basmati",
+    "festive"
+   ],
+   "rating": 4.6,
+   "variants": []
+  },
+  {
+   "slug": "loose-sona-masoori-rice",
+   "name": "Sona Masoori Rice (Loose)",
+   "description": "Light, everyday rice sold by weight.",
+   "brand_slug": null,
+   "category_slug": "rice",
+   "mrp_paise": 37500,
+   "price_paise": 34000,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "loose",
+    "rice"
+   ],
+   "rating": 4.4,
+   "variants": [
+    {
+     "label": "5 kg",
+     "mrp_paise": 37500,
+     "price_paise": 34000,
+     "stock": 26,
+     "sort_order": 0
+    },
+    {
+     "label": "10 kg",
+     "mrp_paise": 72000,
+     "price_paise": 65500,
+     "stock": 14,
+     "sort_order": 1
+    },
+    {
+     "label": "25 kg",
+     "mrp_paise": 175000,
+     "price_paise": 159000,
+     "stock": 6,
+     "sort_order": 2
+    }
+   ]
+  },
+  {
+   "slug": "tata-salt-1kg",
+   "name": "Tata Salt 1 kg",
+   "description": "Iodised free-flowing salt — the one in every kitchen.",
+   "brand_slug": "tata",
+   "category_slug": "sugar-salt",
+   "mrp_paise": 3000,
+   "price_paise": 2700,
+   "unit_label": "1 kg",
+   "stock": 120,
+   "tags": [
+    "staples",
+    "iodised"
+   ],
+   "rating": 4.7,
+   "variants": []
+  },
+  {
+   "slug": "loose-sugar",
+   "name": "Sugar (Loose)",
+   "description": "Fine white sugar from fresh shop stock.",
+   "brand_slug": null,
+   "category_slug": "sugar-salt",
+   "mrp_paise": 5200,
+   "price_paise": 4600,
+   "unit_label": "per pack",
+   "stock": 0,
+   "tags": [
+    "loose",
+    "staples"
+   ],
+   "rating": 4.2,
+   "variants": [
+    {
+     "label": "1 kg",
+     "mrp_paise": 5200,
+     "price_paise": 4600,
+     "stock": 80,
+     "sort_order": 0
+    },
+    {
+     "label": "5 kg",
+     "mrp_paise": 25000,
+     "price_paise": 22400,
+     "stock": 24,
+     "sort_order": 1
+    }
+   ]
+  },
+  {
+   "slug": "tata-sampann-besan-1kg",
+   "name": "Tata Sampann Besan 1 kg",
+   "description": "Fine gram flour for pakoras, kadhi and chilla.",
+   "brand_slug": "tata-sampann",
+   "category_slug": "atta-flour",
+   "mrp_paise": 13500,
+   "price_paise": 12200,
+   "unit_label": "1 kg",
+   "stock": 46,
+   "tags": [
+    "besan"
+   ],
+   "rating": 4.4,
+   "variants": []
+  },
+  {
+   "slug": "fortune-sooji-500g",
+   "name": "Fortune Sooji 500 g",
+   "description": "Coarse semolina for halwa and upma.",
+   "brand_slug": "fortune",
+   "category_slug": "atta-flour",
+   "mrp_paise": 4500,
+   "price_paise": 3900,
+   "unit_label": "500 g",
+   "stock": 52,
+   "tags": [
+    "rava"
+   ],
+   "rating": 4.1,
+   "variants": []
+  },
+  {
+   "slug": "britannia-good-day-butter-cookies-200g",
+   "name": "Britannia Good Day Butter Cookies 200 g",
+   "description": "Buttery cookies with real butter chunks.",
+   "brand_slug": "britannia",
+   "category_slug": "biscuits",
+   "mrp_paise": 5500,
+   "price_paise": 4900,
+   "unit_label": "200 g",
+   "stock": 80,
+   "tags": [
+    "cookies"
+   ],
+   "rating": 4.6,
+   "variants": []
+  },
+  {
+   "slug": "parle-g-biscuits-1kg",
+   "name": "Parle-G Biscuits 1 kg",
+   "description": "The original glucose biscuit, family pack.",
+   "brand_slug": "parle",
+   "category_slug": "biscuits",
+   "mrp_paise": 11000,
+   "price_paise": 9800,
+   "unit_label": "1 kg",
+   "stock": 90,
+   "tags": [
+    "bestseller",
+    "family-pack"
+   ],
+   "rating": 4.7,
+   "variants": []
+  },
+  {
+   "slug": "haldirams-aloo-bhujia-400g",
+   "name": "Haldiram's Aloo Bhujia 400 g",
+   "description": "Crunchy potato bhujia, sealed for freshness.",
+   "brand_slug": "haldirams",
+   "category_slug": "namkeen",
+   "mrp_paise": 13000,
+   "price_paise": 11800,
+   "unit_label": "400 g",
+   "stock": 54,
+   "tags": [
+    "namkeen"
+   ],
+   "rating": 4.5,
+   "variants": []
+  },
+  {
+   "slug": "haldirams-moong-dal-400g",
+   "name": "Haldiram's Moong Dal 400 g",
+   "description": "Salted fried moong dal, the chai-time classic.",
+   "brand_slug": "haldirams",
+   "category_slug": "namkeen",
+   "mrp_paise": 12500,
+   "price_paise": 11200,
+   "unit_label": "400 g",
+   "stock": 48,
+   "tags": [
+    "namkeen"
+   ],
+   "rating": 4.4,
+   "variants": []
+  },
+  {
+   "slug": "balaji-ratlami-sev-400g",
+   "name": "Balaji Ratlami Sev 400 g",
+   "description": "Fiery Ratlami sev with clove and pepper.",
+   "brand_slug": "balaji",
+   "category_slug": "namkeen",
+   "mrp_paise": 9500,
+   "price_paise": 8500,
+   "unit_label": "400 g",
+   "stock": 44,
+   "tags": [
+    "spicy"
+   ],
+   "rating": 4.3,
+   "variants": []
+  },
+  {
+   "slug": "lays-magic-masala-52g",
+   "name": "Lay's Magic Masala 52 g",
+   "description": "The blue pack — India's favourite masala chips.",
+   "brand_slug": "pepsico",
+   "category_slug": "chips",
+   "mrp_paise": 2500,
+   "price_paise": 2000,
+   "unit_label": "52 g",
+   "stock": 120,
+   "tags": [
+    "chips"
+   ],
+   "rating": 4.5,
+   "variants": []
+  },
+  {
+   "slug": "bingo-mad-angles-tomato-70g",
+   "name": "Bingo Mad Angles Tomato 70 g",
+   "description": "Triangle tomato chips, crunchy and tangy.",
+   "brand_slug": "itc",
+   "category_slug": "chips",
+   "mrp_paise": 3000,
+   "price_paise": 2500,
+   "unit_label": "70 g",
+   "stock": 96,
+   "tags": [
+    "chips"
+   ],
+   "rating": 4.2,
+   "variants": []
+  },
+  {
+   "slug": "tata-tea-gold-1kg",
+   "name": "Tata Tea Gold 1 kg",
+   "description": "Assam CTC with a touch of long leaves for a strong, aromatic cup.",
+   "brand_slug": "tata",
+   "category_slug": "tea",
+   "mrp_paise": 66500,
+   "price_paise": 61500,
+   "unit_label": "1 kg",
+   "stock": 40,
+   "tags": [
+    "bestseller",
+    "chai"
+   ],
+   "rating": 4.7,
+   "variants": []
+  },
+  {
+   "slug": "tata-tea-premium-500g",
+   "name": "Tata Tea Premium 500 g",
+   "description": "Everyday strong tea for doodh chai.",
+   "brand_slug": "tata",
+   "category_slug": "tea",
+   "mrp_paise": 31000,
+   "price_paise": 28500,
+   "unit_label": "500 g",
+   "stock": 46,
+   "tags": [
+    "chai"
+   ],
+   "rating": 4.5,
+   "variants": []
+  },
+  {
+   "slug": "nestle-nescafe-classic-100g",
+   "name": "Nescafé Classic Coffee 100 g",
+   "description": "Instant coffee granules, rich and smooth.",
+   "brand_slug": "nestle",
+   "category_slug": "tea",
+   "mrp_paise": 38500,
+   "price_paise": 35500,
+   "unit_label": "100 g",
+   "stock": 26,
+   "tags": [
+    "coffee"
+   ],
+   "rating": 4.5,
+   "variants": []
+  },
+  {
+   "slug": "coca-cola-1-25l",
+   "name": "Coca-Cola 1.25 L",
+   "description": "Chilled on request. Best with Sunday lunch.",
+   "brand_slug": "coca-cola",
+   "category_slug": "cold-drinks",
+   "mrp_paise": 8500,
+   "price_paise": 7800,
+   "unit_label": "1.25 L",
+   "stock": 110,
+   "tags": [
+    "cold-drink"
+   ],
+   "rating": 4.4,
+   "variants": []
+  },
+  {
+   "slug": "frooti-mango-1-2l",
+   "name": "Frooti Mango Drink 1.2 L",
+   "description": "Mango drink in the family pack.",
+   "brand_slug": "frooti",
+   "category_slug": "juices",
+   "mrp_paise": 8500,
+   "price_paise": 7600,
+   "unit_label": "1.2 L",
+   "stock": 84,
+   "tags": [
+    "mango",
+    "kids"
+   ],
+   "rating": 4.3,
+   "variants": []
+  },
+  {
+   "slug": "real-mixed-fruit-juice-1l",
+   "name": "Real Mixed Fruit Juice 1 L",
+   "description": "No added preservatives, seven-fruit blend.",
+   "brand_slug": "dabur",
+   "category_slug": "juices",
+   "mrp_paise": 13000,
+   "price_paise": 11800,
+   "unit_label": "1 L",
+   "stock": 52,
+   "tags": [
+    "juice"
+   ],
+   "rating": 4.2,
+   "variants": []
+  },
+  {
+   "slug": "colgate-strong-teeth-200g",
+   "name": "Colgate Strong Teeth 200 g",
+   "description": "Calcium boost toothpaste for the whole family.",
+   "brand_slug": "colgate",
+   "category_slug": "oral-care",
+   "mrp_paise": 11500,
+   "price_paise": 10200,
+   "unit_label": "200 g",
+   "stock": 70,
+   "tags": [
+    "dental"
+   ],
+   "rating": 4.6,
+   "variants": []
+  },
+  {
+   "slug": "dabur-amla-hair-oil-275ml",
+   "name": "Dabur Amla Hair Oil 275 ml",
+   "description": "Amla oil for stronger, darker hair — a household staple.",
+   "brand_slug": "dabur",
+   "category_slug": "hair-care",
+   "mrp_paise": 16500,
+   "price_paise": 14800,
+   "unit_label": "275 ml",
+   "stock": 48,
+   "tags": [
+    "hair"
+   ],
+   "rating": 4.4,
+   "variants": []
+  },
+  {
+   "slug": "patanjali-kesh-kanti-shampoo-340ml",
+   "name": "Patanjali Kesh Kanti Shampoo 340 ml",
+   "description": "Herbal shampoo with reetha and amla.",
+   "brand_slug": "patanjali",
+   "category_slug": "hair-care",
+   "mrp_paise": 21000,
+   "price_paise": 18900,
+   "unit_label": "340 ml",
+   "stock": 34,
+   "tags": [
+    "hair",
+    "ayurvedic"
+   ],
+   "rating": 4.2,
+   "variants": []
+  },
+  {
+   "slug": "dettol-original-soap-125g",
+   "name": "Dettol Original Soap 125 g",
+   "description": "Trusted germ protection for daily bathing.",
+   "brand_slug": "dettol",
+   "category_slug": "skin-care",
+   "mrp_paise": 5500,
+   "price_paise": 4900,
+   "unit_label": "125 g",
+   "stock": 88,
+   "tags": [
+    "germ-protection"
+   ],
+   "rating": 4.5,
+   "variants": []
+  },
+  {
+   "slug": "santoor-sandalwood-soap-150g",
+   "name": "Santoor Sandalwood Soap 150 g",
+   "description": "Sandalwood and turmeric soap for soft skin.",
+   "brand_slug": "santoor",
+   "category_slug": "bathing-soaps",
+   "mrp_paise": 4600,
+   "price_paise": 4100,
+   "unit_label": "150 g",
+   "stock": 92,
+   "tags": [
+    "sandalwood"
+   ],
+   "rating": 4.3,
+   "variants": []
+  },
+  {
+   "slug": "lifebuoy-sabun-4-pack",
+   "name": "Lifebuoy Total Soap (4 pack)",
+   "description": "Four bars of Lifebuoy Total — the family pack.",
+   "brand_slug": "lifebuoy",
+   "category_slug": "bathing-soaps",
+   "mrp_paise": 18000,
+   "price_paise": 16000,
+   "unit_label": "4 × 125 g",
+   "stock": 56,
+   "tags": [
+    "value-pack",
+    "germ-protection"
+   ],
+   "rating": 4.4,
+   "variants": []
+  },
+  {
+   "slug": "surf-excel-easy-wash-1kg",
+   "name": "Surf Excel Easy Wash 1 kg",
+   "description": "Tough on stains, easy on hands.",
+   "brand_slug": "surf-excel",
+   "category_slug": "detergents",
+   "mrp_paise": 13500,
+   "price_paise": 12200,
+   "unit_label": "1 kg",
+   "stock": 64,
+   "tags": [
+    "detergent"
+   ],
+   "rating": 4.6,
+   "variants": []
+  },
+  {
+   "slug": "surf-excel-matic-liquid-1l",
+   "name": "Surf Excel Matic Liquid 1 L",
+   "description": "Front-load and top-load machine liquid detergent.",
+   "brand_slug": "surf-excel",
+   "category_slug": "detergents",
+   "mrp_paise": 26500,
+   "price_paise": 24200,
+   "unit_label": "1 L",
+   "stock": 30,
+   "tags": [
+    "detergent",
+    "liquid"
+   ],
+   "rating": 4.5,
+   "variants": []
+  },
+  {
+   "slug": "nirma-washing-powder-1kg",
+   "name": "Nirma Washing Powder 1 kg",
+   "description": "The value pack for hand washing.",
+   "brand_slug": "nirma",
+   "category_slug": "detergents",
+   "mrp_paise": 7500,
+   "price_paise": 6600,
+   "unit_label": "1 kg",
+   "stock": 72,
+   "tags": [
+    "budget"
+   ],
+   "rating": 4.1,
+   "variants": []
+  },
+  {
+   "slug": "dettol-floor-cleaner-1l",
+   "name": "Dettol Floor Cleaner 1 L",
+   "description": "Disinfectant floor cleaner, citronellol fragrance.",
+   "brand_slug": "dettol",
+   "category_slug": "household-cleaning",
+   "mrp_paise": 21500,
+   "price_paise": 19500,
+   "unit_label": "1 L",
+   "stock": 38,
+   "tags": [
+    "cleaning"
+   ],
+   "rating": 4.4,
+   "variants": []
+  },
+  {
+   "slug": "colin-glass-cleaner-500ml",
+   "name": "Colin Glass Cleaner 500 ml",
+   "description": "Streak-free shine for glass and mirrors.",
+   "brand_slug": null,
+   "category_slug": "household-cleaning",
+   "mrp_paise": 11000,
+   "price_paise": 9600,
+   "unit_label": "500 ml",
+   "stock": 34,
+   "tags": [
+    "cleaning"
+   ],
+   "rating": 4.2,
+   "variants": []
+  }
+ ]
+}
