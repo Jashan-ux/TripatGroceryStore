@@ -62,6 +62,16 @@ async def _place(
     return placed.json()
 
 
+def _fake_provider(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A configured provider that never talks to Resend (the client is injected)."""
+
+    class FakeSettings:
+        RESEND_API_KEY = "re_test"
+        SUPPORT_EMAIL_FROM = "Tripat Pansari <orders@example.invalid>"
+
+    monkeypatch.setattr(email_service, "get_settings", FakeSettings)
+
+
 async def _emails() -> list[dict[str, Any]]:
     sessionmaker = get_sessionmaker()
     async with sessionmaker() as session:
@@ -285,7 +295,10 @@ async def test_the_confirmation_and_the_shop_alert_are_queued(
 
 
 async def test_without_a_provider_the_outbox_says_so_and_sends_nothing(
-    async_client: AsyncClient, customer: dict[str, Any], ghee: dict[str, Any]
+    async_client: AsyncClient,
+    customer: dict[str, Any],
+    admin: dict[str, Any],
+    ghee: dict[str, Any],
 ) -> None:
     await _place(async_client, customer, ghee)
     sessionmaker = get_sessionmaker()
@@ -305,12 +318,11 @@ async def test_without_a_provider_the_outbox_says_so_and_sends_nothing(
 async def test_with_a_provider_each_email_is_sent_once(
     async_client: AsyncClient,
     customer: dict[str, Any],
+    admin: dict[str, Any],
     ghee: dict[str, Any],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        email_service, "get_settings", lambda: type("S", (), {"RESEND_API_KEY": "re_test"})()
-    )
+    _fake_provider(monkeypatch)
     await _place(async_client, customer, ghee)
 
     sent: list[httpx.Request] = []
@@ -326,7 +338,8 @@ async def test_with_a_provider_each_email_is_sent_once(
         assert counts == {"sent": 2, "skipped": 0, "failed": 0}
         # Draining again sends nothing: the rows are no longer `queued`.
         async with sessionmaker() as session:
-            assert await email_service.flush(session, client=client)["sent"] == 0
+            drained = await email_service.flush(session, client=client)
+            assert drained["sent"] == 0
 
     assert len(sent) == 2
     assert sent[0].headers["authorization"] == "Bearer re_test"
@@ -340,12 +353,11 @@ async def test_with_a_provider_each_email_is_sent_once(
 async def test_a_provider_error_is_recorded_not_swallowed(
     async_client: AsyncClient,
     customer: dict[str, Any],
+    admin: dict[str, Any],
     ghee: dict[str, Any],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        email_service, "get_settings", lambda: type("S", (), {"RESEND_API_KEY": "re_test"})()
-    )
+    _fake_provider(monkeypatch)
     await _place(async_client, customer, ghee)
 
     def handler(request: httpx.Request) -> httpx.Response:

@@ -138,13 +138,15 @@ def upgrade() -> None:
     )
     op.create_index("ix_email_messages_status_created", "email_messages", ["status", "created_at"])
 
+    # One statement per `op.execute`: asyncpg prepares each execute, and a
+    # prepared statement cannot carry two commands (CI caught exactly that).
     for table in ("notifications", "email_messages"):
+        op.execute(f"DROP TRIGGER IF EXISTS trg_{table}_updated_at ON public.{table}")
         op.execute(
             f"""
-            DROP TRIGGER IF EXISTS trg_{table}_updated_at ON public.{table};
             CREATE TRIGGER trg_{table}_updated_at
                 BEFORE UPDATE ON public.{table}
-                FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+                FOR EACH ROW EXECUTE FUNCTION set_updated_at()
             """
         )
 
@@ -154,6 +156,8 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.execute("SELECT set_config('search_path', 'public, extensions, pg_temp', true)")
+    for table in ("notifications", "email_messages"):
+        op.execute(f"DROP TRIGGER IF EXISTS trg_{table}_updated_at ON public.{table}")
     op.drop_index("ix_email_messages_status_created", table_name="email_messages")
     op.drop_table("email_messages")
     op.drop_index("ix_notifications_unread", table_name="notifications")

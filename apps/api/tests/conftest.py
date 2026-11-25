@@ -186,11 +186,20 @@ async def catalogue() -> AsyncIterator[dict[str, Any]]:
 
 
 async def _wipe_profiles() -> None:
-    """Remove rows the tests created. Orders reference profiles, so they go first."""
+    """Remove rows the tests created, so every test starts from the same place.
+
+    Order matters: order lines and events cascade from `orders`, notifications
+    cascade from `profiles`, and `email_messages` has no owner at all — it is an
+    outbox, so it is emptied explicitly. (Leaving it behind makes the outbox
+    assertions order-dependent: a queued row from an earlier test is still
+    `queued` for the next one.)
+    """
     from app.db.session import get_sessionmaker
 
     sessionmaker = get_sessionmaker()
     async with sessionmaker() as session:
+        await session.execute(text("DELETE FROM email_messages"))
+        await session.execute(text("DELETE FROM notifications"))
         await session.execute(text("DELETE FROM orders"))
         await session.execute(text("DELETE FROM addresses"))
         await session.execute(text("DELETE FROM profiles"))
