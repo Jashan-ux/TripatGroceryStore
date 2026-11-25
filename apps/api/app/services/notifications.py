@@ -22,7 +22,7 @@ from app.models.orders import Order
 from app.repositories import notifications as repo
 from app.schemas.notifications import NotificationListOut, NotificationOut
 from app.services.email import queue as queue_email
-from app.services.format import day, items_phrase, rupees
+from app.services.format import day, day_count, items_phrase, rupees
 
 STATUS_COPY: dict[OrderStatus, tuple[str, str]] = {
     OrderStatus.processing: ("Order confirmed", "We have your order and are packing it."),
@@ -228,6 +228,45 @@ async def announce_status_change(
         lines=[f"Hello {order.customer_name or 'there'},", "", body],
         settings=settings,
         dedupe_suffix=f"status-{order.status.value}",
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Customer: the shop changed the delivery promise
+# --------------------------------------------------------------------------- #
+async def announce_delivery_change(
+    session: AsyncSession,
+    order: Order,
+    profile: Profile,
+    settings: StoreSettings,
+) -> None:
+    """The order itself is unchanged; only the date the customer was promised moved."""
+    title = f"{order.order_number}: Delivery in {day_count(order.delivery_days)}"
+    session.add(
+        _add(
+            session,
+            profile_id=profile.id,
+            kind=NotificationKind.system,
+            title=title,
+            body=f"The shop has updated your delivery estimate to {day(order.deliver_by)}.",
+            href=f"/orders/{order.id}",
+            order_id=order.id,
+        )
+    )
+    await _customer_email(
+        session,
+        profile=profile,
+        order=order,
+        subject=title,
+        lines=[
+            f"Hello {order.customer_name or 'there'},",
+            "",
+            f"We have updated the delivery estimate for {order.order_number} "
+            f"to {day(order.deliver_by)} ({day_count(order.delivery_days)}).",
+            "If that does not suit you, call the shop and we will sort it out.",
+        ],
+        settings=settings,
+        dedupe_suffix=f"delivery-{order.delivery_days}-{order.deliver_by}",
     )
 
 

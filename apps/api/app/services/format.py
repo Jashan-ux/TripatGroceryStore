@@ -24,5 +24,10 @@ def day(day_value: date | None) -> str:
     return f"{day_value.day} {day_value.strftime('%b')} {day_value.year}"
 
 
+def day_count(days: int) -> str:
+    """`1 day` / `3 days`, for promises we make in prose."""
+    return "1 day" if days == 1 else f"{days} days"
+
+
 def items_phrase(count: int) -> str:
     return f"{count} item" if count == 1 else f"{count} items"

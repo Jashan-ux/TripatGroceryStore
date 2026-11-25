@@ -77,6 +77,25 @@ export function useSetOrderStatus() {
   });
 }
 
+export function useSetOrderDeliveryDays() {
+  const queryClient = useQueryClient();
+  return useMutation<AdminOrderSummaryOut, Error, { orderId: string; days: number; note?: string }>(
+    {
+      mutationFn: ({ orderId, days, note }) =>
+        api.patch<AdminOrderSummaryOut>(`/api/v1/admin/orders/${orderId}/delivery-days`, {
+          days,
+          note: note ?? '',
+        }),
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] });
+        void queryClient.invalidateQueries({ queryKey: ['admin', 'order'] });
+        // The customer's bell gains a line, so their count is stale too.
+        void queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      },
+    },
+  );
+}
+
 /** The single next step the shop should take, if any. */
 export function nextStep(
   status: string,

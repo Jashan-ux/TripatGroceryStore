@@ -166,6 +166,7 @@ Admin side (all behind `require_admin`):
 |---|---|
 | `GET /admin/orders?status=&q=&page=&page_size=` | The queue: newest first, per-status `counts` for the tabs. |
 | `GET /admin/orders/{id}` | Full order, address snapshot and event trail. |
+| `PATCH /admin/orders/{id}/delivery-days` | `{"days": 0..14, "note": "…"}` — re-promises *this* order from today. Writes a timeline event, rings the customer's bell (`system` kind) and queues the email; money, stock and status do not move. `409 order_not_editable` once the order is `delivered`, `cancelled` or `returned`; out-of-range days is `422`. |
 | `POST /admin/orders/{id}/status` | `{"status": "shipped", "note": "…"}`. Allowed moves: `processing → shipped | cancelled`, `shipped → out_for_delivery`, `out_for_delivery → delivered`, `delivered → returned`. Anything else is `409 invalid_status_transition` with `details.allowed`. Cancelling restores stock; `delivered` settles the COD payment. |
 
 ## Phase 3 — notifications and the email outbox

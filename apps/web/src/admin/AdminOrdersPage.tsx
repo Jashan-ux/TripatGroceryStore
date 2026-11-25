@@ -7,13 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { cn, formatIst, formatPaise, toTelHref } from '@/lib/utils';
+import { cn, formatDateOnly, formatIst, formatPaise, toTelHref } from '@/lib/utils';
 import type { AdminOrderStatusIn, AdminOrderSummaryOut, OrderOut } from '@tripat/api-client';
 import {
   ADMIN_PAGE_SIZE,
   nextStep,
   useAdminOrder,
   useAdminOrders,
+  useSetOrderDeliveryDays,
   useSetOrderStatus,
   type AdminStatusFilter,
 } from '@/admin/adminOrders';
@@ -344,6 +345,97 @@ function OrderDetailPanel({
   );
 }
 
+/**
+ * Per-order delivery days.
+ *
+ * The store default covers most orders; this is for the exception ("the supplier
+ * is late, give it three days"). The date is recomputed by the server from today,
+ * and the customer gets a bell line and an email, so the control must say what it
+ * will do rather than just accept a number.
+ */
+function DeliveryPromise({ order }: { order: OrderOut }) {
+  const saveDays = useSetOrderDeliveryDays();
+  const [days, setDaysInput] = useState(String(order.delivery_days));
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const finished = ['delivered', 'cancelled', 'returned'].includes(order.status);
+
+  const next = Number(days);
+  const changed = Number.isInteger(next) && next >= 0 && next !== order.delivery_days;
+
+  return (
+    <div className="rounded-lg border border-border p-2.5">
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="flex-1">
+          <label htmlFor={`delivery-days-${order.id}`} className="mb-1 block text-xs font-semibold">
+            Delivery promise
+          </label>
+          <p className="text-xs text-muted-foreground">
+            {order.deliver_by
+              ? `Promised by ${formatDateOnly(order.deliver_by)} · ${order.delivery_days} day${
+                  order.delivery_days === 1 ? '' : 's'
+                } from the order`
+              : 'No date promised'}
+          </p>
+        </div>
+        {!finished && (
+          <div className="flex items-end gap-2">
+            <Input
+              id={`delivery-days-${order.id}`}
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={14}
+              value={days}
+              aria-label="Days to deliver"
+              className="w-20"
+              onChange={(event) => {
+                setDaysInput(event.target.value);
+                setSaved(false);
+                setError(null);
+              }}
+            />
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!changed || saveDays.isPending}
+              onClick={() =>
+                saveDays.mutate(
+                  { orderId: order.id, days: next },
+                  {
+                    onSuccess: () => {
+                      setSaved(true);
+                      setError(null);
+                    },
+                    onError: (err) => setError(err.message),
+                  },
+                )
+              }
+            >
+              {saveDays.isPending ? 'Saving…' : 'Save'}
+            </Button>
+          </div>
+        )}
+      </div>
+      {saveDays.isPending && (
+        <p className="mt-1 text-xs text-muted-foreground">
+          Telling the customer about the new date…
+        </p>
+      )}
+      {saved && !saveDays.isPending && (
+        <p role="status" className="mt-1 text-xs font-medium text-primary">
+          Saved — the customer has been told.
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="mt-1 text-xs font-medium text-primary-700">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function Details({
   order,
   note,
@@ -391,6 +483,10 @@ function Details({
           )}
         </span>
       </div>
+
+      {/* Keyed on the server value: when the shop saves, the row remounts with the
+          new number instead of holding a stale input. */}
+      <DeliveryPromise key={`${order.id}-${order.delivery_days}`} order={order} />
 
       <div className="text-xs text-muted-foreground">
         <p>

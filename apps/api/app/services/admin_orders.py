@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import math
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,6 +25,7 @@ from app.models.enums import OrderStatus, PaymentStatus
 from app.models.orders import Order
 from app.repositories import orders as repo
 from app.schemas.admin_orders import (
+    AdminOrderDeliveryIn,
     AdminOrderListOut,
     AdminOrderStatusIn,
     AdminOrderSummaryOut,
@@ -47,6 +48,9 @@ ALLOWED_TRANSITIONS: dict[OrderStatus, frozenset[OrderStatus]] = {
     OrderStatus.cancelled: frozenset(),
     OrderStatus.returned: frozenset(),
 }
+
+#: A delivery promise only means something while the goods are still ours.
+FINISHED_STATUSES = frozenset({OrderStatus.delivered, OrderStatus.cancelled, OrderStatus.returned})
 
 #: Orders in these states still need the shop to do something.
 OPEN_STATUSES = frozenset(
@@ -165,6 +169,58 @@ async def transition(
         order_id=str(order.id),
         order_number=order.order_number,
         status=target.value,
+        actor=str(actor.id),
+    )
+    return order
+
+
+async def set_delivery_days(
+    session: AsyncSession,
+    order: Order,
+    payload: AdminOrderDeliveryIn,
+    *,
+    actor: Profile,
+) -> Order:
+    """Change the date this one order is promised for.
+
+    The date is counted from **today**, not from when the order was placed: the shop
+    is making a new promise now, and "3 days from an order placed last week" would
+    read as a date in the past. Only the promise moves — money, stock and status do
+    not.
+    """
+    if order.status in FINISHED_STATUSES:
+        raise ConflictError(
+            f"This order is {order.status.value.replace('_', ' ')}, so its delivery date "
+            "cannot be changed.",
+            code="order_not_editable",
+            details={"status": order.status.value},
+        )
+
+    promised = datetime.now(tz=UTC).date() + timedelta(days=payload.days)
+    order.delivery_days = payload.days
+    order.deliver_by = promised
+    await repo.add_event(
+        session,
+        order.id,
+        status=order.status.value,
+        actor="admin",
+        note=payload.note or f"Delivery promised by {promised:%d %b} ({payload.days}d)",
+    )
+
+    customer = await session.get(Profile, order.profile_id)
+    if customer is not None:
+        settings = await get_store_settings(session)
+        await notifications_service.announce_delivery_change(session, order, customer, settings)
+
+    await session.commit()
+    await session.refresh(order)
+    email_service.schedule_flush()
+    logger.info(
+        "order_delivery_days_changed",
+        order_id=str(order.id),
+        order_number=order.order_number,
+        days=payload.days,
+        deliver_by=promised.isoformat(),
         actor=str(actor.id),
     )
     return order

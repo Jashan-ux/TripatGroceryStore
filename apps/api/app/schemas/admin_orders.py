@@ -45,6 +45,11 @@ class AdminOrderListOut(APIModel):
     )
 
 
+class AdminOrderDeliveryIn(APIModel):
+    days: int = Field(ge=0, le=14, description="Days from today the shop promises.")
+    note: str = Field(default="", max_length=300)
+
+
 class AdminOrderStatusIn(APIModel):
     status: AdminStatus
     note: str = Field(default="", max_length=300)

@@ -15,6 +15,7 @@ from fastapi import APIRouter, Path, Query
 
 from app.api.deps import AdminUserDep, SessionDep
 from app.schemas.admin_orders import (
+    AdminOrderDeliveryIn,
     AdminOrderListOut,
     AdminOrderStatusIn,
     AdminOrderSummaryOut,
@@ -50,6 +51,22 @@ async def list_orders(
 async def get_order(user: AdminUserDep, session: SessionDep, order_id: OrderId) -> OrderOut:
     order = await service.get_order(session, order_id)
     return service.detail_out(order)
+
+
+@router.patch(
+    "/{order_id}/delivery-days",
+    response_model=AdminOrderSummaryOut,
+    summary="Promise this order for a different number of days",
+)
+async def set_delivery_days(
+    user: AdminUserDep,
+    session: SessionDep,
+    order_id: OrderId,
+    payload: AdminOrderDeliveryIn,
+) -> AdminOrderSummaryOut:
+    order = await service.get_order(session, order_id)
+    updated = await service.set_delivery_days(session, order, payload, actor=user.profile)
+    return service.summary_out(updated)
 
 
 @router.post(

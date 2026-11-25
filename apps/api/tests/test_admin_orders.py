@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Callable
+from datetime import date
 from typing import Any
 
 import pytest
@@ -339,3 +340,116 @@ async def test_stock_is_restored_exactly_once_even_for_two_lines(
             {"id": order["id"]},
         )
     assert events == 1
+
+
+# --------------------------------------------------------------------------- #
+# Per-order delivery days
+# --------------------------------------------------------------------------- #
+async def test_the_shop_can_promise_a_different_date_for_one_order(
+    async_client: AsyncClient,
+    admin: dict[str, Any],
+    order: dict[str, Any],
+) -> None:
+    original = order["deliver_by"]
+
+    response = await async_client.patch(
+        f"/api/v1/admin/orders/{order['id']}/delivery-days",
+        json={"days": 3, "note": "Two more days, the supplier is late"},
+        headers=admin["headers"],
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["deliver_by"] > original
+
+    detail = (
+        await async_client.get(f"/api/v1/admin/orders/{order['id']}", headers=admin["headers"])
+    ).json()
+    assert detail["delivery_days"] == 3
+    # The promise is in the timeline, so the shop can see why the date moved.
+    notes = [event["note"] for event in detail["events"]]
+    assert "Two more days, the supplier is late" in notes
+    # Money and stock are untouched by a scheduling change.
+    assert detail["total_paise"] == order["total_paise"]
+    assert detail["status"] == "processing"
+
+
+async def test_a_delivery_change_rings_the_customer(
+    async_client: AsyncClient,
+    admin: dict[str, Any],
+    customer: dict[str, Any],
+    order: dict[str, Any],
+) -> None:
+    await async_client.post("/api/v1/notifications/read-all", headers=customer["headers"])
+    await async_client.patch(
+        f"/api/v1/admin/orders/{order['id']}/delivery-days",
+        json={"days": 2},
+        headers=admin["headers"],
+    )
+
+    bell = (await async_client.get("/api/v1/notifications", headers=customer["headers"])).json()
+    entry = bell["items"][0]
+    assert entry["kind"] == "system"
+    assert entry["title"] == f"{order['order_number']}: Delivery in 2 days"
+    assert "delivery estimate" in entry["body"]
+    assert bell["unread_count"] == 1
+
+
+async def test_a_delivery_change_is_refused_once_the_order_is_finished(
+    async_client: AsyncClient,
+    admin: dict[str, Any],
+    order: dict[str, Any],
+) -> None:
+    for status in ("shipped", "out_for_delivery", "delivered"):
+        moved = await async_client.post(
+            f"/api/v1/admin/orders/{order['id']}/status",
+            json={"status": status},
+            headers=admin["headers"],
+        )
+        assert moved.status_code == 200, moved.text
+
+    refused = await async_client.patch(
+        f"/api/v1/admin/orders/{order['id']}/delivery-days",
+        json={"days": 5},
+        headers=admin["headers"],
+    )
+    assert refused.status_code == 409
+    assert refused.json()["error"]["code"] == "order_not_editable"
+
+
+async def test_a_delivery_change_keeps_the_promise_sane(
+    async_client: AsyncClient,
+    admin: dict[str, Any],
+    customer: dict[str, Any],
+    order: dict[str, Any],
+) -> None:
+    # Same day is allowed (the shop is delivering today).
+    today = await async_client.patch(
+        f"/api/v1/admin/orders/{order['id']}/delivery-days",
+        json={"days": 0},
+        headers=admin["headers"],
+    )
+    assert today.status_code == 200, today.text
+    assert today.json()["deliver_by"] == date.today().isoformat()
+
+    # More than a fortnight is not a promise, it is a guess.
+    too_long = await async_client.patch(
+        f"/api/v1/admin/orders/{order['id']}/delivery-days",
+        json={"days": 30},
+        headers=admin["headers"],
+    )
+    assert too_long.status_code == 422
+
+    negative = await async_client.patch(
+        f"/api/v1/admin/orders/{order['id']}/delivery-days",
+        json={"days": -1},
+        headers=admin["headers"],
+    )
+    assert negative.status_code == 422
+
+    # A customer cannot move their own promise.
+    forbidden = await async_client.patch(
+        f"/api/v1/admin/orders/{order['id']}/delivery-days",
+        json={"days": 2},
+        headers=customer["headers"],
+    )
+    assert forbidden.status_code == 403

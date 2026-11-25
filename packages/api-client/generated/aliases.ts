@@ -7,6 +7,7 @@ type Schemas = components['schemas'];
 export type AddressIn = Schemas['AddressIn'];
 export type AddressOut = Schemas['AddressOut'];
 export type AddressSnapshotOut = Schemas['AddressSnapshotOut'];
+export type AdminOrderDeliveryIn = Schemas['AdminOrderDeliveryIn'];
 export type AdminOrderListOut = Schemas['AdminOrderListOut'];
 export type AdminOrderStatusIn = Schemas['AdminOrderStatusIn'];
 export type AdminOrderSummaryOut = Schemas['AdminOrderSummaryOut'];
