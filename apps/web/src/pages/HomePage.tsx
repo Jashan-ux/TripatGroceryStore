@@ -75,8 +75,7 @@ export default function HomePage() {
           </span>
           {health.data ? (
             <span>
-              {health.data.status === 'ok' ? 'Store online' : 'Store partially available'} · v
-              {health.data.version}
+              {health.data.status === 'ok' ? 'Store online' : 'Store partially available'}
             </span>
           ) : null}
           {config.data ? (

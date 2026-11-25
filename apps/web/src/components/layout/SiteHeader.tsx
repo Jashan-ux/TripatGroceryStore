@@ -40,7 +40,14 @@ export function SiteHeader() {
               <User aria-hidden="true" />
             </Link>
           </Button>
-          <Button asChild variant="ghost" size="icon" aria-label={t('nav.cart')}>
+          {/* Cart is in the bottom nav on phones: keeping both would overflow 360px. */}
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            aria-label={t('nav.cart')}
+            className="hidden sm:inline-flex"
+          >
             <Link to="/cart">
               <ShoppingCart aria-hidden="true" />
             </Link>
