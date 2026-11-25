@@ -25,6 +25,28 @@ from tests.support import ADDRESS, cart, new_customer, place, product_detail, st
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("use_local_keys")]
 
 
+async def test_the_cached_settings_row_never_needs_its_session() -> None:
+    """A rollback elsewhere must not expire the cached store settings.
+
+    The cache used to hold the live ORM row, so any request that rolled back
+    after loading it left an expired, detached object behind and every checkout
+    inside the 30-second window then raised ``DetachedInstanceError``.
+    """
+    from app.db.session import get_sessionmaker
+    from app.services import settings as settings_service
+
+    settings_service.invalidate_cache()
+    sessionmaker = get_sessionmaker()
+    async with sessionmaker() as session:
+        loaded = await settings_service.get_store_settings(session)
+        await session.rollback()
+
+    assert loaded.minimum_order_paise > 0
+    assert loaded.serviceable_pincodes
+    assert loaded.default_delivery_days >= 1
+    settings_service.invalidate_cache()
+
+
 # --------------------------------------------------------------------------- #
 # Addresses
 # --------------------------------------------------------------------------- #
