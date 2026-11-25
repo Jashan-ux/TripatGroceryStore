@@ -54,7 +54,7 @@ venv; the `db`-marked tests run in CI, where a Postgres exists.
 1. **Browser against live data.** The sandbox has no browser and cannot open a
    Postgres connection to `*.supabase.co` (`ConnectionResetError` on the TLS
    upgrade), so no preview here is backed by the hosted catalogue. The same code
-   paths are exercised instead by the 54 CI database tests and the Playwright
+   paths are exercised instead by the 94 database tests and the Playwright
    job (which runs the real API and the real built bundle).
 2. **Real sign-in round trip.** Supabase Auth is only reachable from a browser
    with network access. The JWT verification side *is* covered
