@@ -1,0 +1,93 @@
+/**
+ * English copy. Hindi arrives in the final phase; every user-facing string is
+ * looked up here (or in a server-provided value), so adding `hi.ts` is a data
+ * change, not a refactor.
+ */
+export const en = {
+  brand: {
+    name: 'Tripat Pansari',
+    sub: 'MSG STORE',
+    full: 'Tripat Pansari · MSG Store',
+  },
+  nav: {
+    home: 'Home',
+    category: 'Category',
+    cart: 'Cart',
+    orders: 'Orders',
+    profile: 'Profile',
+    search: 'Search',
+    menu: 'Menu',
+    notifications: 'Notifications',
+    primary: 'Main navigation',
+    skipToContent: 'Skip to main content',
+  },
+  home: {
+    bannerTitle: 'Your family deserves the best. Choose MSG.',
+    bannerSubtitle: 'Groceries, herbs and daily essentials — delivered in Mandi Dabwali.',
+    callStore: 'Call the store',
+    shopByCategory: 'Shop by category',
+    promos: 'Today at MSG',
+    catalogueEmptyTitle: 'The catalogue is being stocked',
+    catalogueEmptyBody:
+      'Our product list goes live with the next update. Call the store and we will take your order right away.',
+    loadingCatalogue: 'Loading the catalogue',
+  },
+  common: {
+    retry: 'Try again',
+    loading: 'Loading',
+    offline: 'You are offline',
+    offlineBody: 'You can still browse pages you have opened. Ordering needs a connection.',
+    updateAvailable: 'A new version of MSG Store is ready.',
+    updateAction: 'Refresh',
+    later: 'Later',
+    comingSoonTitle: 'Coming soon',
+    comingSoonBody: 'This part of the store opens in an upcoming update.',
+    notFoundTitle: 'Page not found',
+    notFoundBody: 'That page does not exist. Let us take you back to the shop.',
+    backHome: 'Back to home',
+    somethingWrong: 'Something went wrong',
+    somethingWrongBody: 'Please reload the page. If it keeps happening, call the store.',
+    reload: 'Reload',
+  },
+  footer: {
+    about: 'MSG Store · fresh groceries and daily essentials delivered to your doorstep.',
+    shop: 'Shop',
+    customerService: 'Customer Service',
+    account: 'Account',
+    contactUs: 'Contact Us',
+    shippingInfo: 'Shipping Info',
+    returns: 'Returns',
+    faq: 'FAQ',
+    myProfile: 'My Profile',
+    orderHistory: 'Order History',
+    rewards: 'Rewards & Referrals',
+    privacy: 'Privacy Policy',
+    terms: 'Terms of Service',
+    rights: 'All rights reserved.',
+    openNow: 'Open now',
+  },
+  search: {
+    placeholder: 'Search products, brands, herbs…',
+    label: 'Search products',
+    submit: 'Search',
+    emptyTitle: 'No products found',
+    emptyBody: 'Try a different word, or call the store — we probably stock it.',
+    startTitle: 'Search the store',
+    startBody: 'Type a product, brand or herb name to begin.',
+  },
+  admin: {
+    title: 'Admin',
+    analytics: 'Analytics',
+    orders: 'Orders',
+    products: 'Products',
+    customers: 'Customers',
+    offers: 'Offers',
+    categories: 'Categories',
+    settings: 'Settings',
+    insights: 'Insights',
+    overview: 'Overview',
+    buildNote: 'Store management tools arrive in the next phases.',
+  },
+} as const;
+
+export type Dictionary = typeof en;

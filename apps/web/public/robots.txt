@@ -1,0 +1,7 @@
+# Tripat Pansari · MSG Store
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://msgstore.example/sitemap.xml
