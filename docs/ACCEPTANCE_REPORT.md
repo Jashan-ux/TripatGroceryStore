@@ -26,8 +26,8 @@ venv; the `db`-marked tests run in CI, where a Postgres exists.
 |---|---|---|
 | API lint + format | `cd apps/api && ruff check . && ruff format --check .` | ✅ clean (69 files formatted) |
 | API types | `cd apps/api && mypy app` | ✅ `no issues found in 55 source files` |
-| API tests (local) | `cd apps/api && pytest` | ✅ **226 passed, 53 skipped** — the 53 are the `db` tests, which skip without `TEST_DATABASE_URL` |
-| API tests (CI, real Postgres) | CI job *API · lint, types, tests* | ✅ **279 tests** (226 + 53 db) after `alembic upgrade head` → `downgrade base` → `upgrade head`; the db set includes the 24 Phase 2 and 13 admin-order tests |
+| API tests (local) | `cd apps/api && pytest` | ✅ **226 passed, 54 skipped** — the 54 are the `db` tests, which skip without `TEST_DATABASE_URL` |
+| API tests (CI, real Postgres) | CI job *API · lint, types, tests* | ✅ **280 tests** (226 + 54 db) after `alembic upgrade head` → `downgrade base` → `upgrade head`; the db set is 16 Phase 1 + 25 Phase 2 + 13 admin-order tests |
 | Python dependency audit | `pip-audit --skip-editable` | ✅ `No known vulnerabilities found` |
 | Web types | `npm run typecheck` | ✅ clean (web + api-client) |
 | Web lint | `npm run lint` | ✅ clean, `--max-warnings 0` |
@@ -37,7 +37,7 @@ venv; the `db`-marked tests run in CI, where a Postgres exists.
 | Node dependency audit | `npm audit` | ✅ **0 vulnerabilities** |
 | Secret scan | `gitleaks detect --log-opts=--all` (CI) | ✅ clean across all history |
 | Schema/type sync | `python -m app.scripts.dump_openapi` + `npm run api:types` | ✅ **23 paths, 31 aliases**, no drift (CI diff-gates it) |
-| CI run (Phase 2 web) | [45616677173](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45616677173) | ✅ **5/5 jobs green** — Web, API, API container, Security, E2E (incl. the new guest-cart journey) |
+| CI run (Phase 2 head) | [45620329190](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45620329190) | ✅ **5/5 jobs green** — Web, API (280 tests incl. all 54 db tests against Postgres), API container, Security, E2E (guest-cart journey included) |
 | Live schema inventory | SQL via the Supabase connector | ✅ **11 tables** + `alembic_version`, 58 Phase 2 columns, 11 indexes on the new tables, 2 new triggers, 3 enums |
 | Live seed | SQL via the Supabase connector | ✅ 41 categories (10 departments), 30 brands, 70 products (12 unbranded), 44 variants |
 | Live drift check | SQLAlchemy metadata (83 columns) vs `information_schema` | ✅ 83/83 — no missing, no extra column |
@@ -48,7 +48,7 @@ venv; the `db`-marked tests run in CI, where a Postgres exists.
 1. **Browser against live data.** The sandbox has no browser and cannot open a
    Postgres connection to `*.supabase.co` (`ConnectionResetError` on the TLS
    upgrade), so no preview here is backed by the hosted catalogue. The same code
-   paths are exercised instead by the 53 CI database tests and the Playwright
+   paths are exercised instead by the 54 CI database tests and the Playwright
    job (which runs the real API and the real built bundle).
 2. **Real sign-in round trip.** Supabase Auth is only reachable from a browser
    with network access. The JWT verification side *is* covered
