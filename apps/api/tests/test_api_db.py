@@ -27,14 +27,28 @@ pytestmark = pytest.mark.db
 
 
 @pytest.fixture(autouse=True)
-def _require_test_database(database_url: str) -> None:
-    """Skip cleanly when no test database is configured.
+async def _use_test_database(
+    database_url: str, monkeypatch: pytest.MonkeyPatch
+) -> AsyncIterator[None]:
+    """Point the API at the throwaway test database, or skip.
 
-    The application engine reads ``DATABASE_URL`` (which may point at staging);
-    these tests must only ever run against a throwaway database, so they are
-    gated on ``TEST_DATABASE_URL`` via the shared fixture.
+    ``DATABASE_URL`` on a developer machine points at the hosted project, so these
+    tests must never inherit it: the engine is rebuilt against ``TEST_DATABASE_URL``
+    (set by CI) and torn down afterwards.
     """
-    assert database_url
+    from app.core.config import get_settings
+    from app.db.session import dispose_engine
+
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("DATABASE_DIRECT_URL", database_url)
+    get_settings.cache_clear()
+    await dispose_engine()
+    try:
+        yield
+    finally:
+        await dispose_engine()
+        monkeypatch.undo()
+        get_settings.cache_clear()
 
 
 SUPABASE_URL = "https://project.supabase.co"
