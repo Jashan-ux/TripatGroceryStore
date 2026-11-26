@@ -24,11 +24,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
       <div className="container flex items-center gap-2 py-2">
-        <Link
-          to="/"
-          className="flex items-center gap-2 rounded-xl focus-visible:outline-none"
-          aria-label={t('brand.full')}
-        >
+        <Link to="/" className="flex items-center gap-2 rounded-xl focus-visible:outline-none">
           <BrandMark decorative />
           <Wordmark className="hidden xs:flex" />
           <span className="sr-only xs:hidden">{t('brand.full')}</span>
