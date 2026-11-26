@@ -57,7 +57,7 @@ export default function ContactPage() {
 
       <section
         aria-labelledby="store-details"
-        className="rounded-xl border border-border bg-card p-4"
+        className="min-h-[20rem] rounded-xl border border-border bg-card p-4 md:min-h-0"
       >
         <h2 id="store-details" className="text-base font-bold">
           {store?.store_name ?? t('brand.full')}

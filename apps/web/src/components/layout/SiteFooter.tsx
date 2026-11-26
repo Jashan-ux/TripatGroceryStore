@@ -47,14 +47,16 @@ export function SiteFooter() {
             </div>
           </div>
           <p className="text-sm text-muted-foreground">{t('footer.about')}</p>
-          {data ? (
-            <address className="space-y-1 text-sm not-italic text-muted-foreground">
-              <a className="block font-medium text-foreground" href={toTelHref(data.store_phone)}>
-                {data.store_phone}
-              </a>
-              <span className="block">{data.store_address}</span>
-            </address>
-          ) : null}
+          <div className="min-h-16 md:min-h-0">
+            {data ? (
+              <address className="space-y-1 text-sm not-italic text-muted-foreground">
+                <a className="block font-medium text-foreground" href={toTelHref(data.store_phone)}>
+                  {data.store_phone}
+                </a>
+                <span className="block">{data.store_address}</span>
+              </address>
+            ) : null}
+          </div>
         </div>
 
         <FooterColumn title={t('footer.shop')} links={shopLinks} />
