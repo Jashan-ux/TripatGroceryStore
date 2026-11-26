@@ -6,10 +6,12 @@
   "description": "Tripat Pansari · MSG Store — customer storefront and admin PWA",
   "scripts": {
     "dev": "vite",
+    "prebuild": "npm run build --workspace @tripat/api-client",
     "build": "tsc -b && vite build",
     "build:only": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --max-warnings 0",
+    "pretypecheck": "npm run build --workspace @tripat/api-client",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",

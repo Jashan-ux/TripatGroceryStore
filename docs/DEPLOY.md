@@ -8,8 +8,8 @@ Names used below (change them consistently if you prefer different ones):
 
 | Thing | Value |
 |---|---|
-| Production web | `https://tripatpansari.in` (apex) + `www` → redirect |
-| Production API | `https://tripat-msgstore-api.onrender.com` (or `api.tripatpansari.in`) |
+| Production web | `https://tripatmsg.in` (apex) + `www` → redirect |
+| Production API | `https://tripatgrocerystore.onrender.com` |
 | Staging web | `https://staging.tripatpansari.in` (or the Vercel preview URL) |
 | Staging API | `https://tripat-msgstore-api-staging.onrender.com` |
 | Staging DB | separate Supabase project |
@@ -47,8 +47,8 @@ supabase --version
      → `DATABASE_DIRECT_URL` = `postgresql+asyncpg://postgres:<password>@db.<ref>.supabase.co:5432/postgres`
 5. **Auth → Providers**: enable Email. Leave "Confirm email" on for production.
 6. **Auth → URL configuration**:
-   - Site URL: `https://tripatpansari.in`
-   - Redirect URLs: `https://tripatpansari.in/auth/callback`,
+   - Site URL: `https://tripatmsg.in`
+   - Redirect URLs: `https://tripatmsg.in/auth/callback`,
      `https://staging.tripatpansari.in/auth/callback`,
      `http://localhost:5173/auth/callback`,
      `https://*-<your-vercel-team>.vercel.app/auth/callback` (preview deploys)
@@ -96,30 +96,27 @@ select tgname from pg_trigger where tgname = 'trg_harden_public_table';
 
 ---
 
-## 3. Backend host (Render, recommended)
+## 3. Backend host (existing Render Docker service)
 
-1. <https://dashboard.render.com> → **New → Blueprint** → connect this repo →
-   it reads `infra/render.yaml`.
-2. Set every `sync: false` env var (staging values in the staging service):
+The production Docker service is already deployed at
+`https://tripatgrocerystore.onrender.com` from `apps/api/Dockerfile`. **Do not
+create a Blueprint or re-provision the service.** The owner reports `/healthz`
+recently returned `status: ok` for both API and database.
 
-   | Key | Value |
-   |---|---|
-   | `ENVIRONMENT` | `production` |
-   | `WEB_ORIGIN` | `https://tripatpansari.in` |
-   | `DATABASE_URL` | pooled URL (§1) |
-   | `DATABASE_DIRECT_URL` | direct URL (§1) |
-   | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | §1 |
-   | `RESEND_API_KEY`, `SUPPORT_EMAIL_FROM` | §2 |
-   | `STORE_MAPS_URL` | owner-supplied short link |
-   | `ADMIN_EMAILS` | owner's login email(s), comma separated |
-   | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | §5 |
-
-3. Deploy. The container runs `alembic upgrade head` is **not** in the start
-   command on purpose — migrations run from CI before the deploy (see
-   `.github/workflows/deploy-production.yml`), so a bad migration cannot take the
-   service down mid-boot.
-4. Confirm `https://<api-host>/healthz/ready` returns 200 and
-   `https://<api-host>/docs` returns **404**.
+1. In the existing Render service's **Environment** settings, verify/set:
+   `WEB_ORIGIN=https://tripatmsg.in` and `CORS_EXTRA_ORIGINS` to exact active
+   Vercel preview origins, comma-separated, no trailing slash or wildcard. The
+   API parser accepts comma-delimited values (not JSON) and strips trailing
+   slashes. CORS is enabled in production when this extra-origin value is
+   non-empty; this is necessary for direct browser calls to Render.
+2. Keep the existing pooled `DATABASE_URL`; remove `?pgbouncer=true` (asyncpg
+   rejects it). `DATABASE_DIRECT_URL` uses the direct `5432` URL for Alembic.
+   Do not alter database variables until the intended Supabase project is
+   reconciled.
+3. Migrations are not run by the Docker `CMD`. Run Alembic via the established
+   migration step/Render Pre-Deploy Command only after confirming the target DB.
+4. Recheck `https://tripatgrocerystore.onrender.com/healthz/ready` and confirm
+   production `/docs` is **404**.
 
 **Fly.io alternative**: `cd apps/api && fly launch --no-deploy --copy-config`,
 `fly secrets set ...`, `fly deploy`. **Railway**: new project from repo,
@@ -184,7 +181,7 @@ a live connection for stock and price validation.
    "Tripat Pansari · MSG Store", support email, developer email, scopes
    `email`, `profile`, `openid`. Publish.
 3. **Credentials → Create → OAuth client ID → Web application**:
-   - Authorised JavaScript origins: `https://tripatpansari.in`,
+   - Authorised JavaScript origins: `https://tripatmsg.in`,
      `https://staging.tripatpansari.in`, `http://localhost:5173`
    - Authorised redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`
 4. Paste client ID/secret into Supabase **Auth → Providers → Google**, enable it.
@@ -204,15 +201,20 @@ a live connection for stock and price validation.
    When deploying by hand:
    ```bash
    cd apps/web
-   API_ORIGIN=https://tripat-msgstore-api.onrender.com node scripts/render-host-config.mjs
+   API_ORIGIN=https://tripatgrocerystore.onrender.com node scripts/render-host-config.mjs
    vercel --prod
    ```
-4. **Settings → Domains**: add `tripatpansari.in` and `www.tripatpansari.in`
-   (set `www` → 308 redirect to apex). Vercel issues the certificate
-   automatically once DNS points at it.
-5. Build-time env: leave `VITE_API_BASE_URL` **empty** (same-origin rewrites).
-   `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` may also stay empty: the app
-   reads them from `/api/v1/config` at runtime.
+4. **Settings → Domains**: `tripatmsg.in` and `www.tripatmsg.in` are already
+   attached and verified; `www` redirects to the apex. Vercel reports their DNS
+   configuration as valid with no conflicts.
+5. Build-time env: set `VITE_API_BASE_URL=https://tripatgrocerystore.onrender.com`
+   for **Preview** and **Production**. The frontend CSP explicitly allows this
+   API origin. In Render, set `WEB_ORIGIN=https://tripatmsg.in` and
+   `CORS_EXTRA_ORIGINS` to comma-separated exact Vercel preview origins (no
+   wildcard; no trailing slash), so direct browser API calls pass CORS. The
+   application trims trailing slashes and parses comma-separated values, not
+   JSON. `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` may also stay empty: the
+   app reads them from `/api/v1/config` at runtime.
 
 **Netlify alternative**: `netlify.toml` is generated the same way
 (`API_ORIGIN=… node scripts/render-host-config.mjs`); Netlify cannot run FastAPI,
@@ -269,8 +271,8 @@ by the GitHub Environments (`staging`, `production`).
 ## 10. Post-deploy smoke test (5 minutes, every deploy)
 
 ```bash
-API=https://tripat-msgstore-api.onrender.com
-WEB=https://tripatpansari.in
+API=https://tripatgrocerystore.onrender.com
+WEB=https://tripatmsg.in
 
 curl -fsS $API/healthz/ready | jq '.status'          # "ok"
 curl -fsS -o /dev/null -w '%{http_code}\n' $API/docs  # 404 in production
@@ -310,9 +312,9 @@ is safe because every migration is additive until the next phase.
 
 ## 12. Hardening checks after the first production deploy
 
-- <https://securityheaders.com/?q=https://tripatpansari.in> → expect **A**
+- <https://securityheaders.com/?q=https://tripatmsg.in> → expect **A**
   (CSP, HSTS, nosniff, referrer policy, frame options are all in `vercel.json`).
-- <https://www.ssllabs.com/ssltest/analyze.html?d=tripatpansari.in> → expect **A**.
+- <https://www.ssllabs.com/ssltest/analyze.html?d=tripatmsg.in> → expect **A**.
 - Supabase REST with the anon key must return nothing:
   ```bash
   curl -s "$SUPABASE_URL/rest/v1/profiles?select=*" -H "apikey: $SUPABASE_ANON_KEY" | jq

@@ -70,6 +70,5 @@ jobs:
           npm i -g vercel@48
           vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
           vercel deploy --prebuilt=false --token="$VERCEL_TOKEN" --prod=false \
-            --build-env VITE_API_BASE_URL= \
             | tee /tmp/deploy.txt
           echo "Preview: $(tail -n1 /tmp/deploy.txt)"

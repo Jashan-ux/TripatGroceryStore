@@ -17,9 +17,9 @@ and why. Each line states the safer option where security was involved.
 3. **Vercel and Netlify cannot interpolate env vars into their config files.**
    The backend origin therefore lives in `vercel.json.template` /
    `netlify.toml.template` and is rendered at deploy time by
-   `apps/web/scripts/render-host-config.mjs`. The committed rendered files point
-   at the planned production backend host `tripat-msgstore-api.onrender.com`
-   (assumption 12) and are re-rendered by CI on every deploy.
+   `apps/web/scripts/render-host-config.mjs`. The current rendered files point
+   at the deployed Render backend `tripatgrocerystore.onrender.com`; CI deploy
+   jobs still require the matching API origin in their environment variables.
 4. **Node 22 + npm workspaces** for the monorepo. Frontend stack: Vite 7,
    Vitest 5, Tailwind 3.4, shadcn-style primitives on Radix, React 18.3 as
    required by the brief. Lockfiles are committed; Dependabot keeps them fresh.
