@@ -74,11 +74,24 @@ try {
     `Mobile simulated-4G Lighthouse: Performance ${performance}, Accessibility ${accessibility}`,
   );
   console.log(`Full HTML report: ${reportPath}`);
+  const weakPerformanceAudits = (result.lhr.categories.performance?.auditRefs ?? [])
+    .filter((ref) => ref.weight > 0)
+    .map((ref) => result.lhr.audits[ref.id])
+    .filter((audit) => audit.score !== null && audit.score < 0.9)
+    .map((audit) => `${audit.title}: ${audit.displayValue ?? `score ${audit.score}`}`);
   const summary = [
     '### Lighthouse mobile simulated-4G',
     '',
     `- Performance: **${performance}** (target ≥ 85)`,
     `- Accessibility: **${accessibility}** (target ≥ 95)`,
+    ...(weakPerformanceAudits.length
+      ? [
+          '',
+          '**Performance audits below 90%:**',
+          ...weakPerformanceAudits.map((audit) => `- ${audit}`),
+        ]
+      : []),
+    '',
     `- HTML report: \`${reportPath}\` (also uploaded as a workflow artifact)`,
   ].join('\n');
   if (process.env.GITHUB_STEP_SUMMARY) {
@@ -87,7 +100,12 @@ try {
   }
 
   if (performance < 85 || accessibility < 95) {
-    const message = `Lighthouse below target: Performance ${performance}/85, Accessibility ${accessibility}/95.`;
+    const details = weakPerformanceAudits.slice(0, 5).join('; ');
+    const message =
+      `Lighthouse below target: Performance ${performance}/85, Accessibility ${accessibility}/95. ${details}`.slice(
+        0,
+        2000,
+      );
     console.error(message);
     process.stderr.write(`::error title=Lighthouse scores below target::${message}\n`);
     process.exitCode = 1;
