@@ -12,7 +12,7 @@ status board; `docs/ACCEPTANCE_REPORT.md` carries the scenario-level evidence.
 | 4 | Wallet, referrals, scratch cards, returns, loyalty badges | ✅ **done** — wallet ledger + checkout spend, referral programme, server-side scratch cards, two-step returns (approve → received → credit), loyalty tiers; `0005` applied live, rewards hub and admin returns queue shipped |
 | 5 | Admin catalogue tools (inline add, bulk add, categories, brands), offers, settings, feedback | ✅ **done** — `0006` applied live (22 tables, 264/264 columns, digest `999d3e5e…2458`); 76 new API tests and 19 new web tests green |
 | 5.1 | Hardening: rate limits that actually run (order, feedback, code guessing, uploads) | ✅ **done** — `0007` applied live (23 tables, 268/268 columns, digest `e1e60b83…a0bc97c3`); replaces the un-installed slowapi shell and removes the Redis requirement |
-| 6 | Analytics with drill-downs, customer profiles, low-stock edit flow | ✅ **implementation and live schema applied; CI pending** — 0008 indexes round-trip locally and are present in Supabase; 14 API scenarios + web coverage for A-10/A-11/A-13 |
+| 6 | Analytics with drill-downs, customer profiles, low-stock edit flow | ✅ **done** — 0008 indexes round-trip locally and are present in Supabase; 14 API scenarios + web coverage for A-10/A-11/A-13; CI 5/5 green |
 | 7 | PWA polish: install prompt, web push, offline, Lighthouse | ⬜ |
 | 8 | Security hardening, full acceptance run, deploy, DEPLOY.md, ACCEPTANCE_REPORT.md | ⬜ |
 | 9 (optional) | Hindi UI, delivery-person role, SMS OTP behind the flag | ⬜ |
