@@ -79,6 +79,10 @@ try {
     .map((ref) => result.lhr.audits[ref.id])
     .filter((audit) => audit.score !== null && audit.score < 0.9)
     .map((audit) => `${audit.title}: ${audit.displayValue ?? `score ${audit.score}`}`);
+  const layoutShiftSources = (result.lhr.audits['layout-shift-elements']?.details?.items ?? [])
+    .map((item) => item.node?.selector ?? item.node?.snippet)
+    .filter((selector) => typeof selector === 'string')
+    .slice(0, 5);
   const summary = [
     '### Lighthouse mobile simulated-4G',
     '',
@@ -91,6 +95,13 @@ try {
           ...weakPerformanceAudits.map((audit) => `- ${audit}`),
         ]
       : []),
+    ...(layoutShiftSources.length
+      ? [
+          '',
+          '**Largest layout-shift elements:**',
+          ...layoutShiftSources.map((source) => `- \`${source}\``),
+        ]
+      : []),
     '',
     `- HTML report: \`${reportPath}\` (also uploaded as a workflow artifact)`,
   ].join('\n');
@@ -100,7 +111,10 @@ try {
   }
 
   if (performance < 85 || accessibility < 95) {
-    const details = weakPerformanceAudits.slice(0, 5).join('; ');
+    const details = [
+      ...weakPerformanceAudits.slice(0, 5),
+      ...layoutShiftSources.map((source) => `layout shift: ${source}`),
+    ].join('; ');
     const message =
       `Lighthouse below target: Performance ${performance}/85, Accessibility ${accessibility}/95. ${details}`.slice(
         0,
