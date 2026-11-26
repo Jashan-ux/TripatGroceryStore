@@ -423,35 +423,33 @@ async def test_the_top_customer_flag_means_the_top_three(
     async_client: AsyncClient,
     admin: dict[str, Any],
     make_token: Callable[..., str],
-    big_ticket: dict[str, Any],
 ) -> None:
-    small = await new_customer(async_client, make_token)
-    big = await new_customer(async_client, make_token, prefix="other")
-    await _one_order(async_client, small, big_ticket, key="top-small")
-    await _one_order(async_client, big, big_ticket, key="top-big-1")
-    await _one_order(async_client, big, big_ticket, key="top-big-2")
+    customers = [
+        await new_customer(async_client, make_token, prefix=f"top-{rank}") for rank in range(1, 5)
+    ]
 
-    # Spend accrues when an order is *delivered* (cash in hand), so the amounts are
-    # written here rather than driven through four status transitions: this test is
-    # about the ranking the flag describes, not about the delivery path.
+    # Spend accrues when an order is *delivered* (cash in hand); seed the ledger
+    # values directly so this test isolates global ranking and the top-three cutoff.
+    spends = (400_000, 300_000, 200_000, 100_000)
     async with get_sessionmaker()() as session:
-        for profile_id, spend in (
-            (big["profile"]["id"], 250_000),
-            (small["profile"]["id"], 60_000),
-        ):
+        for customer, spend in zip(customers, spends, strict=True):
             await session.execute(
                 text("UPDATE profiles SET lifetime_spend_paise = :spend WHERE id = :id"),
-                {"spend": spend, "id": uuid.UUID(profile_id)},
+                {"spend": spend, "id": uuid.UUID(customer["profile"]["id"])},
             )
         await session.commit()
 
     listing = (await async_client.get("/api/v1/admin/customers", headers=admin["headers"])).json()
-    flags = {row["id"]: row["is_top"] for row in listing["items"]}
-    assert flags[big["profile"]["id"]] is True
-    assert flags[small["profile"]["id"]] is True  # both are inside the top three
-    # Spenders are ordered highest first, so the ranking the flag describes holds.
-    spends = [row["lifetime_spend_paise"] for row in listing["items"]]
-    assert spends == sorted(spends, reverse=True)
+    rows = {row["id"]: row for row in listing["items"]}
+    assert [rows[customer["profile"]["id"]]["is_top"] for customer in customers] == [
+        True,
+        True,
+        True,
+        False,
+    ]
+    # Spenders are ordered highest first, and the fourth customer is outside rank 3.
+    listed_spends = [row["lifetime_spend_paise"] for row in listing["items"]]
+    assert listed_spends[:4] == list(spends)
 
 
 async def test_an_unknown_customer_is_a_clean_404(
