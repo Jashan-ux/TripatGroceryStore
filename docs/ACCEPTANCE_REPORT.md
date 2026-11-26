@@ -8,7 +8,7 @@ Everything else is `NOT RUN` (with the phase that will exercise it) or
 - Report date: **2026-11-25**
 - Phases closed: **0, 1, 2, 3, 4, 5, 6 locally**. Phase 6 (analytics,
   low-stock edit flow, customer profiles) has passed local Postgres/API and web
-  checks; CI 5/5 green at `83a1f75`.
+  checks; CI 5/5 green at `d0b0d0b`.
 - Branch: `arena/660db374-tripatgrocerystore`
 - Environment of record: this sandbox (Node 22.22, Python 3.11, no Docker,
   browser or outbound Postgres to Supabase; local Postgres 16 is available via
@@ -38,7 +38,7 @@ venv; the `db`-marked tests run in CI, where a Postgres exists.
 | Secret scan | `gitleaks detect --log-opts=--all` (CI) | ✅ clean across all history |
 | Schema/type sync | `python -m app.scripts.dump_openapi` + `npm run api:types` | ✅ **28 paths, 36 aliases**, no drift (CI diff-gates it) |
 | CI run (Phase 5.1 head) | [45660286909](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45660286909) | ✅ **5/5 jobs green** at `8f5a29e` — API 412 tests (**182** against the Postgres service container), ruff/mypy clean, `0007` round-trip, OpenAPI diff gate; Security (gitleaks, `pip-audit` with `slowapi`/`redis` gone, npm audit, no secrets in the bundle); Web 80 tests + bundle budget; container build; E2E at both viewports |
-| CI run (Phase 6 head) | [45749697357](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45749697357) | ✅ **5/5 jobs green** at `83a1f75` — API 426 passed / 1 skipped (**196** DB-marked), migration up/down/up, OpenAPI diff gate; Security; Web **83 tests** + build/bundle budget; API container; E2E **22 passed** at both viewports |
+| CI run (Phase 6 head) | [45750560607](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45750560607) | ✅ **5/5 jobs green** at `d0b0d0b` — API 426 passed / 1 skipped (**196** DB-marked), migration up/down/up, OpenAPI diff gate; Security; Web **83 tests** + build/bundle budget; API container; E2E **22 passed** at both viewports |
 | CI run (Phase 5 head) | [45653953209](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45653953209) | ✅ **5/5 jobs green** at `b47e53f` — Web (80 tests + build + bundle budget), API (397 tests, **171** of them against a Postgres service container, plus the `0006` up/down/up round-trip and the OpenAPI diff gate), API container, Security (gitleaks, pip-audit, npm audit, no secrets in the bundle), E2E (Playwright at 360×800 and 1280×800) |
 | CI run (Phase 4 head) | [45643376432](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45643376432) | ✅ **5/5 jobs green** at `4eb84e2` — Web (61 tests + build), API (320 tests, **94** of them against a Postgres service container), API container, Security, E2E (Playwright at 360×800 and 1280×800) |
 | CI run (Phase 3 head) | [45636378146](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45636378146) | ✅ **5/5 jobs green** — Web (44 tests), API (298 tests incl. all 72 db tests against Postgres), API container, Security, E2E (guest-cart journey included) |
@@ -167,6 +167,6 @@ venv; the `db`-marked tests run in CI, where a Postgres exists.
 
 The `0008` migration was applied to the live Supabase project after the local
 round-trip: version `0008_analytics_indexes` and both indexes were verified. This
-was a schema-only, additive change. CI run 45749697357 is green across all five
-jobs at the Phase 6 head. The remaining owner follow-ups in the release
+was a schema-only, additive change. CI run 45750560607 is green across all five
+jobs at the final Phase 6 code head. The remaining owner follow-ups in the release
 checklist are unchanged.
