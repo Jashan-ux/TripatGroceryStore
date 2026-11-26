@@ -8,7 +8,7 @@ Names used below (change them consistently if you prefer different ones):
 
 | Thing | Value |
 |---|---|
-| Production web | `https://tripatmsg.in` (apex) + `www` → redirect |
+| Production web | `https://www.tripatmsg.in` (`tripatmsg.in` apex → 308 redirect to `www`) |
 | Production API | `https://tripatgrocerystore.onrender.com` |
 | Staging web | `https://staging.tripatpansari.in` (or the Vercel preview URL) |
 | Staging API | `https://tripat-msgstore-api-staging.onrender.com` |
@@ -47,8 +47,9 @@ supabase --version
      → `DATABASE_DIRECT_URL` = `postgresql+asyncpg://postgres:<password>@db.<ref>.supabase.co:5432/postgres`
 5. **Auth → Providers**: enable Email. Leave "Confirm email" on for production.
 6. **Auth → URL configuration**:
-   - Site URL: `https://tripatmsg.in`
-   - Redirect URLs: `https://tripatmsg.in/auth/callback`,
+   - Site URL: `https://www.tripatmsg.in`
+   - Redirect URLs: `https://www.tripatmsg.in/auth/callback`,
+     `https://tripatmsg.in/auth/callback`,
      `https://staging.tripatpansari.in/auth/callback`,
      `http://localhost:5173/auth/callback`,
      `https://*-<your-vercel-team>.vercel.app/auth/callback` (preview deploys)
@@ -104,7 +105,8 @@ create a Blueprint or re-provision the service.** The owner reports `/healthz`
 recently returned `status: ok` for both API and database.
 
 1. In the existing Render service's **Environment** settings, verify/set:
-   `WEB_ORIGIN=https://tripatmsg.in` and `CORS_EXTRA_ORIGINS` to exact active
+   `WEB_ORIGIN=https://www.tripatmsg.in` (the current Vercel canonical domain)
+   and `CORS_EXTRA_ORIGINS` to exact active
    Vercel preview origins, comma-separated, no trailing slash or wildcard. The
    API parser accepts comma-delimited values (not JSON) and strips trailing
    slashes. CORS is enabled in production when this extra-origin value is
@@ -181,8 +183,8 @@ a live connection for stock and price validation.
    "Tripat Pansari · MSG Store", support email, developer email, scopes
    `email`, `profile`, `openid`. Publish.
 3. **Credentials → Create → OAuth client ID → Web application**:
-   - Authorised JavaScript origins: `https://tripatmsg.in`,
-     `https://staging.tripatpansari.in`, `http://localhost:5173`
+   - Authorised JavaScript origins: `https://www.tripatmsg.in`,
+     `https://tripatmsg.in`, `https://staging.tripatpansari.in`, `http://localhost:5173`
    - Authorised redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`
 4. Paste client ID/secret into Supabase **Auth → Providers → Google**, enable it.
 5. Add `GOOGLE_OAUTH_CLIENT_IDS` to the backend so it can verify the `aud` claim
@@ -205,11 +207,11 @@ a live connection for stock and price validation.
    vercel --prod
    ```
 4. **Settings → Domains**: `tripatmsg.in` and `www.tripatmsg.in` are already
-   attached and verified; `www` redirects to the apex. Vercel reports their DNS
-   configuration as valid with no conflicts.
+   attached and verified; Vercel redirects apex `tripatmsg.in` to canonical
+   `www.tripatmsg.in`. DNS configuration reports no conflicts.
 5. Build-time env: set `VITE_API_BASE_URL=https://tripatgrocerystore.onrender.com`
    for **Preview** and **Production**. The frontend CSP explicitly allows this
-   API origin. In Render, set `WEB_ORIGIN=https://tripatmsg.in` and
+   API origin. In Render, set `WEB_ORIGIN=https://www.tripatmsg.in` and
    `CORS_EXTRA_ORIGINS` to comma-separated exact Vercel preview origins (no
    wildcard; no trailing slash), so direct browser API calls pass CORS. The
    application trims trailing slashes and parses comma-separated values, not
@@ -272,7 +274,7 @@ by the GitHub Environments (`staging`, `production`).
 
 ```bash
 API=https://tripatgrocerystore.onrender.com
-WEB=https://tripatmsg.in
+WEB=https://www.tripatmsg.in
 
 curl -fsS $API/healthz/ready | jq '.status'          # "ok"
 curl -fsS -o /dev/null -w '%{http_code}\n' $API/docs  # 404 in production
@@ -312,9 +314,9 @@ is safe because every migration is additive until the next phase.
 
 ## 12. Hardening checks after the first production deploy
 
-- <https://securityheaders.com/?q=https://tripatmsg.in> → expect **A**
+- <https://securityheaders.com/?q=https://www.tripatmsg.in> → expect **A**
   (CSP, HSTS, nosniff, referrer policy, frame options are all in `vercel.json`).
-- <https://www.ssllabs.com/ssltest/analyze.html?d=tripatmsg.in> → expect **A**.
+- <https://www.ssllabs.com/ssltest/analyze.html?d=www.tripatmsg.in> → expect **A**.
 - Supabase REST with the anon key must return nothing:
   ```bash
   curl -s "$SUPABASE_URL/rest/v1/profiles?select=*" -H "apikey: $SUPABASE_ANON_KEY" | jq
