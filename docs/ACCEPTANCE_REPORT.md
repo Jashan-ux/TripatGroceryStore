@@ -143,7 +143,7 @@ venv; the `db`-marked tests run in CI, where a Postgres exists.
 
 | ID | Scenario | Status | Evidence |
 |---|---|---|---|
-| P-01 | Lighthouse on throttled 4G: installable, Perf ≥ 85, A11y ≥ 95, initial JS ≤ 200 KB gzip, manifest complete | **PARTIAL** | Current production build: initial JS **182.4 KB gzip** (budget is 200 KB); install manifest assertions pass. `e2e/pwa.spec.ts` checks manifest metadata, service-worker delivery, selective catalogue cache, and push handlers. The 4G Lighthouse score and accessibility audit are not recorded: the local environment has no Chromium binary and no deployed staging URL was used. |
+| P-01 | Lighthouse on throttled 4G: installable, Perf ≥ 85, A11y ≥ 95, initial JS ≤ 200 KB gzip, manifest complete | **PARTIAL** | Current build: initial JS **182.4 KB gzip** (budget is 200 KB); install manifest assertions pass. `e2e/pwa.spec.ts` checks manifest metadata, service-worker delivery, selective catalogue cache, and push handlers. A Vercel preview now builds on the active branch, but it is team-protected and the configured Render API origin has not been health-checked from this environment. Throttled-4G Lighthouse and axe scores remain unrecorded; do not claim a score. |
 | P-02 | Customer-controlled install prompt and push opt-in | **PARTIAL** | `InstallPrompt.test.tsx` proves install is only prompted on a real `beforeinstallprompt` event, after a tap, and can be dismissed. API tests cover HTTPS registration, profile ownership, key refresh, rate limit, missing VAPID config, tier audience and post-commit dispatch. `push.test.ts` covers VAPID public-key decoding. Production push-provider delivery awaits VAPID secrets on the API host. |
 | P-03 | Previously browsed storefront shell and public catalogue remain available offline; checkout does not | **PASS (CI browser)** | Injected service worker precaches the app shell, uses network-first for public catalogue GETs and bounded image caches, and network-only for all other API/admin/Supabase calls. The offline-navigation Playwright scenario passed at both 360×800 and 1280×800 in CI run [45754786194](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45754786194); API endpoints including orders and checkout are explicitly excluded from offline caches. |
 
@@ -182,10 +182,12 @@ checklist are unchanged.
 | Web quality + unit tests | `npm run lint --workspace @tripat/web && npm run typecheck && npm run test --workspace @tripat/web` | ✅ clean; **18 files, 88 tests passed** |
 | Production build + initial JS budget | `npm run build --workspace @tripat/web && npm run size --workspace @tripat/web` | ✅ injectManifest service worker generated; **182.4 KB gzip** initial JS against a 200 KB budget |
 | Built PWA checks | `npm run test:e2e --workspace @tripat/web -- --grep 'P-01'` locally; full Playwright suite in CI | ✅ local manifest/worker request checks pass; local browser launch is unavailable (no Chromium binary). CI run [45754786194](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45754786194) passed **24 E2E tests**, including offline navigation at 360×800 and 1280×800 |
-| Live migration and provider check | Supabase project `tripat-msgstore` (`nhmymidaebfbrbrovbzm`) | ⏳ project remains at `0008_analytics_indexes`; `0009`/`0010` are not applied. Production VAPID credentials are not configured/verified. |
-| Lighthouse / axe | Lighthouse throttled-4G performance and accessibility audits | ⏳ not run: no local Chromium binary and no staging deployment used. Do not claim a Lighthouse score. |
+| Vercel preview deployment | Project `tripat-grocery-store`, commit `693eb75` | ✅ deployment is READY at [tripat-grocery-store-7ekbjh3xx-jashan-uxs-projects.vercel.app](https://tripat-grocery-store-7ekbjh3xx-jashan-uxs-projects.vercel.app); Vercel team protection is enabled, so this preview is not public. The custom domain can be attached after purchase. |
+| Live migration and provider check | Supabase project `tripat-msgstore` (`nhmymidaebfbrbrovbzm`) | ⏳ read-only check confirms database is healthy at `0008_analytics_indexes`; `push_subscriptions` and `offers.push_queued` are absent, so `0009`/`0010` are not applied. Production VAPID credentials are not configured/verified. |
+| Lighthouse / axe | Lighthouse throttled-4G performance and accessibility audits | ⏳ not run: the preview is team-protected and no public/staging URL is available for an audit. Do not claim a Lighthouse score. |
 
 Push is implemented as optional: with VAPID absent, in-app notifications continue
-and browser push opt-in returns `503 unavailable`. The code is ready for the normal
-staging/release pipeline; Phase 7 stays open until browser E2E, a staging
-Lighthouse/axe run, and the configured-provider check are recorded.
+and browser push opt-in returns `503 unavailable`. CI browser E2E is green and a
+team-protected Vercel preview now builds the active branch. Phase 7 stays open
+until a public/staging Lighthouse/axe run and the configured-provider check are
+recorded; the Supabase schema is still at `0008_analytics_indexes`.
