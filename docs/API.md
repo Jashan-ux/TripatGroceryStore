@@ -354,3 +354,29 @@ Consumers import types only:
 ```ts
 import type { PublicConfig, ErrorResponse } from '@tripat/api-client';
 ```
+
+
+## Phase 6 — owner's analytics and customer screens
+
+The analytics endpoints are owner-only (`403 admin_only` for a customer). Dates
+are inclusive **shop-days** in `Asia/Kolkata`, not UTC calendar dates. Omit both
+for the last 30 days; omit one to use the other as the range anchor. Reversed
+bounds are swapped and ranges longer than 366 days are clamped. A future range is
+kept as requested and returns zeros until orders exist. Money remains integer
+paise.
+
+| Method and path | Purpose |
+|---|---|
+| `GET /admin/analytics/summary?from_date=YYYY-MM-DD&to_date=YYYY-MM-DD` | Revenue, qualifying order count, average, items sold, first-time/repeat customers, cash pending, order status counts, low-stock count and the applied date range. |
+| `GET /admin/analytics/series?...` | One zero-filled revenue and order point for every shop-day. |
+| `GET /admin/analytics/orders?...&page=1&page_size=25` | Revenue-card drill-down; optional `status` filter. `total_paise` is over the full filtered result, not just the page, and uses the same qualifying-order predicate as the card. |
+| `GET /admin/analytics/products?...&limit=10` | Best-selling product lines by units and sales; overall totals accompany the visible rows. |
+| `GET /admin/analytics/low-stock` | Active products at or below their own stock threshold. Each row includes `edit_href`, which opens the exact catalogue product editor. |
+| `GET /admin/customers?q=...&tier=gold&sort=spend&page=1&page_size=20` | Search by name, phone or email; tier filter; `spend`, `recent` or `newest` sort. Tier counts are across all customers, independent of the current filter and page. |
+| `GET /admin/customers/{customer_id}` | Customer profile, lifetime stats, saved-address count and up to 20 newest orders. |
+
+Turnover counts `processing`, `shipped`, `out_for_delivery` and `delivered`; a
+cancelled or returned order is not revenue. The same status and date predicates
+are shared by summary, series and the order drill-down. The customer `is_top`
+flag means rank 1–3 by lifetime spend across the full customer population, even
+when a tier/search filter is active.

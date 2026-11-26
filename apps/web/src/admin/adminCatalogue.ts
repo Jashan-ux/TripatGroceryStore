@@ -35,6 +35,8 @@ function bustCatalogue(queryClient: ReturnType<typeof useQueryClient>) {
   void queryClient.invalidateQueries({ queryKey: ['products'] });
   void queryClient.invalidateQueries({ queryKey: ['categories'] });
   void queryClient.invalidateQueries({ queryKey: ['home'] });
+  void queryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'low-stock'] });
+  void queryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'summary'] });
 }
 
 // --------------------------------------------------------------------------- //
@@ -45,6 +47,15 @@ export interface ProductFilters {
   categoryId: string;
   lowStock: boolean;
   page: number;
+}
+
+export function useAdminProduct(productId: string | null) {
+  return useQuery<ProductAdminOut>({
+    queryKey: ['admin', 'catalogue', 'product', productId],
+    queryFn: ({ signal }) =>
+      api.get<ProductAdminOut>(`/api/v1/admin/catalogue/products/${productId}`, { signal }),
+    enabled: Boolean(productId),
+  });
 }
 
 export function useAdminProducts(filters: ProductFilters) {

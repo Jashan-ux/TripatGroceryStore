@@ -6,14 +6,14 @@ Everything else is `NOT RUN` (with the phase that will exercise it) or
 `PARTIAL`.
 
 - Report date: **2026-11-25**
-- Phases closed: **0, 1, 2, 3, 4, 5**. Phase 5 (admin catalogue tools, offers,
-  settings, feedback) is delivered and tested; Phase 6 (analytics, customer
-  profiles) is next.
+- Phases closed: **0, 1, 2, 3, 4, 5, 6 locally**. Phase 6 (analytics,
+  low-stock edit flow, customer profiles) has passed local Postgres/API and web
+  checks; its CI run is pending.
 - Branch: `arena/660db374-tripatgrocerystore`
-- Environment of record: this sandbox (Node 22.22, Python 3.11, no Docker, no
-  browser, no Postgres, **no outbound Postgres to Supabase**) plus GitHub
-  Actions, which has a real Postgres service container, a real browser and
-  network access to the audit APIs.
+- Environment of record: this sandbox (Node 22.22, Python 3.11, no Docker,
+  browser or outbound Postgres to Supabase; local Postgres 16 is available via
+  `pgserver`) plus GitHub Actions, which has a real Postgres service container,
+  a real browser and network access to audit APIs.
 - Live project: Supabase `tripat-msgstore`
   (`nhmymidaebfbrbrovbzm`, `ap-south-1`).
 
@@ -113,10 +113,10 @@ venv; the `db`-marked tests run in CI, where a Postgres exists.
 | A-07 | Inline add on a category row appears on the storefront | **PASS** | `test_a_product_added_inline_appears_on_the_storefront` adds a product and then finds it at `/api/v1/products/{slug}`, in `GET /products?q=…` and in the category listing with **no cache flush**; `test_two_products_may_share_a_name_but_never_a_url` proves the slug helper keeps URLs unique; `test_the_inline_row_refuses_a_price_above_the_mrp` (422 `mrp_below_price`), `test_an_unknown_category_is_a_404`. Web: the inline add row on **Admin → Products** and a per-shelf "Add product" row on **Admin → Categories** (`AdminProductsPage.test.tsx` › "adds one product from the inline row and converts rupees to paise" — ₹145.50 arrives as `14550`). |
 | A-08 | Bulk add: valid file commits; bad rows show per-row errors and commit nothing; SSRF URL rejected | **PASS** | `test_one_bad_row_rolls_back_the_whole_sheet` (3 bad rows → `committed=false`, `created=0`, the product count is unchanged and the good row is **not** on the storefront), `test_a_clean_sheet_commits_every_row` (₹99.50 → `9950` paise exactly, ₹120 → `12000`), `test_a_dry_run_reports_without_writing`, `test_a_name_repeated_inside_the_sheet_is_caught`, `test_the_sheet_must_have_the_columns_we_need` (`bulk_bad_header`), `test_an_empty_sheet_is_refused`, `test_a_sheet_over_the_row_cap_is_refused` (500 rows), `test_an_excel_export_with_a_byte_order_mark_still_parses`. SSRF: `test_an_image_url_pointing_inside_the_network_is_refused` rejects `http://169.254.169.254/…` and `https://localhost/…`, and the unit tests cover bare IPs, `*.local`, `http://` and `javascript:` (`test_uploads.py`, 12 URL cases). Web: the bulk dialog previews first and disables Save while any row is red (`AdminProductsPage.test.tsx`). |
 | A-09 | Edit product/category/subcategory; delete with products blocked or reassigned | **PASS** | `test_editing_a_price_is_visible_to_the_storefront_and_audit_logged` (the storefront price changes and one `product.updated` audit row carries `before`/`after` and the actor's email; a partial update is still validated against the stored MRP), `test_variants_are_replaced_wholesale` (an old pack that is not re-sent disappears, and the collision on `(product_id, label)` is handled), `test_duplicate_variant_labels_are_refused`, `test_a_product_without_orders_is_really_deleted`, `test_a_product_inside_an_order_is_hidden_instead_of_deleted` (outcome `deactivated`, storefront 404, the past order still shows the name), `test_deleting_a_category_that_still_holds_products_is_refused_then_reassigned` (409 `category_not_empty` → `reassign_to` moves the product and deletes the shelf), `test_categories_nest_only_one_level_deep`, `test_a_category_cannot_be_its_own_parent`, `test_brands_are_created_once_and_deleted_only_when_unused`, `test_an_unused_brand_can_be_deleted`, `test_the_admin_listing_filters_and_pages`. Web: `AdminProductsPage.test.tsx` › "says that a product in an order was hidden, not deleted". |
-| A-10 | Analytics cards drill down; empty range safe; figures reconcile | **NOT RUN** (Phase 6) | |
-| A-11 | Low-stock row opens product edit; saving updates the count | **NOT RUN** (Phase 6) | |
+| A-10 | Analytics cards drill down; empty range safe; figures reconcile | **PASS (local Postgres)** | `tests/test_admin_analytics.py`: `test_a_quiet_range_answers_zeros_instead_of_an_error`, `test_the_card_equals_the_rows_it_opens` (card = list total = row sum = daily series), `test_a_cancelled_order_is_not_income_but_is_still_visible`, `test_a_late_evening_order_belongs_to_that_evening` (23:40 IST), range clamps/defaults and product reconciliation. Web: `AdminPhase6.test.tsx` opens the drill-down and asserts summary/list use identical date bounds. |
+| A-11 | Low-stock row opens product edit; saving updates the count | **PASS (local Postgres + web flow)** | `test_a_low_stock_row_points_at_its_own_edit_dialog` checks `edit_href`, opens the real admin product PATCH endpoint, saves stock 25, then verifies the low-stock count falls by one. `AdminProductsPage.test.tsx` › "opens the exact product editor from a low-stock deep link" checks the product-fetch URL and edit dialog. Catalogue mutations invalidate the low-stock and summary queries. |
 | A-12 | Return approve + mark received credits exactly once | **PASS** | `POST /admin/returns/{id}/decision` then `POST /admin/returns/{id}/received`: `test_a_return_waits_for_approval_and_receipt_before_it_pays` proves the first call pays nothing, the second credits exactly once (a repeat is idempotent, `credited_entry_id` is unique), and `test_only_the_owner_can_decide_a_return` proves a customer gets 403. Web: the new **Returns** admin tab (`AdminReturnsPage.test.tsx`, 4 tests) offers approve/refuse on `requested` and only "Goods received · credit wallet" on `approved`. |
-| A-13 | Customers list, tier filter, profile with past orders, top-customer flag | **NOT RUN** (Phase 6) | |
+| A-13 | Customers list, tier filter, profile with past orders, top-customer flag | **PASS (local Postgres)** | `test_customers_list_their_tier_and_can_be_filtered`, `test_a_customer_can_be_found_by_phone_or_email`, `test_a_profile_shows_every_past_order_and_the_average`, `test_the_top_customer_flag_means_the_top_three`, `test_an_unknown_customer_is_a_clean_404`. Customer requests are owner-only (`test_analytics_are_owner_only`). Web: `AdminPhase6.test.tsx` checks tier counts/filter and customer-profile link. |
 | A-14 | Offer to all / one tier reaches bell, banner, push | **PASS (bell + banner; push is Phase 7)** | `test_an_offer_to_one_tier_reaches_only_that_tier` (a Gold offer rings exactly one bell and leaves a non-Gold customer's bell empty), `test_an_offer_to_everyone_rings_every_customer_and_can_be_read_without_signing_in` (`recipients=2`, both bells, the public `/offers/current` banner and the history), `test_an_expired_offer_stops_showing_on_the_banner`, `test_an_offer_must_link_inside_our_own_app` (an external `href` is a 422), `test_sending_an_offer_is_audit_logged`, `test_offers_are_owner_only`. Web push is **not** claimed: the row is written so push can join in Phase 7 without a schema change, and the admin page says so. Web: `OfferBanner.test.tsx` (3 tests) proves the banner renders the live offer, renders nothing when there is none, and stays dismissed for that offer id while still showing a newer one. |
 | A-15 | Settings changes apply on next checkout without redeploy, audit-logged | **PASS** | `test_a_new_minimum_order_applies_to_the_very_next_checkout` places a valid order (which warms the 30-second settings cache), raises `minimum_order_paise` through `PATCH /admin/settings`, and the **next** checkout is refused with `minimum_order_not_met` — no restart, no redeploy. `test_settings_are_validated_as_a_set_not_field_by_field` (tiers out of order, scratch min > max, non-https Maps URL → 422 `invalid_settings`, and none of it half-applied), `test_a_settings_edit_is_audit_logged_with_before_and_after`, `test_the_owner_can_read_and_change_every_number`, `test_settings_are_owner_only`. Web: `AdminSettingsPage.test.tsx` (4 tests) — rupees in, paise out, the server's refusal shown instead of a false "Saved". |
 | A-16 | No cart or customer footer in admin; tabs + bottom nav correct on mobile | **PASS (shell)** | `src/App.test.tsx` › "keeps the customer cart out of the admin shell and lazy-loads admin"; `e2e/shell.spec.ts` › "admin has tabs, no customer search and no customer footer". |
@@ -151,3 +151,20 @@ venv; the `db`-marked tests run in CI, where a Postgres exists.
 3. Lighthouse and securityheaders.com artefacts captured from staging.
 4. The owner-signed privacy policy and terms.
 5. A completed restore drill.
+
+
+## Phase 6 local evidence (CI pending)
+
+| Check | Command | Result |
+|---|---|---|
+| API integration suite, including Phase 6 | `TEST_DATABASE_URL=… uv run pytest -q --junit-xml=/tmp/phase6.xml` | ✅ **426 passed, 1 skipped**, 0 failures/errors (real local PostgreSQL); **196** tests carry the `db` marker |
+| Phase 6 API scenarios | `uv run pytest tests/test_admin_analytics.py -q` | ✅ **14 passed**; includes IST boundary, zero range, card/list/series reconciliation, low-stock edit/save/recount, customer tier/profile/top-rank and owner-only checks |
+| Phase 6 web scenarios | `npm test -- --reporter=dot` | ✅ **16 files, 83 tests passed** (includes analytics/customer and low-stock edit cases) |
+| API quality and migration | `uv run ruff check . && uv run ruff format --check . && uv run mypy app`; local Alembic round-trip + live SQL verification | ✅ clean; `0008_analytics_indexes` round-tripped up/down/up locally, then applied to live Supabase `nhmymidaebfbrbrovbzm`; `alembic_version=0008_analytics_indexes`, both expected indexes present (connector query: 2 rows) |
+| Web quality | `npm run lint && npm run typecheck` | ✅ clean |
+| OpenAPI client | `python -m app.scripts.dump_openapi && npm run api:types` | ✅ **60 paths, 105 aliases**, no drift |
+
+The `0008` migration was applied to the live Supabase project after the local
+round-trip: version `0008_analytics_indexes` and both indexes were verified. This
+was a schema-only, additive change. The remaining owner follow-ups in the release
+checklist are unchanged.

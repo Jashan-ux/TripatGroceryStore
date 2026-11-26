@@ -69,6 +69,11 @@ ignore = [
 # goes through _quote() (single-quote doubling) and numbers are ints. There is no
 # user input on this path, and the generated SQL is committed for review.
 "app/scripts/seed.py" = ["S608", "E501"]
+# Analytics builds SQL from its own module constants (table aliases, the
+# Asia/Kolkata date predicates, the revenue-status list). Every *value* — dates,
+# page, tier, search text, status — is a bound parameter; there is no user input
+# in the f-string on that path.
+"app/repositories/analytics.py" = ["S608"]
 
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Path", "fastapi.Header"]

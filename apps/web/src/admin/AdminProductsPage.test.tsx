@@ -126,6 +126,9 @@ function mockFetch() {
         const body = JSON.parse(String(init?.body)) as { name: string };
         return json({ ...ghee, id: '22222222-2222-2222-2222-222222222222', name: body.name }, 201);
       }
+      if (url.endsWith(`/api/v1/admin/catalogue/products/${ghee.id}`) && method === 'GET') {
+        return json(ghee);
+      }
       if (url.includes('/api/v1/admin/catalogue/products/') && method === 'DELETE') {
         return json({
           id: ghee.id,
@@ -203,6 +206,18 @@ describe('AdminProductsPage', () => {
     expect(screen.getByText(/unknown category "no-such-shelf"/i)).toBeInTheDocument();
     // A sheet with an error cannot be saved from this dialog.
     expect(screen.getByRole('button', { name: /^save/i })).toBeDisabled();
+  });
+
+  it('opens the exact product editor from a low-stock deep link', async () => {
+    const calls = mockFetch();
+    renderWithProviders(<AdminProductsPage />, {
+      route: `/admin/products?edit=${ghee.id}`,
+    });
+
+    expect(await screen.findByText(`Edit ${ghee.name}`)).toBeInTheDocument();
+    expect(
+      calls.some((call) => call.url.endsWith(`/api/v1/admin/catalogue/products/${ghee.id}`)),
+    ).toBe(true);
   });
 
   it('says that a product in an order was hidden, not deleted', async () => {

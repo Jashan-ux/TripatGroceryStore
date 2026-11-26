@@ -15,7 +15,7 @@
 ### Running the database tests on your own machine
 
 `pgserver` gives you a real, throwaway PostgreSQL without Docker. That is how the
-`0006`/`0007` migrations (round-tripped up/down/up) and the 182 database-marked tests
+`0006`/`0007`/`0008` migrations (round-tripped up/down/up) and the 196 database-marked tests
 were checked before CI:
 
 ```bash
@@ -37,8 +37,9 @@ done
 # 3. migrate both ways, then run everything
 export DATABASE_URL="postgresql+asyncpg://postgres@/tripat_test?host=/tmp/pgdata"
 export TEST_DATABASE_URL="$DATABASE_URL"
+export DATABASE_DIRECT_URL="$DATABASE_URL"  # Alembic uses the direct URL
 alembic upgrade head && alembic downgrade base && alembic upgrade head
-pytest            # 412 passed, 1 skipped
+pytest            # 426 passed, 1 skipped
 ```
 
 One test skips there on purpose: the `anon`-role RLS probe needs Supabase's roles,

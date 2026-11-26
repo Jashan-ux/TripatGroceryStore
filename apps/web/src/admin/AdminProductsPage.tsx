@@ -1,10 +1,12 @@
 import type { ProductAdminOut } from '@tripat/api-client';
 import { Pencil, Plus, Search, Trash2, Upload } from 'lucide-react';
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import {
   useAdminBrands,
   useAdminCategories,
+  useAdminProduct,
   useAdminProducts,
   useBulkImport,
   useCreateProduct,
@@ -81,6 +83,11 @@ export function AdminProductsPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const editProductId = searchParams.get('edit');
+
+  const deepLinkedProduct = useAdminProduct(editProductId);
+  const activeEditing = editProductId ? (deepLinkedProduct.data ?? null) : editing;
 
   const categories = useAdminCategories();
   const brands = useAdminBrands();
@@ -421,16 +428,23 @@ export function AdminProductsPage() {
       )}
 
       <EditProductDialog
-        product={editing}
-        onClose={() => setEditing(null)}
+        product={activeEditing}
+        onClose={() => {
+          setEditing(null);
+          if (searchParams.has('edit')) {
+            const next = new URLSearchParams(searchParams);
+            next.delete('edit');
+            setSearchParams(next, { replace: true });
+          }
+        }}
         onSave={(body) => {
-          if (!editing) return;
+          if (!activeEditing) return;
           setError(null);
           update.mutate(
-            { id: editing.id, ...body },
+            { id: activeEditing.id, ...body },
             {
               onSuccess: () => {
-                setNotice(`${editing.name} updated.`);
+                setNotice(`${activeEditing.name} updated.`);
                 setEditing(null);
               },
               onError: (err) => setError(err.message),

@@ -700,6 +700,182 @@
         "title": "AdminVariantOut",
         "type": "object"
       },
+      "AnalyticsOrderListOut": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsOrderOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "total_pages": {
+            "title": "Total Pages",
+            "type": "integer"
+          },
+          "total_paise": {
+            "title": "Total Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages",
+          "total_paise"
+        ],
+        "title": "AnalyticsOrderListOut",
+        "type": "object"
+      },
+      "AnalyticsOrderOut": {
+        "additionalProperties": false,
+        "description": "A row in the drill-down behind the revenue and orders cards.",
+        "properties": {
+          "customer_id": {
+            "format": "uuid",
+            "title": "Customer Id",
+            "type": "string"
+          },
+          "customer_name": {
+            "title": "Customer Name",
+            "type": "string"
+          },
+          "customer_phone": {
+            "title": "Customer Phone",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "item_count": {
+            "title": "Item Count",
+            "type": "integer"
+          },
+          "order_number": {
+            "title": "Order Number",
+            "type": "string"
+          },
+          "placed_at": {
+            "format": "date-time",
+            "title": "Placed At",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "total_paise": {
+            "title": "Total Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "order_number",
+          "status",
+          "total_paise",
+          "item_count",
+          "placed_at",
+          "customer_name",
+          "customer_phone",
+          "customer_id"
+        ],
+        "title": "AnalyticsOrderOut",
+        "type": "object"
+      },
+      "AnalyticsSummaryOut": {
+        "additionalProperties": false,
+        "description": "The six numbers the owner opens the app for.",
+        "properties": {
+          "average_order_paise": {
+            "description": "0 when there were no orders.",
+            "title": "Average Order Paise",
+            "type": "integer"
+          },
+          "by_status": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Order counts per status inside the range.",
+            "title": "By Status",
+            "type": "object"
+          },
+          "cash_pending_paise": {
+            "description": "Cash still to collect on undelivered orders.",
+            "title": "Cash Pending Paise",
+            "type": "integer"
+          },
+          "items_sold": {
+            "title": "Items Sold",
+            "type": "integer"
+          },
+          "low_stock": {
+            "description": "Products at or below their own threshold.",
+            "title": "Low Stock",
+            "type": "integer"
+          },
+          "new_customers": {
+            "description": "First order ever placed inside the range.",
+            "title": "New Customers",
+            "type": "integer"
+          },
+          "orders": {
+            "description": "Orders placed in the range, same predicate as revenue.",
+            "title": "Orders",
+            "type": "integer"
+          },
+          "range": {
+            "$ref": "#/components/schemas/DateRangeOut"
+          },
+          "repeat_customers": {
+            "description": "Customers with 2+ orders inside the range.",
+            "title": "Repeat Customers",
+            "type": "integer"
+          },
+          "repeat_rate_percent": {
+            "description": "repeat / distinct customers, rounded down.",
+            "title": "Repeat Rate Percent",
+            "type": "integer"
+          },
+          "revenue_paise": {
+            "description": "Sum of order totals, excluding cancelled and returned.",
+            "title": "Revenue Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "range",
+          "revenue_paise",
+          "orders",
+          "average_order_paise",
+          "items_sold",
+          "new_customers",
+          "repeat_customers",
+          "repeat_rate_percent",
+          "cash_pending_paise",
+          "by_status",
+          "low_stock"
+        ],
+        "title": "AnalyticsSummaryOut",
+        "type": "object"
+      },
       "AuditEntryOut": {
         "additionalProperties": false,
         "properties": {
@@ -1719,6 +1895,291 @@
         "title": "CurrentOfferOut",
         "type": "object"
       },
+      "CustomerListOut": {
+        "additionalProperties": false,
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Customers per tier across the whole shop.",
+            "title": "Counts",
+            "type": "object"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CustomerRowOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "total_pages": {
+            "title": "Total Pages",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages",
+          "counts"
+        ],
+        "title": "CustomerListOut",
+        "type": "object"
+      },
+      "CustomerOrderOut": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "item_count": {
+            "title": "Item Count",
+            "type": "integer"
+          },
+          "order_number": {
+            "title": "Order Number",
+            "type": "string"
+          },
+          "placed_at": {
+            "format": "date-time",
+            "title": "Placed At",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "total_paise": {
+            "title": "Total Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "order_number",
+          "status",
+          "total_paise",
+          "item_count",
+          "placed_at"
+        ],
+        "title": "CustomerOrderOut",
+        "type": "object"
+      },
+      "CustomerProfileOut": {
+        "additionalProperties": false,
+        "properties": {
+          "addresses": {
+            "title": "Addresses",
+            "type": "integer"
+          },
+          "average_order_paise": {
+            "title": "Average Order Paise",
+            "type": "integer"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "first_order_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Order At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_top": {
+            "title": "Is Top",
+            "type": "boolean"
+          },
+          "last_order_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Order At"
+          },
+          "lifetime_spend_paise": {
+            "title": "Lifetime Spend Paise",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "orders": {
+            "title": "Orders",
+            "type": "integer"
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          },
+          "recent_orders": {
+            "description": "Newest first, capped.",
+            "items": {
+              "$ref": "#/components/schemas/CustomerOrderOut"
+            },
+            "title": "Recent Orders",
+            "type": "array"
+          },
+          "referral_code": {
+            "title": "Referral Code",
+            "type": "string"
+          },
+          "tier": {
+            "title": "Tier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "phone",
+          "email",
+          "tier",
+          "referral_code",
+          "lifetime_spend_paise",
+          "orders",
+          "first_order_at",
+          "last_order_at",
+          "average_order_paise",
+          "is_top",
+          "addresses",
+          "recent_orders"
+        ],
+        "title": "CustomerProfileOut",
+        "type": "object"
+      },
+      "CustomerRowOut": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_top": {
+            "description": "Inside the shop's top three by lifetime spend.",
+            "title": "Is Top",
+            "type": "boolean"
+          },
+          "last_order_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Order At"
+          },
+          "lifetime_spend_paise": {
+            "title": "Lifetime Spend Paise",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "orders": {
+            "title": "Orders",
+            "type": "integer"
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          },
+          "tier": {
+            "title": "Tier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "phone",
+          "email",
+          "tier",
+          "lifetime_spend_paise",
+          "orders",
+          "last_order_at",
+          "is_top"
+        ],
+        "title": "CustomerRowOut",
+        "type": "object"
+      },
+      "DateRangeOut": {
+        "additionalProperties": false,
+        "description": "The range actually applied, after defaulting and clamping.",
+        "properties": {
+          "days": {
+            "description": "Inclusive number of shop-days in the range.",
+            "title": "Days",
+            "type": "integer"
+          },
+          "from_date": {
+            "format": "date",
+            "title": "From Date",
+            "type": "string"
+          },
+          "timezone": {
+            "description": "The zone a 'day' means here (Asia/Kolkata).",
+            "title": "Timezone",
+            "type": "string"
+          },
+          "to_date": {
+            "format": "date",
+            "title": "To Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_date",
+          "to_date",
+          "days",
+          "timezone"
+        ],
+        "title": "DateRangeOut",
+        "type": "object"
+      },
       "ErrorDetail": {
         "additionalProperties": false,
         "properties": {
@@ -2073,6 +2534,90 @@
         ],
         "title": "ImageOut",
         "type": "object"
+      },
+      "LowStockListOut": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LowStockOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "LowStockListOut",
+        "type": "object"
+      },
+      "LowStockOut": {
+        "additionalProperties": false,
+        "description": "One row of \"running out\" \u2014 it always knows where its fix lives.",
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "edit_href": {
+            "description": "Admin route that opens this product's edit dialog.",
+            "title": "Edit Href",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "product_id": {
+            "format": "uuid",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "stock": {
+            "title": "Stock",
+            "type": "integer"
+          },
+          "threshold": {
+            "title": "Threshold",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "product_id",
+          "name",
+          "slug",
+          "stock",
+          "threshold",
+          "is_active",
+          "category",
+          "edit_href"
+        ],
+        "title": "LowStockOut",
+        "type": "object"
+      },
+      "LoyaltyTier": {
+        "enum": [
+          "none",
+          "gold",
+          "platinum",
+          "diamond"
+        ],
+        "title": "LoyaltyTier",
+        "type": "string"
       },
       "MarkAllReadOut": {
         "additionalProperties": false,
@@ -2743,6 +3288,18 @@
         "title": "OrderOut",
         "type": "object"
       },
+      "OrderStatus": {
+        "enum": [
+          "processing",
+          "shipped",
+          "out_for_delivery",
+          "delivered",
+          "cancelled",
+          "returned"
+        ],
+        "title": "OrderStatus",
+        "type": "string"
+      },
       "OrderSummaryOut": {
         "additionalProperties": false,
         "properties": {
@@ -3404,6 +3961,73 @@
           "total_pages"
         ],
         "title": "ProductListOut",
+        "type": "object"
+      },
+      "ProductSalesListOut": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProductSalesOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "range": {
+            "$ref": "#/components/schemas/DateRangeOut"
+          },
+          "total_revenue_paise": {
+            "description": "Revenue from all sold lines in the range.",
+            "title": "Total Revenue Paise",
+            "type": "integer"
+          },
+          "total_units": {
+            "title": "Total Units",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "range",
+          "items",
+          "total_revenue_paise",
+          "total_units"
+        ],
+        "title": "ProductSalesListOut",
+        "type": "object"
+      },
+      "ProductSalesOut": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "product_id": {
+            "format": "uuid",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "revenue_paise": {
+            "title": "Revenue Paise",
+            "type": "integer"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "units": {
+            "title": "Units",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "product_id",
+          "name",
+          "slug",
+          "units",
+          "revenue_paise"
+        ],
+        "title": "ProductSalesOut",
         "type": "object"
       },
       "ProductUpdateIn": {
@@ -4507,6 +5131,53 @@
         "title": "ScratchRevealOut",
         "type": "object"
       },
+      "SeriesOut": {
+        "additionalProperties": false,
+        "properties": {
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/SeriesPointOut"
+            },
+            "title": "Points",
+            "type": "array"
+          },
+          "range": {
+            "$ref": "#/components/schemas/DateRangeOut"
+          }
+        },
+        "required": [
+          "range",
+          "points"
+        ],
+        "title": "SeriesOut",
+        "type": "object"
+      },
+      "SeriesPointOut": {
+        "additionalProperties": false,
+        "description": "One shop-day. Every day in the range appears, zero or not.",
+        "properties": {
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "orders": {
+            "title": "Orders",
+            "type": "integer"
+          },
+          "revenue_paise": {
+            "title": "Revenue Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "day",
+          "orders",
+          "revenue_paise"
+        ],
+        "title": "SeriesPointOut",
+        "type": "object"
+      },
       "SettingsOut": {
         "additionalProperties": false,
         "description": "The whole singleton row, so the form can show every number it can change.",
@@ -5599,6 +6270,649 @@
         "summary": "Edit an address",
         "tags": [
           "addresses"
+        ]
+      }
+    },
+    "/api/v1/admin/analytics/low-stock": {
+      "get": {
+        "operationId": "analytics_low_stock_api_v1_admin_analytics_low_stock_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LowStockListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Products at or below their own threshold, with where to fix them",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/analytics/orders": {
+      "get": {
+        "operationId": "analytics_orders_api_v1_admin_analytics_orders_get",
+        "parameters": [
+          {
+            "description": "First shop-day, inclusive (default: 29 days ago)",
+            "in": "query",
+            "name": "from_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "First shop-day, inclusive (default: 29 days ago)",
+              "title": "From Date"
+            }
+          },
+          {
+            "description": "Last shop-day, inclusive (default: today)",
+            "in": "query",
+            "name": "to_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Last shop-day, inclusive (default: today)",
+              "title": "To Date"
+            }
+          },
+          {
+            "description": "Narrow to one status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/OrderStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Narrow to one status",
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsOrderListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "The orders behind the revenue card",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/analytics/products": {
+      "get": {
+        "operationId": "analytics_products_api_v1_admin_analytics_products_get",
+        "parameters": [
+          {
+            "description": "First shop-day, inclusive (default: 29 days ago)",
+            "in": "query",
+            "name": "from_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "First shop-day, inclusive (default: 29 days ago)",
+              "title": "From Date"
+            }
+          },
+          {
+            "description": "Last shop-day, inclusive (default: today)",
+            "in": "query",
+            "name": "to_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Last shop-day, inclusive (default: today)",
+              "title": "To Date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductSalesListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "What actually sold in the range",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/analytics/series": {
+      "get": {
+        "operationId": "analytics_series_api_v1_admin_analytics_series_get",
+        "parameters": [
+          {
+            "description": "First shop-day, inclusive (default: 29 days ago)",
+            "in": "query",
+            "name": "from_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "First shop-day, inclusive (default: 29 days ago)",
+              "title": "From Date"
+            }
+          },
+          {
+            "description": "Last shop-day, inclusive (default: today)",
+            "in": "query",
+            "name": "to_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Last shop-day, inclusive (default: today)",
+              "title": "To Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeriesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "One point per shop-day, gaps included as zero",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/analytics/summary": {
+      "get": {
+        "operationId": "analytics_summary_api_v1_admin_analytics_summary_get",
+        "parameters": [
+          {
+            "description": "First shop-day, inclusive (default: 29 days ago)",
+            "in": "query",
+            "name": "from_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "First shop-day, inclusive (default: 29 days ago)",
+              "title": "From Date"
+            }
+          },
+          {
+            "description": "Last shop-day, inclusive (default: today)",
+            "in": "query",
+            "name": "to_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Last shop-day, inclusive (default: today)",
+              "title": "To Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsSummaryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Revenue, orders, average, repeat rate and cash still to collect",
+        "tags": [
+          "admin"
         ]
       }
     },
@@ -7283,6 +8597,265 @@
           }
         ],
         "summary": "Edit a product",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/customers": {
+      "get": {
+        "operationId": "list_customers_api_v1_admin_customers_get",
+        "parameters": [
+          {
+            "description": "Name, phone or email",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 120,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Name, phone or email",
+              "title": "Q"
+            }
+          },
+          {
+            "description": "Filter by loyalty tier",
+            "in": "query",
+            "name": "tier",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/LoyaltyTier"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by loyalty tier",
+              "title": "Tier"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "spend",
+              "pattern": "^(spend|recent|newest)$",
+              "title": "Sort",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Who shops here: spend, tier, last order",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/customers/{customer_id}": {
+      "get": {
+        "operationId": "get_customer_api_v1_admin_customers__customer_id__get",
+        "parameters": [
+          {
+            "description": "Customer id",
+            "in": "path",
+            "name": "customer_id",
+            "required": true,
+            "schema": {
+              "description": "Customer id",
+              "format": "uuid",
+              "title": "Customer Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerProfileOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "One customer, with every recent order",
         "tags": [
           "admin"
         ]

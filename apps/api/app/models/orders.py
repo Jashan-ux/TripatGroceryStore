@@ -183,6 +183,8 @@ class Order(Base, TimestampMixin):
         ),
         Index("ix_orders_profile_placed", "profile_id", "placed_at"),
         Index("ix_orders_status_placed", "status", "placed_at"),
+        # Analytics (Phase 6) scans by date across all customers.
+        Index("ix_orders_placed", "placed_at"),
     )
 
 
@@ -217,6 +219,8 @@ class OrderItem(Base):
 
     __table_args__ = (
         CheckConstraint("quantity > 0", name="quantity_positive"),
+        # "What actually sold": lines rolled up per product, joined back by order.
+        Index("ix_order_items_product_order", "product_id", "order_id"),
         CheckConstraint("unit_price_paise >= 0", name="unit_price_non_negative"),
         CheckConstraint(
             "line_total_paise = unit_price_paise * quantity", name="line_total_multiplies"

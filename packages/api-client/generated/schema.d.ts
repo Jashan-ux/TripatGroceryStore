@@ -42,6 +42,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/analytics/low-stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Products at or below their own threshold, with where to fix them */
+        get: operations["analytics_low_stock_api_v1_admin_analytics_low_stock_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/analytics/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The orders behind the revenue card */
+        get: operations["analytics_orders_api_v1_admin_analytics_orders_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/analytics/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What actually sold in the range */
+        get: operations["analytics_products_api_v1_admin_analytics_products_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/analytics/series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One point per shop-day, gaps included as zero */
+        get: operations["analytics_series_api_v1_admin_analytics_series_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/analytics/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Revenue, orders, average, repeat rate and cash still to collect */
+        get: operations["analytics_summary_api_v1_admin_analytics_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/audit": {
         parameters: {
             query?: never;
@@ -200,6 +285,40 @@ export interface paths {
         head?: never;
         /** Edit a product */
         patch: operations["update_product_api_v1_admin_catalogue_products__product_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Who shops here: spend, tier, last order */
+        get: operations["list_customers_api_v1_admin_customers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{customer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One customer, with every recent order */
+        get: operations["get_customer_api_v1_admin_customers__customer_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/feedback": {
@@ -1278,6 +1397,110 @@ export interface components {
             /** Stock */
             stock: number;
         };
+        /** AnalyticsOrderListOut */
+        AnalyticsOrderListOut: {
+            /** Items */
+            items: components["schemas"]["AnalyticsOrderOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            total_pages: number;
+            /** Total Paise */
+            total_paise: number;
+        };
+        /**
+         * AnalyticsOrderOut
+         * @description A row in the drill-down behind the revenue and orders cards.
+         */
+        AnalyticsOrderOut: {
+            /**
+             * Customer Id
+             * Format: uuid
+             */
+            customer_id: string;
+            /** Customer Name */
+            customer_name: string;
+            /** Customer Phone */
+            customer_phone: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Item Count */
+            item_count: number;
+            /** Order Number */
+            order_number: string;
+            /**
+             * Placed At
+             * Format: date-time
+             */
+            placed_at: string;
+            /** Status */
+            status: string;
+            /** Total Paise */
+            total_paise: number;
+        };
+        /**
+         * AnalyticsSummaryOut
+         * @description The six numbers the owner opens the app for.
+         */
+        AnalyticsSummaryOut: {
+            /**
+             * Average Order Paise
+             * @description 0 when there were no orders.
+             */
+            average_order_paise: number;
+            /**
+             * By Status
+             * @description Order counts per status inside the range.
+             */
+            by_status: {
+                [key: string]: number;
+            };
+            /**
+             * Cash Pending Paise
+             * @description Cash still to collect on undelivered orders.
+             */
+            cash_pending_paise: number;
+            /** Items Sold */
+            items_sold: number;
+            /**
+             * Low Stock
+             * @description Products at or below their own threshold.
+             */
+            low_stock: number;
+            /**
+             * New Customers
+             * @description First order ever placed inside the range.
+             */
+            new_customers: number;
+            /**
+             * Orders
+             * @description Orders placed in the range, same predicate as revenue.
+             */
+            orders: number;
+            range: components["schemas"]["DateRangeOut"];
+            /**
+             * Repeat Customers
+             * @description Customers with 2+ orders inside the range.
+             */
+            repeat_customers: number;
+            /**
+             * Repeat Rate Percent
+             * @description repeat / distinct customers, rounded down.
+             */
+            repeat_rate_percent: number;
+            /**
+             * Revenue Paise
+             * @description Sum of order totals, excluding cancelled and returned.
+             */
+            revenue_paise: number;
+        };
         /** AuditEntryOut */
         AuditEntryOut: {
             /** Action */
@@ -1674,6 +1897,137 @@ export interface components {
         CurrentOfferOut: {
             offer?: components["schemas"]["OfferOut"] | null;
         };
+        /** CustomerListOut */
+        CustomerListOut: {
+            /**
+             * Counts
+             * @description Customers per tier across the whole shop.
+             */
+            counts: {
+                [key: string]: number;
+            };
+            /** Items */
+            items: components["schemas"]["CustomerRowOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            total_pages: number;
+        };
+        /** CustomerOrderOut */
+        CustomerOrderOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Item Count */
+            item_count: number;
+            /** Order Number */
+            order_number: string;
+            /**
+             * Placed At
+             * Format: date-time
+             */
+            placed_at: string;
+            /** Status */
+            status: string;
+            /** Total Paise */
+            total_paise: number;
+        };
+        /** CustomerProfileOut */
+        CustomerProfileOut: {
+            /** Addresses */
+            addresses: number;
+            /** Average Order Paise */
+            average_order_paise: number;
+            /** Email */
+            email: string;
+            /** First Order At */
+            first_order_at: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Top */
+            is_top: boolean;
+            /** Last Order At */
+            last_order_at: string | null;
+            /** Lifetime Spend Paise */
+            lifetime_spend_paise: number;
+            /** Name */
+            name: string;
+            /** Orders */
+            orders: number;
+            /** Phone */
+            phone: string;
+            /**
+             * Recent Orders
+             * @description Newest first, capped.
+             */
+            recent_orders: components["schemas"]["CustomerOrderOut"][];
+            /** Referral Code */
+            referral_code: string;
+            /** Tier */
+            tier: string;
+        };
+        /** CustomerRowOut */
+        CustomerRowOut: {
+            /** Email */
+            email: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Is Top
+             * @description Inside the shop's top three by lifetime spend.
+             */
+            is_top: boolean;
+            /** Last Order At */
+            last_order_at: string | null;
+            /** Lifetime Spend Paise */
+            lifetime_spend_paise: number;
+            /** Name */
+            name: string;
+            /** Orders */
+            orders: number;
+            /** Phone */
+            phone: string;
+            /** Tier */
+            tier: string;
+        };
+        /**
+         * DateRangeOut
+         * @description The range actually applied, after defaulting and clamping.
+         */
+        DateRangeOut: {
+            /**
+             * Days
+             * @description Inclusive number of shop-days in the range.
+             */
+            days: number;
+            /**
+             * From Date
+             * Format: date
+             */
+            from_date: string;
+            /**
+             * Timezone
+             * @description The zone a 'day' means here (Asia/Kolkata).
+             */
+            timezone: string;
+            /**
+             * To Date
+             * Format: date
+             */
+            to_date: string;
+        };
         /** ErrorDetail */
         ErrorDetail: {
             /** Code */
@@ -1819,6 +2173,46 @@ export interface components {
             /** Width */
             width: number;
         };
+        /** LowStockListOut */
+        LowStockListOut: {
+            /** Items */
+            items: components["schemas"]["LowStockOut"][];
+            /** Total */
+            total: number;
+        };
+        /**
+         * LowStockOut
+         * @description One row of "running out" — it always knows where its fix lives.
+         */
+        LowStockOut: {
+            /** Category */
+            category: string;
+            /**
+             * Edit Href
+             * @description Admin route that opens this product's edit dialog.
+             */
+            edit_href: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Name */
+            name: string;
+            /**
+             * Product Id
+             * Format: uuid
+             */
+            product_id: string;
+            /** Slug */
+            slug: string;
+            /** Stock */
+            stock: number;
+            /** Threshold */
+            threshold: number;
+        };
+        /**
+         * LoyaltyTier
+         * @enum {string}
+         */
+        LoyaltyTier: "none" | "gold" | "platinum" | "diamond";
         /** MarkAllReadOut */
         MarkAllReadOut: {
             /** Marked */
@@ -2118,6 +2512,11 @@ export interface components {
              */
             wallet_paise: number;
         };
+        /**
+         * OrderStatus
+         * @enum {string}
+         */
+        OrderStatus: "processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled" | "returned";
         /** OrderSummaryOut */
         OrderSummaryOut: {
             /** Deliver By */
@@ -2415,6 +2814,35 @@ export interface components {
             total: number;
             /** Total Pages */
             total_pages: number;
+        };
+        /** ProductSalesListOut */
+        ProductSalesListOut: {
+            /** Items */
+            items: components["schemas"]["ProductSalesOut"][];
+            range: components["schemas"]["DateRangeOut"];
+            /**
+             * Total Revenue Paise
+             * @description Revenue from all sold lines in the range.
+             */
+            total_revenue_paise: number;
+            /** Total Units */
+            total_units: number;
+        };
+        /** ProductSalesOut */
+        ProductSalesOut: {
+            /** Name */
+            name: string;
+            /**
+             * Product Id
+             * Format: uuid
+             */
+            product_id: string;
+            /** Revenue Paise */
+            revenue_paise: number;
+            /** Slug */
+            slug: string;
+            /** Units */
+            units: number;
         };
         /**
          * ProductUpdateIn
@@ -2848,6 +3276,27 @@ export interface components {
             credited_paise: number;
             /** Wallet Balance Paise */
             wallet_balance_paise: number;
+        };
+        /** SeriesOut */
+        SeriesOut: {
+            /** Points */
+            points: components["schemas"]["SeriesPointOut"][];
+            range: components["schemas"]["DateRangeOut"];
+        };
+        /**
+         * SeriesPointOut
+         * @description One shop-day. Every day in the range appears, zero or not.
+         */
+        SeriesPointOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Orders */
+            orders: number;
+            /** Revenue Paise */
+            revenue_paise: number;
         };
         /**
          * SettingsOut
@@ -3361,6 +3810,401 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    analytics_low_stock_api_v1_admin_analytics_low_stock_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LowStockListOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    analytics_orders_api_v1_admin_analytics_orders_get: {
+        parameters: {
+            query?: {
+                /** @description First shop-day, inclusive (default: 29 days ago) */
+                from_date?: string | null;
+                /** @description Last shop-day, inclusive (default: today) */
+                to_date?: string | null;
+                /** @description Narrow to one status */
+                status?: components["schemas"]["OrderStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsOrderListOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    analytics_products_api_v1_admin_analytics_products_get: {
+        parameters: {
+            query?: {
+                /** @description First shop-day, inclusive (default: 29 days ago) */
+                from_date?: string | null;
+                /** @description Last shop-day, inclusive (default: today) */
+                to_date?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductSalesListOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    analytics_series_api_v1_admin_analytics_series_get: {
+        parameters: {
+            query?: {
+                /** @description First shop-day, inclusive (default: 29 days ago) */
+                from_date?: string | null;
+                /** @description Last shop-day, inclusive (default: today) */
+                to_date?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeriesOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    analytics_summary_api_v1_admin_analytics_summary_get: {
+        parameters: {
+            query?: {
+                /** @description First shop-day, inclusive (default: 29 days ago) */
+                from_date?: string | null;
+                /** @description Last shop-day, inclusive (default: today) */
+                to_date?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsSummaryOut"];
+                };
             };
             /** @description Missing, expired or invalid token. */
             401: {
@@ -4614,6 +5458,165 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProductAdminOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_customers_api_v1_admin_customers_get: {
+        parameters: {
+            query?: {
+                /** @description Name, phone or email */
+                q?: string | null;
+                /** @description Filter by loyalty tier */
+                tier?: components["schemas"]["LoyaltyTier"] | null;
+                sort?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerListOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_customer_api_v1_admin_customers__customer_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Customer id */
+                customer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerProfileOut"];
                 };
             };
             /** @description Missing, expired or invalid token. */

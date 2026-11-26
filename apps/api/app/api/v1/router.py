@@ -23,6 +23,7 @@ from app.api.v1.endpoints import (
     rewards,
     system,
 )
+from app.api.v1.endpoints.admin import analytics as admin_analytics
 from app.api.v1.endpoints.admin import audit as admin_audit
 from app.api.v1.endpoints.admin import catalogue as admin_catalogue
 from app.api.v1.endpoints.admin import dashboard as admin_dashboard
@@ -52,4 +53,5 @@ api_router.include_router(admin_catalogue.router)
 api_router.include_router(admin_offers.router)
 api_router.include_router(admin_settings.router)
 api_router.include_router(admin_feedback.router)
+api_router.include_router(admin_analytics.router)
 api_router.include_router(admin_audit.router)
