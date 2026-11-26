@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
 /**
@@ -50,6 +51,23 @@ test.describe('P-01 PWA installability', () => {
     } finally {
       await context.setOffline(false);
     }
+  });
+
+  test('public contact route has no WCAG A/AA accessibility violations', async ({ page }) => {
+    await page.goto('/contact');
+    await expect(page.getByRole('heading', { name: /contact/i })).toBeVisible();
+
+    const audit = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+    expect(
+      audit.violations.map(({ id, impact, help, nodes }) => ({
+        id,
+        impact,
+        help,
+        targets: nodes.flatMap((node) => node.target),
+      })),
+    ).toEqual([]);
   });
 
   test('service worker is served with selective offline caching and push handling', async ({
