@@ -106,6 +106,12 @@ try {
     const { appendFile } = await import('node:fs/promises');
     await appendFile(process.env.GITHUB_STEP_SUMMARY, `${summary}\n`);
   }
+  const cls = result.lhr.audits['cumulative-layout-shift']?.displayValue ?? 'n/a';
+  const lcp = result.lhr.audits['largest-contentful-paint']?.displayValue ?? 'n/a';
+  const tbt = result.lhr.audits['total-blocking-time']?.displayValue ?? 'n/a';
+  process.stderr.write(
+    `::notice title=Lighthouse mobile metrics::Performance ${performance}; Accessibility ${accessibility}; CLS ${cls}; LCP ${lcp}; TBT ${tbt}.\n`,
+  );
 
   if (performance < 85 || accessibility < 95) {
     const details = [
