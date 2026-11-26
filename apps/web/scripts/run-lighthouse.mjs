@@ -74,9 +74,22 @@ try {
     `Mobile simulated-4G Lighthouse: Performance ${performance}, Accessibility ${accessibility}`,
   );
   console.log(`Full HTML report: ${reportPath}`);
+  const summary = [
+    '### Lighthouse mobile simulated-4G',
+    '',
+    `- Performance: **${performance}** (target ≥ 85)`,
+    `- Accessibility: **${accessibility}** (target ≥ 95)`,
+    `- HTML report: \`${reportPath}\` (also uploaded as a workflow artifact)`,
+  ].join('\n');
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    const { appendFile } = await import('node:fs/promises');
+    await appendFile(process.env.GITHUB_STEP_SUMMARY, `${summary}\n`);
+  }
 
   if (performance < 85 || accessibility < 95) {
-    console.error('Lighthouse scores are below the Phase 7 target (Perf 85, A11y 95).');
+    const message = `Lighthouse below target: Performance ${performance}/85, Accessibility ${accessibility}/95.`;
+    console.error(message);
+    process.stderr.write(`::error title=Lighthouse scores below target::${message}\n`);
     process.exitCode = 1;
   }
 } finally {
