@@ -55,10 +55,9 @@ export default function ContactPage() {
         <p className="mt-1 text-sm text-muted-foreground">{t('contact.subtitle')}</p>
       </div>
 
-      {/* Reserve mobile height while API-backed details load to avoid CLS. */}
       <section
         aria-labelledby="store-details"
-        className="min-h-[18rem] rounded-xl border border-border bg-card p-4 md:min-h-0"
+        className="rounded-xl border border-border bg-card p-4"
       >
         <h2 id="store-details" className="text-base font-bold">
           {store?.store_name ?? t('brand.full')}

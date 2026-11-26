@@ -79,10 +79,7 @@ try {
     .map((ref) => result.lhr.audits[ref.id])
     .filter((audit) => audit.score !== null && audit.score < 0.9)
     .map((audit) => `${audit.title}: ${audit.displayValue ?? `score ${audit.score}`}`);
-  const layoutShiftSources = (result.lhr.audits['layout-shift-elements']?.details?.items ?? [])
-    .map((item) => item.node?.selector ?? item.node?.snippet)
-    .filter((selector) => typeof selector === 'string')
-    .slice(0, 5);
+  const layoutShiftSources = await readLayoutShiftSources(url);
   const summary = [
     '### Lighthouse mobile simulated-4G',
     '',
@@ -127,4 +124,58 @@ try {
 } finally {
   await browser?.kill();
   server.kill('SIGTERM');
+}
+
+async function readLayoutShiftSources(targetUrl) {
+  let probe;
+  try {
+    probe = await chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-dev-shm-usage'],
+    });
+    const page = await probe.newPage({ viewport: { width: 360, height: 800 } });
+    await page.addInitScript(() => {
+      window.__layoutShiftEntries = [];
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if (entry.hadRecentInput) continue;
+          window.__layoutShiftEntries.push({
+            value: entry.value,
+            sources: (entry.sources ?? []).map(({ node, previousRect, currentRect }) => ({
+              selector: node
+                ? `${node.tagName?.toLowerCase() ?? ''}${node.id ? `#${node.id}` : ''}${
+                    node.classList?.length
+                      ? `.${Array.from(node.classList).slice(0, 2).join('.')}`
+                      : ''
+                  }`
+                : 'unknown node',
+              text: node?.textContent?.trim().replace(/\s+/g, ' ').slice(0, 80) ?? '',
+              from: previousRect
+                ? [previousRect.x, previousRect.y, previousRect.width, previousRect.height]
+                : [],
+              to: currentRect
+                ? [currentRect.x, currentRect.y, currentRect.width, currentRect.height]
+                : [],
+            })),
+          });
+        }
+      }).observe({ type: 'layout-shift', buffered: true });
+    });
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForTimeout(3500);
+    return await page.evaluate(() =>
+      window.__layoutShiftEntries
+        .flatMap((entry) =>
+          entry.sources.map(
+            (source) => `${entry.value.toFixed(3)}: ${source.selector} “${source.text}”`,
+          ),
+        )
+        .slice(0, 8),
+    );
+  } catch (error) {
+    console.warn(`Could not collect CLS element sources: ${error.message}`);
+    return [];
+  } finally {
+    await probe?.close();
+  }
 }
