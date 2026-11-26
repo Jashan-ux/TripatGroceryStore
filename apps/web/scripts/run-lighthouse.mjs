@@ -109,8 +109,11 @@ try {
   const cls = result.lhr.audits['cumulative-layout-shift']?.displayValue ?? 'n/a';
   const lcp = result.lhr.audits['largest-contentful-paint']?.displayValue ?? 'n/a';
   const tbt = result.lhr.audits['total-blocking-time']?.displayValue ?? 'n/a';
+  const shiftSummary = layoutShiftSources.length
+    ? `; layout-shift elements ${layoutShiftSources.join(' | ')}`
+    : '';
   process.stderr.write(
-    `::notice title=Lighthouse mobile metrics::Performance ${performance}; Accessibility ${accessibility}; CLS ${cls}; LCP ${lcp}; TBT ${tbt}.\n`,
+    `::notice title=Lighthouse mobile metrics::Performance ${performance}; Accessibility ${accessibility}; CLS ${cls}; LCP ${lcp}; TBT ${tbt}${shiftSummary}.\n`,
   );
 
   if (performance < 85 || accessibility < 95) {
