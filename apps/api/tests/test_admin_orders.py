@@ -14,6 +14,7 @@ from typing import Any
 
 import pytest
 from app.db.session import get_sessionmaker
+from app.services import push as push_service
 from httpx import AsyncClient
 from sqlalchemy import text
 from tests.support import ADDRESS, place, product_detail, stock_of
@@ -199,9 +200,19 @@ async def test_detail_carries_the_timeline(
 # --------------------------------------------------------------------------- #
 # Transitions
 # --------------------------------------------------------------------------- #
-async def test_the_happy_path_settles_the_cash_on_delivery(
-    async_client: AsyncClient, admin: dict[str, Any], order: dict[str, Any]
+async def test_the_happy_path_settles_the_cash_on_delivery_and_schedules_push(
+    async_client: AsyncClient,
+    admin: dict[str, Any],
+    order: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    pushes: list[dict[str, Any]] = []
+
+    async def fake_deliver(profile_id: uuid.UUID, **payload: str) -> int:
+        pushes.append({"profile_id": profile_id, **payload})
+        return 1
+
+    monkeypatch.setattr(push_service, "deliver_to_profile", fake_deliver)
     for status in ("shipped", "out_for_delivery", "delivered"):
         response = await _set_status(async_client, admin, order["id"], status)
         assert response.status_code == 200, response.text
@@ -222,6 +233,13 @@ async def test_the_happy_path_settles_the_cash_on_delivery(
         "delivered",
     ]
     assert {event["actor"] for event in body["events"][1:]} == {"admin"}
+    assert [message["title"].split(": ", 1)[1] for message in pushes] == [
+        "Packed and shipped",
+        "Out for delivery",
+        "Delivered",
+    ]
+    assert all(message["href"] == f"/orders/{order['id']}" for message in pushes)
+    assert len({message["profile_id"] for message in pushes}) == 1
 
 
 async def test_a_skipped_step_is_refused_with_the_allowed_moves(

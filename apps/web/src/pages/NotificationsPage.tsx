@@ -2,6 +2,7 @@ import { BellRing, CheckCheck, PackageCheck, ReceiptText, Truck, XCircle } from 
 import { Link, useNavigate } from 'react-router-dom';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { PushOptInCard } from '@/components/notifications/PushOptInCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { NotificationOut } from '@tripat/api-client';
@@ -70,6 +71,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="container max-w-2xl py-6 pb-nav-safe md:pb-8">
+      <PushOptInCard />
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-extrabold tracking-tight">Notifications</h1>

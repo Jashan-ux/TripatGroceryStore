@@ -33,6 +33,7 @@ from app.models.enums import (
 from app.models.notifications import EmailMessage, Notification
 from app.models.ops import RateLimitCounter
 from app.models.orders import Address, Order, OrderEvent, OrderItem
+from app.models.push import PushSubscription
 from app.models.returns import OrderReturn, ReturnItem
 from app.models.rewards import Referral, ScratchCard, Wallet, WalletEntry
 
@@ -62,6 +63,7 @@ __all__ = [
     "Product",
     "ProductVariant",
     "Profile",
+    "PushSubscription",
     "RateLimitCounter",
     "Referral",
     "ReferralStatus",

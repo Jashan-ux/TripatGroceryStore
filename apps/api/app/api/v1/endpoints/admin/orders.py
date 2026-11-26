@@ -11,9 +11,10 @@ from __future__ import annotations
 import uuid
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Path, Query
+from fastapi import APIRouter, BackgroundTasks, Path, Query
 
 from app.api.deps import AdminUserDep, SessionDep
+from app.models.catalogue import Profile
 from app.schemas.admin_orders import (
     AdminOrderDeliveryIn,
     AdminOrderListOut,
@@ -22,6 +23,8 @@ from app.schemas.admin_orders import (
 )
 from app.schemas.orders import OrderOut
 from app.services import admin_orders as service
+from app.services import notifications as notifications_service
+from app.services import push as push_service
 
 router = APIRouter(prefix="/admin/orders", tags=["admin"])
 
@@ -63,9 +66,23 @@ async def set_delivery_days(
     session: SessionDep,
     order_id: OrderId,
     payload: AdminOrderDeliveryIn,
+    background_tasks: BackgroundTasks,
 ) -> AdminOrderSummaryOut:
     order = await service.get_order(session, order_id)
     updated = await service.set_delivery_days(session, order, payload, actor=user.profile)
+    customer = await session.get(Profile, updated.profile_id)
+    if customer is not None:
+        background_tasks.add_task(
+            push_service.deliver_to_profile,
+            customer.id,
+            title=f"{updated.order_number}: Delivery estimate updated",
+            body=(
+                f"The shop has updated your delivery estimate to {updated.deliver_by:%d %b %Y}."
+                if updated.deliver_by
+                else "The shop has updated your delivery estimate."
+            ),
+            href=f"/orders/{updated.id}",
+        )
     return service.summary_out(updated)
 
 
@@ -79,7 +96,18 @@ async def set_status(
     session: SessionDep,
     order_id: OrderId,
     payload: AdminOrderStatusIn,
+    background_tasks: BackgroundTasks,
 ) -> AdminOrderSummaryOut:
     order = await service.get_order(session, order_id)
     updated = await service.transition(session, order, payload, actor=user.profile)
+    customer = await session.get(Profile, updated.profile_id)
+    if customer is not None:
+        headline, detail = notifications_service.STATUS_COPY[updated.status]
+        background_tasks.add_task(
+            push_service.deliver_to_profile,
+            customer.id,
+            title=f"{updated.order_number}: {headline}",
+            body=payload.note or detail,
+            href=f"/orders/{updated.id}",
+        )
     return service.summary_out(updated)

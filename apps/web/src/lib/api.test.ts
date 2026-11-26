@@ -98,6 +98,22 @@ describe('apiFetch', () => {
     });
   });
 
+  it('sends a JSON body with DELETE requests when the endpoint requires it', async () => {
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+      jsonResponse({ enabled: false, message: 'off' }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    await api.delete('/api/v1/push/subscribe', {
+      body: { endpoint: 'https://push.example.test/endpoint', keys: { p256dh: 'p', auth: 'a' } },
+    });
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(init.method).toBe('DELETE');
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      endpoint: 'https://push.example.test/endpoint',
+    });
+    expect((init.headers as Record<string, string>)['Content-Type']).toBe('application/json');
+  });
+
   it('returns undefined for 204 responses', async () => {
     vi.stubGlobal(
       'fetch',

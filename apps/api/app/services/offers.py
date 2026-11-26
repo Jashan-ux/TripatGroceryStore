@@ -2,13 +2,13 @@
 
 What "sent" means here is deliberately modest, because promises should match
 reality: a row in every matching customer's bell, an email in the outbox for each
-of them, and a banner row the storefront can show. Web push is wired but belongs
-to Phase 7 — the row is created now so push can join in later without a schema
-change.
+of them, a storefront banner, and push delivery to opted-in browsers when VAPID is
+configured. The push count is the number of matching endpoints targeted, not a
+provider delivery receipt.
 
-The count is recorded, not estimated: ``recipients`` is how many bells rang and
-``emails_queued`` is how many addresses went into the outbox, both visible in the
-history so the owner can see what actually happened.
+The count is recorded, not estimated: ``recipients`` is how many bells rang,
+``emails_queued`` is how many addresses went into the outbox, and ``push_queued``
+is how many opted-in browser endpoints matched the audience.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ from app.models.enums import NotificationKind, OfferAudience
 from app.models.notifications import Notification
 from app.repositories import admin_tools as repo
 from app.schemas.admin_ops import OfferIn, OfferOut
-from app.services import audit, email
+from app.services import audit, email, push
 
 
 def audience_label(audience: OfferAudience) -> str:
@@ -46,6 +46,7 @@ def offer_out(offer: Offer) -> OfferOut:
         expires_at=offer.expires_at,
         recipients=offer.recipients,
         emails_queued=offer.emails_queued,
+        push_queued=offer.push_queued,
         sent_at=offer.sent_at,
         created_at=offer.created_at,
     )
@@ -70,7 +71,7 @@ async def send(
     actor: Profile,
     payload: OfferIn,
     settings: StoreSettings,
-) -> Offer:
+) -> tuple[Offer, list[dict[str, str]]]:
     audience = OfferAudience(payload.audience)
     offer = Offer(
         title=payload.title.strip(),
@@ -81,6 +82,7 @@ async def send(
         sent_by=actor.id,
         recipients=0,
         emails_queued=0,
+        push_queued=0,
     )
     session.add(offer)
     await session.flush()
@@ -101,6 +103,8 @@ async def send(
         )
     await session.flush()
 
+    push_targets = await push.offer_targets(session, audience)
+
     queued = 0
     for _profile_id, address, _name in people:
         if not address:
@@ -117,6 +121,7 @@ async def send(
 
     offer.recipients = len(people)
     offer.emails_queued = queued
+    offer.push_queued = len(push_targets)
     await session.flush()
 
     await audit.record(
@@ -131,9 +136,10 @@ async def send(
             "audience": audience.value,
             "recipients": offer.recipients,
             "emails_queued": offer.emails_queued,
+            "push_queued": offer.push_queued,
         },
     )
-    return offer
+    return offer, push_targets
 
 
 async def current(session: AsyncSession) -> Offer | None:

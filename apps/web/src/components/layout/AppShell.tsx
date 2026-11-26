@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom';
 
 import { OfflineBanner } from '@/components/common/OfflineBanner';
+import { InstallPrompt } from '@/components/common/InstallPrompt';
 import { UpdatePrompt } from '@/components/common/UpdatePrompt';
 import { CartBar } from '@/components/cart/CartBar';
 import { BottomNav } from '@/components/layout/BottomNav';
@@ -36,6 +37,7 @@ export function AppShell() {
         </a>
         <UpdatePrompt />
         <OfflineBanner />
+        <InstallPrompt />
         <SiteHeader />
         <OfferBanner />
         <main id="main" tabIndex={-1} className={cn('flex-1 outline-none')}>

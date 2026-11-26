@@ -13,7 +13,7 @@ status board; `docs/ACCEPTANCE_REPORT.md` carries the scenario-level evidence.
 | 5 | Admin catalogue tools (inline add, bulk add, categories, brands), offers, settings, feedback | ✅ **done** — `0006` applied live (22 tables, 264/264 columns, digest `999d3e5e…2458`); 76 new API tests and 19 new web tests green |
 | 5.1 | Hardening: rate limits that actually run (order, feedback, code guessing, uploads) | ✅ **done** — `0007` applied live (23 tables, 268/268 columns, digest `e1e60b83…a0bc97c3`); replaces the un-installed slowapi shell and removes the Redis requirement |
 | 6 | Analytics with drill-downs, customer profiles, low-stock edit flow | ✅ **done** — 0008 indexes round-trip locally and are present in Supabase; 14 API scenarios + web coverage for A-10/A-11/A-13; CI 5/5 green |
-| 7 | PWA polish: install prompt, web push, offline, Lighthouse | ⬜ |
+| 7 | PWA polish: install prompt, web push, offline, Lighthouse | 🟡 **in progress** — install prompt, opt-in push, offer delivery and selective offline caching implemented; migrations pass locally; live VAPID setup, browser E2E and Lighthouse evidence remain pending |
 | 8 | Security hardening, full acceptance run, deploy, DEPLOY.md, ACCEPTANCE_REPORT.md | ⬜ |
 | 9 (optional) | Hindi UI, delivery-person role, SMS OTP behind the flag | ⬜ |
 
@@ -54,9 +54,12 @@ status board; `docs/ACCEPTANCE_REPORT.md` carries the scenario-level evidence.
   **no** cart, **no** customer footer, **no** product search (defect 6.4).
 - PWA: `vite-plugin-pwa` with `registerType: 'prompt'`, generated
   192/512/maskable icons from the brand artwork, manifest with id/start_url/scope,
-  Workbox rules that **never** cache `/api/*` or Supabase responses, OSM tiles
-  cached first, and an "update available" slide-down prompt instead of silently
-  swapping the app (defect 6.4).
+  Workbox rules that cache only the app shell, public catalogue GETs and bounded
+  public images; checkout, account, admin, all other `/api/*` and Supabase
+  responses remain network-only. An optional, dismissible install nudge and
+  opt-in web-push settings live in the customer UI; app updates wait for consent.
+  Browsed catalogue pages and assets can be revisited offline; orders cannot be
+  placed without the server's live stock and price checks.
 - Typed API client: types generated from the FastAPI schema
   (`packages/api-client`), an `ApiError` that mirrors the backend error shape, and
   a single `apiFetch` seam (`no-store`, request timeout, abort support).

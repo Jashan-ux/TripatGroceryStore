@@ -19,6 +19,7 @@ from app.api.v1.endpoints import (
     notifications,
     offers,
     orders,
+    push,
     returns,
     rewards,
     system,
@@ -42,6 +43,7 @@ api_router.include_router(addresses.router)
 api_router.include_router(checkout.router)
 api_router.include_router(orders.router)
 api_router.include_router(notifications.router)
+api_router.include_router(push.router)
 api_router.include_router(rewards.router)
 api_router.include_router(returns.router)
 api_router.include_router(offers.router)

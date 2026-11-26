@@ -84,6 +84,7 @@ describe('AdminOffersPage', () => {
               expires_at: null,
               recipients: 3,
               emails_queued: 2,
+              push_queued: 1,
               sent_at: '2026-11-25T10:00:00Z',
               created_at: '2026-11-25T10:00:00Z',
             }
@@ -103,7 +104,9 @@ describe('AdminOffersPage', () => {
       // The expiry is a real date, not the word "7".
       expect(String((post?.body as { expires_at: string }).expires_at)).toMatch(/^\d{4}-/);
     });
-    expect(await screen.findByText(/sent to 3 customers — 2 emails queued/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/sent to 3 customers — 2 emails queued · 1 push device targeted/i),
+    ).toBeInTheDocument();
   });
 
   it('shows what is live on the storefront right now', async () => {

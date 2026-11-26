@@ -69,6 +69,7 @@ class Settings(BaseSettings):
     RATE_LIMIT_REFERRAL: int = Field(default=10, ge=0, le=100_000)
     RATE_LIMIT_SCRATCH: int = Field(default=30, ge=0, le=100_000)
     RATE_LIMIT_UPLOADS: int = Field(default=60, ge=0, le=100_000)
+    RATE_LIMIT_PUSH: int = Field(default=10, ge=0, le=100_000)
 
     # --- Store / contact (seeded into store_settings, never hard-coded) -----
     STORE_PHONE: str = "+91 87089-73386"

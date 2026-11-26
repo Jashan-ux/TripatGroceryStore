@@ -56,7 +56,8 @@ export function AdminOffersPage() {
         onSuccess: (offer) => {
           setNotice(
             `Sent to ${offer.recipients} customer${offer.recipients === 1 ? '' : 's'} — ` +
-              `${offer.emails_queued} email${offer.emails_queued === 1 ? '' : 's'} queued.`,
+              `${offer.emails_queued} email${offer.emails_queued === 1 ? '' : 's'} queued · ` +
+              `${offer.push_queued} push device${offer.push_queued === 1 ? '' : 's'} targeted.`,
           );
           setTitle('');
           setBody('');
@@ -165,8 +166,8 @@ export function AdminOffersPage() {
             <Send aria-hidden="true" /> {send.isPending ? 'Sending…' : 'Send offer'}
           </Button>
           <p className="text-xs text-muted-foreground">
-            It reaches the bell and the storefront banner immediately. Web push joins in a later
-            release; the record is already kept for it.
+            It reaches the bell and storefront banner. Opted-in browsers are targeted for push when
+            push is configured; the count is not a delivery receipt.
           </p>
         </div>
       </section>
@@ -193,6 +194,7 @@ export function AdminOffersPage() {
                   {offer.recipients === 1 ? '' : 's'} ·{' '}
                   <span className="font-semibold">{offer.emails_queued}</span> email
                   {offer.emails_queued === 1 ? '' : 's'} ·{' '}
+                  <span className="font-semibold">{offer.push_queued}</span> push targeted ·{' '}
                   {AUDIENCES.find((option) => option.value === offer.audience)?.label ??
                     offer.audience}
                 </p>

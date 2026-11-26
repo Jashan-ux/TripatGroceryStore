@@ -9,11 +9,13 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Path, Query
+from fastapi import APIRouter, BackgroundTasks, Path, Query
 
 from app.api.deps import CurrentUserDep, SessionDep
 from app.schemas.orders import OrderCancelIn, OrderListOut, OrderOut
+from app.services import notifications as notifications_service
 from app.services import orders as service
+from app.services import push as push_service
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -41,8 +43,17 @@ async def cancel_order(
     user: CurrentUserDep,
     session: SessionDep,
     order_id: OrderId,
+    background_tasks: BackgroundTasks,
     payload: OrderCancelIn | None = None,
 ) -> OrderOut:
     reason = payload.reason if payload is not None else ""
     order = await service.cancel_order(session, user.profile, order_id, reason)
+    headline, detail = notifications_service.STATUS_COPY[order.status]
+    background_tasks.add_task(
+        push_service.deliver_to_profile,
+        user.profile.id,
+        title=f"{order.order_number}: {headline}",
+        body=reason or detail,
+        href=f"/orders/{order.id}",
+    )
     return service.order_out(order)

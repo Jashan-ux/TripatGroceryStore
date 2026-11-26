@@ -31,11 +31,38 @@ test.describe('P-01 PWA installability', () => {
     expect(manifest.icons.some((icon) => icon.purpose === 'maskable')).toBe(true);
   });
 
-  test('service worker is served and never caches the API', async ({ request }) => {
+  test('a previously installed app shell serves client routes while offline', async ({
+    page,
+    context,
+  }) => {
+    await page.goto('/');
+    await page.evaluate(async () => {
+      await navigator.serviceWorker.ready;
+    });
+    await expect
+      .poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null))
+      .toBe(true);
+
+    await context.setOffline(true);
+    try {
+      await page.goto('/contact');
+      await expect(page.getByRole('heading', { name: /contact/i })).toBeVisible();
+    } finally {
+      await context.setOffline(false);
+    }
+  });
+
+  test('service worker is served with selective offline caching and push handling', async ({
+    request,
+  }) => {
     const sw = await request.get('/sw.js');
     expect(sw.ok()).toBeTruthy();
     const body = await sw.text();
     expect(body).toContain('skipWaiting');
-    expect(body).toMatch(/NetworkOnly/);
+    expect(body).toContain('public-catalogue-v1');
+    expect(body).toContain('notificationclick');
+    // The catalogue cache is selective; the /api/ catch-all is network-only,
+    // while installable offline app-shell navigation remains available.
+    expect(body).toContain('/api/');
   });
 });

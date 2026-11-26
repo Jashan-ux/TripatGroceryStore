@@ -118,6 +118,8 @@ class Offer(Base, TimestampMixin):
     )
     recipients: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
     emails_queued: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    #: Number of subscribed browser endpoints targeted at send time (not delivery receipts).
+    push_queued: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
     sent_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -125,6 +127,7 @@ class Offer(Base, TimestampMixin):
     __table_args__ = (
         Index("ix_offers_created", "created_at"),
         CheckConstraint("recipients >= 0", name="recipients_non_negative"),
+        CheckConstraint("push_queued >= 0", name="push_queued_non_negative"),
         CheckConstraint("char_length(title) > 0", name="title_not_empty"),
     )
 

@@ -57,6 +57,7 @@ _LIMIT_FIELDS: dict[str, str] = {
     "referral": "RATE_LIMIT_REFERRAL",
     "scratch": "RATE_LIMIT_SCRATCH",
     "uploads": "RATE_LIMIT_UPLOADS",
+    "push": "RATE_LIMIT_PUSH",
 }
 
 

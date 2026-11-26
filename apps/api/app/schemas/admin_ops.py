@@ -105,6 +105,9 @@ class OfferOut(APIModel):
     expires_at: datetime | None = None
     recipients: int
     emails_queued: int
+    push_queued: int = Field(
+        description="Subscribed browser endpoints targeted; not delivery receipts."
+    )
     sent_at: datetime
     created_at: datetime
 

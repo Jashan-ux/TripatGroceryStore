@@ -19,6 +19,10 @@ dependencies = [
     # what makes a polyglot upload harmless, so it is a runtime dependency, not
     # an optional integration.
     "pillow==13.0.0",
+    # Web Push is a Phase 7 runtime feature; deliver to opted-in browsers after
+    # the offer transaction commits. Email remains an optional integration.
+    "pywebpush==2.0.3",
+    "py-vapid==1.9.1",
 ]
 
 [project.optional-dependencies]
@@ -26,8 +30,6 @@ dependencies = [
 # lockfile and audit results stay reproducible from day one.
 integrations = [
     "resend==2.5.1",
-    "pywebpush==2.0.3",
-    "py-vapid==1.9.1",
 ]
 dev = [
     "pytest==9.2.0",

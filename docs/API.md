@@ -62,7 +62,7 @@ failures return `code: "validation_error"` with
 | checkout & orders | `POST /checkout/quote` (public), `POST /orders` (`Idempotency-Key`), `GET /orders`, `GET /orders/{id}`, `POST /orders/{id}/cancel`, `POST /orders/{id}/return` | 2 ✅ + 4 ✅ |
 | wallet & rewards | `GET /rewards`, `GET /rewards/wallet`, `POST /rewards/referral`, `GET /rewards/scratch-cards`, `POST /rewards/scratch-cards/{id}/reveal` | 4 ✅ |
 | returns | `GET /returns`, `POST /orders/{id}/return`; admin: `GET /admin/returns`, `POST /admin/returns/{id}/decision`, `POST /admin/returns/{id}/received` | 4 ✅ |
-| notifications | `GET /notifications`, `POST /notifications/{id}/ack`, `POST /push/subscribe`, `DELETE /push/subscribe` | 3 |
+| notifications | `GET /notifications`, `POST /notifications/{id}/ack`, `POST/DELETE /push/subscribe` | 3 + 7 |
 | feedback | `POST /feedback` | 5 |
 | admin | `GET /admin/whoami` ✅, `GET /admin/orders`, `GET /admin/orders/{id}`, `POST /admin/orders/{id}/status` ✅; products/categories/brands/customers/offers/settings/analytics/audit | 3–6 |
 
@@ -103,6 +103,28 @@ curl -s http://localhost:8000/api/v1/config | jq
 `/api/v1/config` is intentionally public and excludes the service-role key,
 database URL and every other secret (tested:
 `apps/api/tests/test_health.py::test_public_config_exposes_store_contact_but_no_secrets`).
+It returns only the VAPID **public** key so an opted-in browser can create a
+subscription; `VAPID_PRIVATE_KEY` and endpoint encryption keys never leave the
+backend.
+
+## Phase 7 — browser push
+
+A signed-in browser may `POST /push/subscribe` with its HTTPS endpoint, `p256dh`
+and `auth` keys, or `DELETE` the same endpoint to unsubscribe. Both routes use
+the authenticated user's profile and the `push` rate-limit scope. Endpoint URLs must be HTTPS and belong to a
+supported browser push provider (Google FCM, Mozilla, Apple, or Windows), limiting
+server-side delivery to trusted push services. Re-registering refreshes the
+browser keys; the endpoint is globally unique. There is no listing
+API and no response ever includes the endpoint or encryption keys. The
+`push_subscriptions` table has RLS enabled and no browser-role grants.
+
+Push is optional: configure VAPID keys on the API host; when they are absent,
+opt-in is disabled with `503 unavailable`, while in-app notifications remain
+available. Offers still reach the bell and storefront banner. Offer history's
+`push_queued` count means matching opted-in browser endpoints targeted, not
+provider delivery receipts. Order status changes and revised delivery estimates
+also send post-commit push messages to that customer's opted-in devices.
+`404`/`410` provider responses prune expired subscriptions.
 
 ## Phase 2 — cart, checkout and orders
 

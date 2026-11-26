@@ -158,8 +158,22 @@ npx web-push generate-vapid-keys
 # Private Key: ...
 ```
 
-`VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` go to the backend secrets;
-`VAPID_SUBJECT` is `mailto:tripatinsan029@gmail.com`.
+`VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` go to the API host's secrets;
+`VAPID_SUBJECT` is `mailto:tripatinsan029@gmail.com`. These are optional for
+launch: without them, in-app notifications still work and the web-push opt-in
+shows that push is not configured. Never put the private key in Vercel or the
+browser. Once configured, customers opt in from **Notifications → Turn on**;
+the browser asks permission only after that tap. Offer history reports matching
+endpoints targeted, not a delivery receipt. Push subscription rows are private
+and are deleted when the customer deletes their profile or a provider returns
+`404`/`410`.
+
+The Phase 7 database changes are Alembic migrations `0009_push_subscriptions`
+and `0010_offer_push_count`; they must be included in the standard migration job
+before deploying API code. The worker caches the app shell, public catalogue GETs
+and public images only; every customer/admin API and checkout remains network-only.
+Offline browsing may show cached catalogue data, but order placement always needs
+a live connection for stock and price validation.
 
 ---
 
