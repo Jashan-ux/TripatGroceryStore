@@ -1,0 +1,49 @@
+# Local development services.
+#
+# Preferred local path is the Supabase CLI (supabase start) because it also gives
+# you Auth + Storage. This compose file is the lightweight alternative when you
+# only need Postgres (e.g. running the API test suite).
+#
+#   docker compose -f infra/docker-compose.yml up -d
+#   export DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/tripat
+#   export DATABASE_DIRECT_URL=$DATABASE_URL
+#   (cd apps/api && alembic upgrade head)
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tripat
+    ports:
+      - '5432:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d tripat']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ../apps/api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: local
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/tripat
+      DATABASE_DIRECT_URL: postgresql+asyncpg://postgres:postgres@db:5432/tripat
+      WEB_ORIGIN: http://localhost:5173
+      STORE_MAPS_URL: ${STORE_MAPS_URL:-}
+    ports:
+      - '8000:8000'
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+volumes:
+  db-data:

@@ -1,0 +1,119 @@
+name: DB ops · Supabase
+
+# Owner-triggered operations against the hosted Supabase project.
+#
+# Why a workflow instead of a laptop: the API's database URL is a secret, and the
+# migration history must be applied by exactly the same code path in every
+# environment. This gives one auditable place to run `alembic upgrade head`,
+# `alembic check` (drift between models and the live schema) and the seeder.
+#
+# Secrets required (Settings → Secrets and variables → Actions):
+#   SUPABASE_DB_URL           postgresql+asyncpg://postgres.<ref>:<pw>@aws-0-ap-south-1.pooler.supabase.com:5432/postgres
+#   SUPABASE_SERVICE_ROLE_KEY optional, only for `seed --with-users`
+# Variables (optional, defaults below):
+#   SUPABASE_URL, ADMIN_EMAILS, STORE_*
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: 'What to run'
+        type: choice
+        required: true
+        default: verify
+        options:
+          - verify # alembic check + inventory (read-only)
+          - migrate # alembic upgrade head
+          - stamp # alembic stamp head (schema applied outside Alembic)
+          - seed # catalogue seed (idempotent)
+          - admins # grant admin to ADMIN_EMAILS profiles
+          - migrate-seed # migrate then seed
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/migrations/**'
+      - 'apps/api/app/scripts/**'
+      - '.github/workflows/db-ops.yml'
+
+concurrency:
+  group: db-ops
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: '3.12'
+  ENVIRONMENT: staging
+  ADMIN_EMAILS: ${{ vars.ADMIN_EMAILS }}
+  SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+  DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+  DATABASE_DIRECT_URL: ${{ secrets.SUPABASE_DB_URL }}
+
+jobs:
+  run:
+    name: ${{ github.event.inputs.task || 'migrate-seed' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: actions/setup-python@v5.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: apps/api/pyproject.toml
+
+      - name: Install API dependencies
+        working-directory: apps/api
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Guard — the database secret must be present
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::SUPABASE_DB_URL secret is not configured"
+            exit 1
+          fi
+
+      - name: Show connection target (no password)
+        working-directory: apps/api
+        run: python -m app.scripts.db_target
+
+      - name: Alembic current
+        working-directory: apps/api
+        run: alembic current --verbose
+
+      - name: Verify (drift + inventory)
+        if: ${{ github.event.inputs.task == 'verify' || github.event.inputs.task == '' }}
+        working-directory: apps/api
+        run: |
+          alembic check || echo "::warning::alembic check reported drift — review the diff above"
+          python -m app.scripts.db_inventory
+
+      - name: Migrate
+        if: ${{ github.event.inputs.task == 'migrate' || github.event.inputs.task == 'migrate-seed' }}
+        working-directory: apps/api
+        run: alembic upgrade head
+
+      - name: Stamp head (schema applied out-of-band)
+        if: ${{ github.event.inputs.task == 'stamp' }}
+        working-directory: apps/api
+        run: alembic stamp head
+
+      - name: Seed catalogue
+        if: ${{ github.event.inputs.task == 'seed' || github.event.inputs.task == 'migrate-seed' }}
+        working-directory: apps/api
+        run: python -m app.scripts.seed
+
+      - name: Sync admin roles
+        if: ${{ github.event.inputs.task == 'admins' }}
+        working-directory: apps/api
+        run: python -m app.scripts.seed --admins
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### DB ops — ${{ github.event.inputs.task || 'push' }}"
+            echo ""
+            echo "Commit: \`${GITHUB_SHA::7}\` · Runner: ubuntu-latest"
+          } >> "$GITHUB_STEP_SUMMARY"

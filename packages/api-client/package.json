@@ -1,0 +1,24 @@
+{
+  "name": "@tripat/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Generated TypeScript types for the Tripat Pansari · MSG Store API",
+  "main": "./src/index.ts",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "generate": "node scripts/generate.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.5.0",
+    "typescript": "5.7.2"
+  }
+}

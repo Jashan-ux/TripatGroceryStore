@@ -1,0 +1,52 @@
+import {
+  BarChart3,
+  Boxes,
+  History,
+  Inbox,
+  LayoutGrid,
+  Megaphone,
+  PackageX,
+  ReceiptText,
+  Settings,
+  Tag,
+  Users,
+} from 'lucide-react';
+
+/** Top tab strip (tablet/desktop) and bottom nav (mobile) share this list. */
+export const adminSections = [
+  { to: '/admin', labelKey: 'admin.analytics', icon: BarChart3, end: true, mobile: true },
+  { to: '/admin/orders', labelKey: 'admin.orders', icon: ReceiptText, end: false, mobile: true },
+  { to: '/admin/products', labelKey: 'admin.products', icon: Boxes, end: false, mobile: true },
+  { to: '/admin/customers', labelKey: 'admin.customers', icon: Users, end: false, mobile: true },
+  {
+    to: '/admin/categories',
+    labelKey: 'admin.categories',
+    icon: LayoutGrid,
+    end: false,
+    mobile: false,
+  },
+  {
+    to: '/admin/returns',
+    labelKey: 'admin.returns',
+    icon: PackageX,
+    end: false,
+    mobile: false,
+  },
+  { to: '/admin/brands', labelKey: 'admin.brands', icon: Tag, end: false, mobile: false },
+  { to: '/admin/offers', labelKey: 'admin.offers', icon: Megaphone, end: false, mobile: false },
+  {
+    to: '/admin/feedback',
+    labelKey: 'admin.feedback',
+    icon: Inbox,
+    end: false,
+    mobile: false,
+  },
+  {
+    to: '/admin/activity',
+    labelKey: 'admin.activity',
+    icon: History,
+    end: false,
+    mobile: false,
+  },
+  { to: '/admin/settings', labelKey: 'admin.settings', icon: Settings, end: false, mobile: true },
+] as const;

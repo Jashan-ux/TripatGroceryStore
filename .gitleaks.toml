@@ -1,0 +1,38 @@
+# gitleaks configuration — pre-commit hook and CI.
+title = "Tripat Pansari · MSG Store"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known-safe fixtures and placeholders"
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''apps/web/\.env\.example$''',
+  '''apps/api/\.env\.example$''',
+  '''docs/.*\.md$''',
+  '''packages/api-client/openapi\.json$''',
+]
+regexes = [
+  '''example\.invalid''',
+  '''\$\{.*\}''',
+  '''<project-ref>''',
+  '''<password>''',
+  '''anon-key''',
+  '''super-secret-service-role''',
+  '''jwt-token''',
+  '''re_test''',
+  '''eyJzdWIiOiIxMjM0NTY3ODkwIn0''',
+]
+
+# jwt.io's published sample token is used in a logging test to prove that
+# scrubbing works. It is not a credential; the rule stays on everywhere else.
+[[allowlists]]
+description = "Public jwt.io sample token used by the log-scrubbing test"
+paths = ['''apps/api/tests/test_logging[.]py$''']
+
+[[rules]]
+id = "supabase-service-role-key"
+description = "Supabase service-role JWT must never be committed"
+regex = '''eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}'''
+keywords = ["service_role", "SUPABASE_SERVICE_ROLE_KEY"]

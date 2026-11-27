@@ -1,0 +1,74 @@
+# Dependencies
+node_modules/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+
+# Build output
+dist/
+dist-ssr/
+build/
+out/
+*.tsbuildinfo
+apps/web/dev-dist/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+apps/web/coverage/
+.tox/
+
+# Test artifacts
+playwright-report/
+test-results/
+blob-report/
+apps/web/e2e/.auth/
+apps/api/.test-db/
+
+# Environment / secrets — never commit real values
+.env
+.env.*
+!.env.example
+!**/.env.example
+*.pem
+*.key
+secrets/
+.gitleaks-report.json
+
+# Supabase CLI local state
+supabase/.branches
+supabase/.temp
+supabase/volumes
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+logs/
+
+# Vercel / Netlify local
+.vercel
+.netlify
