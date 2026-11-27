@@ -100,7 +100,7 @@ export function AddressForm({
           <Input
             id="recipient_name"
             autoComplete="name"
-            aria-invalid={Boolean(errors.recipient_name)}
+            aria-invalid={Boolean(errors.recipient_name || serverFieldErrors.recipient_name)}
             {...form.register('recipient_name')}
           />
         </Field>
@@ -115,7 +115,7 @@ export function AddressForm({
             inputMode="numeric"
             autoComplete="tel-national"
             placeholder="98765 43210"
-            aria-invalid={Boolean(errors.phone)}
+            aria-invalid={Boolean(errors.phone || serverFieldErrors.phone)}
             {...form.register('phone')}
           />
         </Field>
@@ -129,7 +129,7 @@ export function AddressForm({
         <Input
           id="line1"
           autoComplete="address-line1"
-          aria-invalid={Boolean(errors.line1)}
+          aria-invalid={Boolean(errors.line1 || serverFieldErrors.line1)}
           {...form.register('line1')}
         />
       </Field>
@@ -140,14 +140,24 @@ export function AddressForm({
           error={errors.line2?.message ?? serverFieldErrors.line2}
           htmlFor="line2"
         >
-          <Input id="line2" autoComplete="address-line2" {...form.register('line2')} />
+          <Input
+            id="line2"
+            autoComplete="address-line2"
+            aria-invalid={Boolean(errors.line2 || serverFieldErrors.line2)}
+            {...form.register('line2')}
+          />
         </Field>
         <Field
           label="Landmark (optional)"
           error={errors.landmark?.message ?? serverFieldErrors.landmark}
           htmlFor="landmark"
         >
-          <Input id="landmark" placeholder="Near the school gate" {...form.register('landmark')} />
+          <Input
+            id="landmark"
+            placeholder="Near the school gate"
+            aria-invalid={Boolean(errors.landmark || serverFieldErrors.landmark)}
+            {...form.register('landmark')}
+          />
         </Field>
       </div>
 
@@ -162,7 +172,7 @@ export function AddressForm({
             inputMode="numeric"
             maxLength={6}
             autoComplete="postal-code"
-            aria-invalid={Boolean(errors.pincode)}
+            aria-invalid={Boolean(errors.pincode || serverFieldErrors.pincode)}
             {...form.register('pincode')}
           />
         </Field>
@@ -171,14 +181,24 @@ export function AddressForm({
           error={errors.city?.message ?? serverFieldErrors.city}
           htmlFor="city"
         >
-          <Input id="city" autoComplete="address-level2" {...form.register('city')} />
+          <Input
+            id="city"
+            autoComplete="address-level2"
+            aria-invalid={Boolean(errors.city || serverFieldErrors.city)}
+            {...form.register('city')}
+          />
         </Field>
         <Field
           label="State"
           error={errors.state?.message ?? serverFieldErrors.state}
           htmlFor="state"
         >
-          <Input id="state" autoComplete="address-level1" {...form.register('state')} />
+          <Input
+            id="state"
+            autoComplete="address-level1"
+            aria-invalid={Boolean(errors.state || serverFieldErrors.state)}
+            {...form.register('state')}
+          />
         </Field>
       </div>
 
