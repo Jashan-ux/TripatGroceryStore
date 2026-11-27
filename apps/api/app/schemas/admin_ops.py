@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from typing import Any, Literal
+from urllib.parse import urlsplit
 
 from pydantic import Field, field_validator
 
@@ -90,7 +91,22 @@ class OfferIn(APIModel):
     def _internal_only(cls, value: str) -> str:
         """A notification href is a link inside our own app, never anywhere else."""
         href = value.strip() or "/"
-        if not href.startswith("/") or href.startswith("//"):
+        # Browsers treat backslashes as URL separators in special URLs, so a
+        # string beginning with "/\\attacker.example" can escape the origin
+        # despite passing a simple startswith("/") check. Reject controls too;
+        # they can be normalized away before navigation by clients/proxies.
+        if (
+            not href.startswith("/")
+            or href.startswith("//")
+            or "\\" in href
+            or any(ord(char) < 0x20 or ord(char) == 0x7F for char in href)
+        ):
+            raise ValueError("href must be a path inside this app, e.g. /search?q=ghee")
+        try:
+            parsed = urlsplit(href)
+        except ValueError as exc:
+            raise ValueError("href must be a valid internal app path") from exc
+        if parsed.scheme or parsed.netloc:
             raise ValueError("href must be a path inside this app, e.g. /search?q=ghee")
         return href
 
