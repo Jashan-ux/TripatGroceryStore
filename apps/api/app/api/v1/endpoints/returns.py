@@ -7,7 +7,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, status
 
-from app.api.deps import CurrentUserDep, SessionDep
+from app.api.deps import CustomerUserDep, SessionDep
 from app.schemas.returns import ReturnListOut, ReturnOut, ReturnRequestIn
 from app.services import returns as service
 from app.services.settings import get_store_settings
@@ -24,7 +24,7 @@ OrderId = Annotated[uuid.UUID, Path(description="Order id")]
     summary="Ask to return part of a delivered order",
 )
 async def request_return(
-    user: CurrentUserDep,
+    user: CustomerUserDep,
     session: SessionDep,
     order_id: OrderId,
     payload: ReturnRequestIn,
@@ -34,5 +34,5 @@ async def request_return(
 
 
 @router.get("/returns", response_model=ReturnListOut, summary="My returns")
-async def list_returns(user: CurrentUserDep, session: SessionDep) -> ReturnListOut:
+async def list_returns(user: CustomerUserDep, session: SessionDep) -> ReturnListOut:
     return await service.list_mine(session, user.profile)

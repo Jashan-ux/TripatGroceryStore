@@ -2,9 +2,15 @@ import type { SettingsOut, SettingsPatchIn } from '@tripat/api-client';
 import { useState } from 'react';
 
 import { useAdminSettings, useUpdateSettings } from '@/admin/adminCatalogue';
+import {
+  useDeliveryCandidates,
+  useDeliveryProfiles,
+  usePromoteDeliveryProfile,
+} from '@/admin/adminDelivery';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
@@ -125,6 +131,10 @@ export function AdminSettingsPage() {
 
 function SettingsForm({ settings }: { settings: SettingsOut }) {
   const update = useUpdateSettings();
+  const profiles = useDeliveryProfiles();
+  const candidates = useDeliveryCandidates('');
+  const promote = usePromoteDeliveryProfile();
+  const [candidateId, setCandidateId] = useState('');
   const [form, setForm] = useState(settings);
   // Rupee fields are edited as text and converted once, on save. Re-formatting a
   // live controlled input ("5" → "5.00" → "5.005") fights the person typing.
@@ -165,6 +175,7 @@ function SettingsForm({ settings }: { settings: SettingsOut }) {
       return_window_days: form.return_window_days,
       low_stock_threshold: form.low_stock_threshold,
       default_delivery_days: form.default_delivery_days,
+      default_delivery_profile_id: form.default_delivery_profile_id ?? null,
       is_open: form.is_open,
       tier_gold_paise: toPaise(rupees.tier_gold_paise),
       tier_platinum_paise: toPaise(rupees.tier_platinum_paise),
@@ -276,6 +287,121 @@ function SettingsForm({ settings }: { settings: SettingsOut }) {
             />
           </label>
         </div>
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border bg-card p-3">
+        <div>
+          <h2 className="text-sm font-bold">Delivery worker</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Set up the worker’s normal customer account first. Once enabled here, they get a
+            delivery-only view; newly shipped orders are assigned to the default worker.
+          </p>
+        </div>
+        <label className="block text-xs font-semibold" htmlFor="default-delivery-profile">
+          Default delivery person
+          <Select
+            id="default-delivery-profile"
+            className="mt-1"
+            value={form.default_delivery_profile_id ?? ''}
+            disabled={profiles.isPending || profiles.isError}
+            onChange={(event) =>
+              setForm({
+                ...form,
+                default_delivery_profile_id: event.target.value || null,
+              })
+            }
+          >
+            <option value="">No default driver</option>
+            {(profiles.data ?? []).map((profile) => (
+              <option key={profile.id} value={profile.id}>
+                {profile.name}
+                {profile.phone ? ` · ${profile.phone}` : ''}
+              </option>
+            ))}
+          </Select>
+        </label>
+        {profiles.isPending && (
+          <p role="status" className="text-xs">
+            Loading delivery profiles…
+          </p>
+        )}
+        {profiles.isError && (
+          <div
+            role="alert"
+            className="flex items-center justify-between gap-2 text-xs text-warning"
+          >
+            <span>{profiles.error.message}</span>
+            <Button size="sm" variant="outline" onClick={() => void profiles.refetch()}>
+              Try again
+            </Button>
+          </div>
+        )}
+        <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+          <label className="block text-xs font-semibold" htmlFor="enable-delivery-profile">
+            Enable an existing account for delivery
+            <Select
+              id="enable-delivery-profile"
+              className="mt-1"
+              value={candidateId}
+              disabled={candidates.isPending || candidates.isError || !candidates.data?.length}
+              onChange={(event) => setCandidateId(event.target.value)}
+            >
+              <option value="">Choose a customer account</option>
+              {(candidates.data ?? []).map((profile) => (
+                <option key={profile.id} value={profile.id}>
+                  {profile.name} · {profile.email}
+                </option>
+              ))}
+            </Select>
+          </label>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={!candidateId || promote.isPending}
+            onClick={() =>
+              promote.mutate(candidateId, {
+                onSuccess: (profile) => {
+                  setForm({ ...form, default_delivery_profile_id: profile.id });
+                  setCandidateId('');
+                  setNotice(
+                    'Delivery access enabled. Save settings to make this worker the default.',
+                  );
+                },
+              })
+            }
+          >
+            {promote.isPending ? 'Enabling…' : 'Enable driver'}
+          </Button>
+        </div>
+        {candidates.isPending && (
+          <p role="status" className="text-xs">
+            Loading customer accounts…
+          </p>
+        )}
+        {candidates.isError && (
+          <div
+            role="alert"
+            className="flex items-center justify-between gap-2 text-xs text-warning"
+          >
+            <span>{candidates.error.message}</span>
+            <Button size="sm" variant="outline" onClick={() => void candidates.refetch()}>
+              Try again
+            </Button>
+          </div>
+        )}
+        {candidates.isSuccess && candidates.data.length === 0 && (
+          <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+            <span>No customer accounts are available. The worker must sign up first.</span>
+            <Button size="sm" variant="outline" onClick={() => void candidates.refetch()}>
+              Refresh
+            </Button>
+          </div>
+        )}
+        {promote.isError && (
+          <p role="alert" className="text-xs text-warning">
+            {promote.error.message}
+          </p>
+        )}
       </section>
 
       <section className="space-y-2 rounded-xl border border-border bg-card p-3">

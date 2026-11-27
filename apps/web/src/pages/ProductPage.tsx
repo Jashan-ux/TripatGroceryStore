@@ -13,6 +13,7 @@ import { useProduct } from '@/features/catalogue/queries';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useStoreConfig } from '@/hooks/useStoreConfig';
 import { cn, discountPercent, formatPaise } from '@/lib/utils';
+import { t } from '@/i18n';
 
 /**
  * Product detail.
@@ -51,8 +52,8 @@ export default function ProductPage() {
       <div className="container py-8">
         <EmptyState
           icon={Phone}
-          title="We could not find that product"
-          body="It may have been removed or renamed. Call the store and we will check for you."
+          title={t('catalogue.productNotFound')}
+          body={t('catalogue.productNotFoundBody')}
           action={<CallStoreButton />}
         />
       </div>
@@ -73,7 +74,7 @@ export default function ProductPage() {
         className="mb-3 inline-flex min-h-touch items-center gap-1 text-sm font-medium text-muted-foreground hover:text-primary-700"
       >
         <ChevronLeft className="size-4" aria-hidden="true" />
-        {item.category_name || 'Back to category'}
+        {item.category_name || t('catalogue.backToCategory')}
       </Link>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -88,7 +89,7 @@ export default function ProductPage() {
                   <button
                     type="button"
                     onClick={() => setActiveImage(index)}
-                    aria-label={`Show image ${index + 1}`}
+                    aria-label={`${t('catalogue.imageLabel')} ${index + 1}`}
                     aria-current={index === activeImage}
                     className={cn(
                       'size-14 overflow-hidden rounded-lg border-2',
@@ -106,13 +107,13 @@ export default function ProductPage() {
         <div className="space-y-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {item.brand_name ?? 'Loose · weighed at the counter'}
+              {item.brand_name ?? t('catalogue.looseAtCounter')}
             </p>
             <h1 className="mt-1 text-balance text-2xl font-extrabold leading-tight">{item.name}</h1>
             <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1">
                 <Star className="size-3.5 fill-rating text-rating" aria-hidden="true" />
-                {item.rating > 0 ? `${item.rating.toFixed(1)} / 5` : 'New arrival'}
+                {item.rating > 0 ? `${item.rating.toFixed(1)} / 5` : t('catalogue.newArrival')}
               </span>
               <span aria-hidden="true">·</span>
               <span>{item.unit_label}</span>
@@ -132,17 +133,20 @@ export default function ProductPage() {
                   <span className="text-sm text-muted-foreground line-through">
                     {formatPaise(mrpPaise)}
                   </span>
-                  <Badge tone="success">{off}% off</Badge>
+                  <Badge tone="success">
+                    {off}% {t('catalogue.discountOff')}
+                  </Badge>
                 </>
               )}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Inclusive of all taxes · {stock > 0 ? `${stock} in stock` : 'Out of stock'}
+              {t('catalogue.inclusiveTaxes')} ·{' '}
+              {stock > 0 ? `${stock} ${t('catalogue.inStock')}` : t('catalogue.outOfStock')}
             </p>
 
             {variants.length > 1 && (
               <fieldset className="mt-4">
-                <legend className="mb-2 text-sm font-semibold">Choose a pack size</legend>
+                <legend className="mb-2 text-sm font-semibold">{t('catalogue.choosePack')}</legend>
                 <div className="flex flex-wrap gap-2">
                   {variants.map((variant) => {
                     const active = variant.id === selectedVariant?.id;
@@ -166,7 +170,7 @@ export default function ProductPage() {
                         </span>
                         <span className="block text-xs text-muted-foreground">
                           {formatPaise(variant.price_paise)}
-                          {variant.stock === 0 ? ' · out of stock' : ''}
+                          {variant.stock === 0 ? ` · ${t('catalogue.outOfStock')}` : ''}
                         </span>
                       </button>
                     );
@@ -179,8 +183,8 @@ export default function ProductPage() {
               <AddToCart
                 size="md"
                 className="w-full"
-                label="Add to cart"
-                disabledReason={stock === 0 ? 'Out of stock' : undefined}
+                label={t('catalogue.addToCart')}
+                disabledReason={stock === 0 ? t('catalogue.outOfStock') : undefined}
                 line={{
                   productId: item.id,
                   variantId: selectedVariant?.id ?? null,
@@ -204,7 +208,7 @@ export default function ProductPage() {
                   rel="noreferrer noopener"
                   className="inline-flex min-h-touch items-center justify-center rounded-xl border border-border px-4 text-sm font-semibold hover:bg-secondary"
                 >
-                  Get directions
+                  {t('catalogue.getDirections')}
                 </a>
               )}
             </div>

@@ -34,6 +34,8 @@ class AdminOrderSummaryOut(APIModel):
     customer_phone: str
     first_item_name: str
     first_item_image_url: str
+    assigned_to: uuid.UUID | None = None
+    assigned_driver_name: str = ""
     is_new: bool = Field(description="Placed since the shop last opened the queue.")
 
 

@@ -13,7 +13,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, Request, status
 
 from app.api.deps import (
-    CurrentUserDep,
+    CustomerUserDep,
     OptionalUserDep,
     SessionDep,
     rate_limit_ip,
@@ -60,7 +60,7 @@ async def quote_cart(
 )
 async def place_order(
     request: Request,
-    user: CurrentUserDep,
+    user: CustomerUserDep,
     session: SessionDep,
     payload: OrderIn,
     idempotency_key: IdempotencyKey = None,

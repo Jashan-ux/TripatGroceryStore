@@ -20,15 +20,21 @@ export function getCurrentLanguage(): Language {
   return DEFAULT_LANGUAGE;
 }
 
-/** Persist the user's choice and reload so every route picks up translated copy. */
-export function setCurrentLanguage(language: Language): void {
+/** Save the preference independently so persistence can be tested without navigation. */
+export function persistLanguagePreference(language: Language): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(LANGUAGE_KEY, language);
   } catch {
     // Continue in the current language when storage is disabled.
   }
-  if (typeof window !== 'undefined') window.location.reload();
+}
+
+/** Persist the user's choice and reload so every route picks up translated copy. */
+export function setCurrentLanguage(language: Language): void {
+  if (typeof window === 'undefined') return;
+  persistLanguagePreference(language);
+  window.location.reload();
 }
 
 function lookup(dictionary: Dictionary, key: string): string | undefined {

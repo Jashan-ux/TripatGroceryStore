@@ -24,8 +24,10 @@ from app.schemas.admin_orders import (
     AdminOrderStatusIn,
     AdminOrderSummaryOut,
 )
+from app.schemas.delivery import DeliveryAssignmentIn
 from app.schemas.orders import OrderOut
 from app.services import admin_orders as service
+from app.services import delivery as delivery_service
 from app.services import notifications as notifications_service
 from app.services import push as push_service
 
@@ -120,6 +122,37 @@ async def set_delivery_days(
     return service.summary_out(updated)
 
 
+@router.patch(
+    "/{order_id}/assignment",
+    response_model=AdminOrderSummaryOut,
+    summary="Assign or unassign a delivery profile",
+)
+async def set_assignment(
+    user: AdminUserDep,
+    session: SessionDep,
+    order_id: OrderId,
+    payload: DeliveryAssignmentIn,
+) -> AdminOrderSummaryOut:
+    order = await service.lock_order(session, order_id)
+    updated = await delivery_service.assign_order(
+        session, order, driver_id=payload.profile_id, actor=user.profile
+    )
+    return service.summary_out(updated)
+
+
+@router.post(
+    "/{order_id}/assign-default",
+    response_model=AdminOrderSummaryOut,
+    summary="Assign the configured default delivery profile",
+)
+async def assign_default(
+    user: AdminUserDep, session: SessionDep, order_id: OrderId
+) -> AdminOrderSummaryOut:
+    order = await service.lock_order(session, order_id)
+    updated = await delivery_service.assign_default_driver(session, order, actor=user.profile)
+    return service.summary_out(updated)
+
+
 @router.post(
     "/{order_id}/status",
     response_model=AdminOrderSummaryOut,
@@ -132,7 +165,7 @@ async def set_status(
     payload: AdminOrderStatusIn,
     background_tasks: BackgroundTasks,
 ) -> AdminOrderSummaryOut:
-    order = await service.get_order(session, order_id)
+    order = await service.lock_order(session, order_id)
     updated = await service.transition(session, order, payload, actor=user.profile)
     customer = await session.get(Profile, updated.profile_id)
     if customer is not None:

@@ -209,6 +209,17 @@ async def get_order_any(session: AsyncSession, order_id: uuid.UUID) -> Order | N
     return cast("Order | None", await session.scalar(stmt))
 
 
+async def lock_order_any(session: AsyncSession, order_id: uuid.UUID) -> Order | None:
+    """Serialize admin status/assignment changes against driver retries."""
+    stmt = (
+        select(Order)
+        .where(Order.id == order_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    return cast("Order | None", await session.scalar(stmt))
+
+
 def _admin_filters(
     status: str | None,
     search: str | None,

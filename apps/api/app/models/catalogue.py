@@ -262,6 +262,9 @@ class StoreSettings(Base, TimestampMixin):
         SmallInteger, nullable=False, server_default=text("1")
     )
     is_open: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+    default_delivery_profile_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("profiles.id", ondelete="SET NULL"), nullable=True
+    )
     low_stock_threshold: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default=text("10")
     )

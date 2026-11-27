@@ -11,7 +11,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Path, Query
 
-from app.api.deps import CurrentUserDep, SessionDep
+from app.api.deps import CustomerUserDep, SessionDep
 from app.schemas.orders import OrderCancelIn, OrderListOut, OrderOut
 from app.services import notifications as notifications_service
 from app.services import orders as service
@@ -24,7 +24,7 @@ OrderId = Annotated[uuid.UUID, Path(description="Order id")]
 
 @router.get("", response_model=OrderListOut, summary="My orders")
 async def list_orders(
-    user: CurrentUserDep,
+    user: CustomerUserDep,
     session: SessionDep,
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=50)] = 20,
@@ -33,14 +33,14 @@ async def list_orders(
 
 
 @router.get("/{order_id}", response_model=OrderOut, summary="One of my orders")
-async def get_order(user: CurrentUserDep, session: SessionDep, order_id: OrderId) -> OrderOut:
+async def get_order(user: CustomerUserDep, session: SessionDep, order_id: OrderId) -> OrderOut:
     order = await service.get_my_order(session, user.profile, order_id)
     return service.order_out(order)
 
 
 @router.post("/{order_id}/cancel", response_model=OrderOut, summary="Cancel while processing")
 async def cancel_order(
-    user: CurrentUserDep,
+    user: CustomerUserDep,
     session: SessionDep,
     order_id: OrderId,
     background_tasks: BackgroundTasks,

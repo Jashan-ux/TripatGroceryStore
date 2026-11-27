@@ -7,9 +7,7 @@ import { getCurrentLanguage, translate } from '@/i18n';
 function stringPaths(value: Record<string, unknown>, prefix = ''): string[] {
   return Object.entries(value).flatMap(([key, child]) => {
     const path = prefix ? `${prefix}.${key}` : key;
-    return typeof child === 'string'
-      ? [path]
-      : stringPaths(child as Record<string, unknown>, path);
+    return typeof child === 'string' ? [path] : stringPaths(child as Record<string, unknown>, path);
   });
 }
 

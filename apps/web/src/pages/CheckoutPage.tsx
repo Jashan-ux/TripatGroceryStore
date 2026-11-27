@@ -23,6 +23,8 @@ import {
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { ApiError, api } from '@/lib/api';
 import { cn, formatPaise } from '@/lib/utils';
+import { getCurrentLanguage, t } from '@/i18n';
+import { apiErrorMessage, blockingIssueMessage } from '@/i18n/messages';
 
 /**
  * Ask the quote to use no more than this: the server clamps to the balance *and*
@@ -41,7 +43,7 @@ const MAX_WALLET_ASK = 1_00_00_000;
  * change produces a new key.
  */
 export default function CheckoutPage() {
-  usePageTitle(undefined, 'Checkout');
+  usePageTitle(undefined, t('checkout.title'));
   const cart = useCart();
   const navigate = useNavigate();
   const { profile, refreshProfile } = useAuth();
@@ -98,14 +100,14 @@ export default function CheckoutPage() {
   if (cart.lines.length === 0) {
     return (
       <div className="container py-8">
-        <h1 className="mb-4 text-xl font-extrabold tracking-tight">Checkout</h1>
+        <h1 className="mb-4 text-xl font-extrabold tracking-tight">{t('checkout.title')}</h1>
         <EmptyState
           icon={ShoppingBag}
-          title="Nothing to check out yet"
-          body="Your cart is empty, so there is nothing to deliver. Add a few items and come back."
+          title={t('checkout.emptyTitle')}
+          body={t('checkout.emptyBody')}
           action={
             <Button asChild className="mt-2">
-              <Link to="/categories">Browse the shop</Link>
+              <Link to="/categories">{t('checkout.browseShop')}</Link>
             </Button>
           }
         />
@@ -132,10 +134,10 @@ export default function CheckoutPage() {
       setEditing(null);
     } catch (error) {
       if (error instanceof ApiError) {
-        setFormError(error.message);
+        setFormError(apiErrorMessage(error));
         setAddressFieldErrors(error.fieldErrors);
       } else {
-        setFormError('We could not save your address. Please try again.');
+        setFormError(t('checkout.addressSaveError'));
       }
     }
   };
@@ -158,9 +160,7 @@ export default function CheckoutPage() {
         },
         onError: (error) =>
           setOrderError(
-            error instanceof ApiError
-              ? error
-              : new ApiError(0, 'error', 'Could not place the order.'),
+            error instanceof ApiError ? error : new ApiError(0, 'error', t('checkout.orderError')),
           ),
       },
     );
@@ -170,11 +170,11 @@ export default function CheckoutPage() {
     <div className="container py-6 pb-nav-safe md:pb-8">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-extrabold tracking-tight">Checkout</h1>
-          <p className="text-sm text-muted-foreground">Cash on delivery · no delivery charge</p>
+          <h1 className="text-xl font-extrabold tracking-tight">{t('checkout.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('checkout.cashNoDeliveryFee')}</p>
         </div>
         <Link to="/cart" className="text-sm font-semibold text-primary hover:underline">
-          Edit cart
+          {t('checkout.editCart')}
         </Link>
       </div>
 
@@ -184,7 +184,7 @@ export default function CheckoutPage() {
           <section aria-labelledby="address-heading" className="space-y-3">
             <h2 id="address-heading" className="flex items-center gap-2 text-sm font-bold">
               <MapPin className="size-4 text-primary" aria-hidden="true" />
-              Delivery address
+              {t('checkout.address')}
             </h2>
 
             {addresses.isError && !addresses.data ? (
@@ -192,15 +192,15 @@ export default function CheckoutPage() {
                 role="alert"
                 className="rounded-xl border border-border bg-warning-soft p-3 text-sm"
               >
-                <p className="font-semibold">We could not load your saved addresses.</p>
-                <p className="mt-1">Check your connection and try again before saving.</p>
+                <p className="font-semibold">{t('checkout.addressLoadError')}</p>
+                <p className="mt-1">{t('checkout.addressLoadBody')}</p>
                 <Button
                   className="mt-2"
                   variant="outline"
                   size="sm"
                   onClick={() => void addresses.refetch()}
                 >
-                  Try again
+                  {t('checkout.tryAgain')}
                 </Button>
               </div>
             ) : addresses.isPending ? (
@@ -255,7 +255,7 @@ export default function CheckoutPage() {
                                 </span>
                                 {address.is_default && (
                                   <span className="text-[11px] font-medium text-primary">
-                                    Default
+                                    {t('checkout.default')}
                                   </span>
                                 )}
                               </span>
@@ -282,7 +282,7 @@ export default function CheckoutPage() {
                                 setFormOpen(true);
                               }}
                             >
-                              Edit
+                              {t('checkout.edit')}
                             </button>
                             <button
                               type="button"
@@ -293,7 +293,7 @@ export default function CheckoutPage() {
                                 deleteAddress.mutate(address.id);
                               }}
                             >
-                              Remove
+                              {t('checkout.remove')}
                             </button>
                           </div>
                         </div>
@@ -310,7 +310,7 @@ export default function CheckoutPage() {
                   }}
                 >
                   <Plus aria-hidden="true" />
-                  Add another address
+                  {t('checkout.addAddress')}
                 </Button>
               </>
             )}
@@ -323,21 +323,19 @@ export default function CheckoutPage() {
           >
             <h2 id="contact-heading" className="mb-2 flex items-center gap-2 text-sm font-bold">
               <Phone className="size-4 text-primary" aria-hidden="true" />
-              Contact number
+              {t('checkout.contact')}
             </h2>
             {profile?.phone ? (
               <p className="flex items-center gap-2 text-sm">
                 <CheckCircle2 className="size-4 text-success" aria-hidden="true" />
-                We will call {profile.phone} before delivery.
+                {t('checkout.phoneCallNotice').replace('{phone}', profile.phone)}
               </p>
             ) : (
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  We need a mobile number so the delivery partner can reach you.
-                </p>
+                <p className="text-sm text-muted-foreground">{t('checkout.phoneNeeded')}</p>
                 <div className="flex flex-wrap gap-2">
                   <Input
-                    aria-label="Mobile number"
+                    aria-label={t('checkout.mobileNumber')}
                     type="tel"
                     inputMode="numeric"
                     placeholder="98765 43210"
@@ -350,12 +348,12 @@ export default function CheckoutPage() {
                     disabled={savePhone.isPending || phoneDraft.replace(/\D/g, '').length < 10}
                     onClick={() => savePhone.mutate(phoneDraft)}
                   >
-                    {savePhone.isPending ? 'Saving…' : 'Save number'}
+                    {savePhone.isPending ? t('checkout.saving') : t('checkout.saveNumber')}
                   </Button>
                 </div>
                 {savePhone.isError && (
                   <p role="alert" className="text-xs text-primary-700">
-                    {savePhone.error.message}
+                    {apiErrorMessage(savePhone.error)}
                   </p>
                 )}
               </div>
@@ -368,7 +366,7 @@ export default function CheckoutPage() {
             className="space-y-3 rounded-xl border border-border bg-card p-4"
           >
             <h2 id="payment-heading" className="text-sm font-bold">
-              Payment
+              {t('checkout.payment')}
             </h2>
             <div className="flex items-start gap-3 rounded-lg bg-muted/60 p-3">
               <input
@@ -380,15 +378,13 @@ export default function CheckoutPage() {
                 className="mt-1 size-4 accent-primary"
               />
               <label htmlFor="payment-cod" className="text-sm">
-                <span className="block font-semibold">Cash on delivery</span>
-                <span className="block text-muted-foreground">
-                  Pay the delivery partner in cash when your order arrives. Keep exact change handy.
-                </span>
+                <span className="block font-semibold">{t('checkout.cod')}</span>
+                <span className="block text-muted-foreground">{t('checkout.codHelp')}</span>
               </label>
             </div>
             <div>
               <label htmlFor="note" className="mb-1 block text-xs font-semibold">
-                Note for the store (optional)
+                {t('checkout.noteForStore')}
               </label>
               <textarea
                 id="note"
@@ -396,7 +392,7 @@ export default function CheckoutPage() {
                 maxLength={250}
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
-                placeholder="Ring the bell twice, leave at the door…"
+                placeholder={t('checkout.notePlaceholder')}
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
@@ -406,7 +402,7 @@ export default function CheckoutPage() {
         {/* Summary */}
         <aside className="space-y-3 lg:sticky lg:top-24 lg:self-start">
           <div className="rounded-xl border border-border bg-card p-4">
-            <h2 className="mb-3 text-sm font-bold">Order summary</h2>
+            <h2 className="mb-3 text-sm font-bold">{t('checkout.summary')}</h2>
             {quote.data ? (
               <OrderTotals
                 subtotalPaise={quote.data.subtotal_paise}
@@ -424,9 +420,7 @@ export default function CheckoutPage() {
                 <Skeleton className="h-6 w-3/4" />
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                Choose an address and we will work out the bill.
-              </p>
+              <p className="text-sm text-muted-foreground">{t('checkout.chooseAddress')}</p>
             )}
 
             {quote.data?.blocking_issues.map((issue) => (
@@ -436,7 +430,7 @@ export default function CheckoutPage() {
                 className="mt-3 flex gap-1.5 text-xs font-medium text-warning"
               >
                 <AlertTriangle className="mt-px size-3.5 shrink-0" aria-hidden="true" />
-                {issue.message}
+                {blockingIssueMessage(issue)}
               </p>
             ))}
 
@@ -454,11 +448,15 @@ export default function CheckoutPage() {
                   aria-describedby="wallet-help"
                 />
                 <label htmlFor="use-wallet">
-                  <span className="font-semibold">Use {formatPaise(balance)} from your wallet</span>
+                  <span className="font-semibold">
+                    {t('checkout.useWallet').replace('{amount}', formatPaise(balance))}
+                  </span>
                   <span id="wallet-help" className="block text-xs text-muted-foreground">
                     {useWallet && quote.data
-                      ? `${formatPaise(quote.data.wallet_applied_paise)} applied · ${formatPaise(quote.data.total_paise)} left to pay in person.`
-                      : 'Applies to this order; the rest is cash on delivery.'}
+                      ? t('checkout.appliedLeft')
+                          .replace('{applied}', formatPaise(quote.data.wallet_applied_paise))
+                          .replace('{remaining}', formatPaise(quote.data.total_paise))
+                      : t('checkout.walletRemainder')}
                   </span>
                 </label>
               </div>
@@ -467,13 +465,16 @@ export default function CheckoutPage() {
             {quote.data?.can_checkout && (
               <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Truck className="size-3.5" aria-hidden="true" />
-                Arrives by{' '}
-                {new Date(quote.data.deliver_by).toLocaleDateString('en-IN', {
-                  weekday: 'short',
-                  day: 'numeric',
-                  month: 'short',
-                  timeZone: 'Asia/Kolkata',
-                })}
+                {t('checkout.arrivesBy')}{' '}
+                {new Date(quote.data.deliver_by).toLocaleDateString(
+                  getCurrentLanguage() === 'hi' ? 'hi-IN' : 'en-IN',
+                  {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    timeZone: 'Asia/Kolkata',
+                  },
+                )}
               </p>
             )}
           </div>
@@ -483,11 +484,14 @@ export default function CheckoutPage() {
               role="alert"
               className="rounded-xl border border-border bg-warning-soft p-3 text-sm text-warning"
             >
-              <p className="font-semibold">We could not place the order</p>
-              <p>{orderError.message}</p>
+              <p className="font-semibold">{t('checkout.unableToPlace')}</p>
+              <p>{apiErrorMessage(orderError)}</p>
               {typeof orderError.details.shortfall_paise === 'number' && (
                 <p className="mt-1">
-                  Add {formatPaise(orderError.details.shortfall_paise)} more to check out.
+                  {t('checkout.addMoreToCheckout').replace(
+                    '{amount}',
+                    formatPaise(orderError.details.shortfall_paise),
+                  )}
                 </p>
               )}
             </div>
@@ -495,16 +499,19 @@ export default function CheckoutPage() {
 
           <Button size="lg" className="w-full" disabled={!canPlace} onClick={onPlaceOrder}>
             {placeOrder.isPending
-              ? 'Placing your order…'
+              ? t('checkout.placingOrder')
               : quote.data
-                ? `Place order · ${formatPaise(quote.data.total_paise)}`
-                : 'Place order'}
+                ? `${t('checkout.placeOrder')} · ${formatPaise(quote.data.total_paise)}`
+                : t('checkout.placeOrder')}
           </Button>
           <p className="text-center text-xs text-muted-foreground">
             {quote.data && quote.data.total_paise === 0
-              ? 'Your wallet covers this order — nothing to pay on delivery.'
-              : `You pay ${quote.data ? formatPaise(quote.data.total_paise) : '—'} in cash on delivery.`}{' '}
-            You can cancel until the order is out for delivery.
+              ? t('checkout.walletCovers')
+              : t('checkout.payOnDelivery').replace(
+                  '{amount}',
+                  quote.data ? formatPaise(quote.data.total_paise) : '—',
+                )}{' '}
+            {t('checkout.cancelUntil')}
           </p>
         </aside>
       </div>

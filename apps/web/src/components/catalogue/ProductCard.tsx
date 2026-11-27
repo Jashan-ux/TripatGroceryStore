@@ -15,6 +15,7 @@ import { AddToCart } from '@/components/cart/AddToCart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn, discountPercent, formatPaise } from '@/lib/utils';
+import { t } from '@/i18n';
 
 /** Brand-tinted tile derived from the product name, used when there is no photo. */
 function monogram(name: string): { initials: string; tone: string } {
@@ -98,7 +99,7 @@ export function ProductCard({
       <Link
         to={`/products/${product.slug}`}
         className="relative block aspect-square overflow-hidden bg-secondary"
-        aria-label={`${product.name}, ${formatPaise(product.price_paise)} per ${product.unit_label}`}
+        aria-label={`${product.name}, ${formatPaise(product.price_paise)} ${t('catalogue.per')} ${product.unit_label}`}
       >
         <ProductThumb
           name={product.name}
@@ -106,19 +107,19 @@ export function ProductCard({
         />
         {off > 0 && (
           <span className="absolute left-2 top-2 rounded-md bg-discount px-1.5 py-0.5 text-[11px] font-bold text-white">
-            {off}% off
+            {off}% {t('catalogue.discountOff')}
           </span>
         )}
         {soldOut && (
           <span className="absolute inset-0 flex items-center justify-center bg-background/75 text-sm font-semibold text-foreground">
-            Out of stock
+            {t('catalogue.outOfStock')}
           </span>
         )}
       </Link>
 
       <div className="flex flex-1 flex-col gap-1 p-3">
         <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          {product.brand_name ?? 'Loose · sold by weight'}
+          {product.brand_name ?? t('catalogue.looseByWeight')}
         </p>
         <h3 className="line-clamp-2 text-sm font-semibold leading-snug">
           <Link to={`/products/${product.slug}`} className="hover:text-primary-700">
@@ -142,21 +143,25 @@ export function ProductCard({
           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
             <Star className="size-3 fill-rating text-rating" aria-hidden="true" />
             {product.rating > 0 ? product.rating.toFixed(1) : 'New'}
-            {product.has_variants && <span aria-hidden="true">· sizes</span>}
+            {product.has_variants && <span aria-hidden="true">· {t('catalogue.sizes')}</span>}
           </span>
-          {lowStock && <Badge tone="warning">Only {product.stock} left</Badge>}
+          {lowStock && (
+            <Badge tone="warning">
+              {t('catalogue.onlyLeft')} {product.stock} {t('catalogue.left')}
+            </Badge>
+          )}
         </div>
 
         {/* A product with sizes cannot be added blind: send the shopper to pick one. */}
         <div className="pt-1.5">
           {product.has_variants ? (
             <Button asChild variant="outline" size="sm" className="w-full">
-              <Link to={`/products/${product.slug}`}>Choose size</Link>
+              <Link to={`/products/${product.slug}`}>{t('catalogue.chooseSize')}</Link>
             </Button>
           ) : (
             <AddToCart
               className="w-full"
-              disabledReason={soldOut ? 'Out of stock' : undefined}
+              disabledReason={soldOut ? t('catalogue.outOfStock') : undefined}
               line={{
                 productId: product.id,
                 variantId: null,

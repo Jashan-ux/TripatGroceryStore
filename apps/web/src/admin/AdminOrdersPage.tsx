@@ -2,6 +2,7 @@ import { ChevronDown, MapPin, Phone, Search, Truck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { ProductThumb } from '@/components/catalogue/ProductCard';
+import { useAssignDefaultOrder } from '@/admin/adminDelivery';
 import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -256,6 +257,7 @@ function OrderRow({
   onToggle: () => void;
 }) {
   const setStatus = useSetOrderStatus();
+  const assignDefault = useAssignDefaultOrder(order.id);
   const next = nextStep(order.status);
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -351,6 +353,30 @@ function OrderRow({
           >
             Cancel order
           </Button>
+        )}
+        {['shipped', 'out_for_delivery'].includes(order.status) && (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/50 px-2 py-1">
+            {order.assigned_driver_name ? (
+              <span className="text-xs font-medium">Driver: {order.assigned_driver_name}</span>
+            ) : (
+              <>
+                <span className="text-xs text-muted-foreground">No driver assigned</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={assignDefault.isPending}
+                  onClick={() => assignDefault.mutate()}
+                >
+                  {assignDefault.isPending ? 'Assigning…' : 'Assign default driver'}
+                </Button>
+              </>
+            )}
+            {assignDefault.isError && (
+              <span role="alert" className="w-full text-xs text-warning">
+                {assignDefault.error.message}
+              </span>
+            )}
+          </div>
         )}
         {order.payment_status === 'pending' && order.status !== 'cancelled' && (
           <span className="self-center text-xs text-muted-foreground">

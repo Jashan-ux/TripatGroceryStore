@@ -14,6 +14,7 @@ from app.api.v1.endpoints import (
     addresses,
     catalogue,
     checkout,
+    delivery,
     feedback,
     me,
     notifications,
@@ -28,6 +29,7 @@ from app.api.v1.endpoints.admin import analytics as admin_analytics
 from app.api.v1.endpoints.admin import audit as admin_audit
 from app.api.v1.endpoints.admin import catalogue as admin_catalogue
 from app.api.v1.endpoints.admin import dashboard as admin_dashboard
+from app.api.v1.endpoints.admin import delivery as admin_delivery
 from app.api.v1.endpoints.admin import feedback as admin_feedback
 from app.api.v1.endpoints.admin import offers as admin_offers
 from app.api.v1.endpoints.admin import orders as admin_orders
@@ -48,7 +50,9 @@ api_router.include_router(rewards.router)
 api_router.include_router(returns.router)
 api_router.include_router(offers.router)
 api_router.include_router(feedback.router)
+api_router.include_router(delivery.router)
 api_router.include_router(admin_dashboard.router)
+api_router.include_router(admin_delivery.router)
 api_router.include_router(admin_orders.router)
 api_router.include_router(admin_returns.router)
 api_router.include_router(admin_catalogue.router)

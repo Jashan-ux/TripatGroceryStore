@@ -80,8 +80,9 @@ export function AppShell() {
     );
   }
 
-  // Admins do not browse customer routes accidentally. The explicit preview is
-  // session-scoped and read-only; account and transaction pages remain blocked.
+  // Staff roles do not browse the customer shell. Admin preview is the one
+  // explicit read-only exception; delivery profiles use their own route surface.
+  if (profile?.role === 'delivery') return <Navigate to="/delivery" replace />;
   if (isAdmin && !previewMode) return <Navigate to="/admin" replace />;
   if (
     previewMode &&

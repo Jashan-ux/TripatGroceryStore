@@ -12,7 +12,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, Response, status
 
-from app.api.deps import CurrentUserDep, SessionDep
+from app.api.deps import CustomerUserDep, SessionDep
 from app.repositories import orders as repo
 from app.schemas.orders import AddressIn, AddressOut
 from app.services import orders as service
@@ -23,7 +23,7 @@ AddressId = Annotated[uuid.UUID, Path(description="Address id")]
 
 
 @router.get("", response_model=list[AddressOut], summary="My addresses")
-async def list_addresses(user: CurrentUserDep, session: SessionDep) -> list[AddressOut]:
+async def list_addresses(user: CustomerUserDep, session: SessionDep) -> list[AddressOut]:
     rows = await repo.list_addresses(session, user.profile.id)
     return [service.address_out(row) for row in rows]
 
@@ -35,7 +35,7 @@ async def list_addresses(user: CurrentUserDep, session: SessionDep) -> list[Addr
     summary="Add an address",
 )
 async def create_address(
-    user: CurrentUserDep, session: SessionDep, payload: AddressIn
+    user: CustomerUserDep, session: SessionDep, payload: AddressIn
 ) -> AddressOut:
     address = await service.create_address(session, user.profile, payload)
     return service.address_out(address)
@@ -43,7 +43,7 @@ async def create_address(
 
 @router.put("/{address_id}", response_model=AddressOut, summary="Edit an address")
 async def update_address(
-    user: CurrentUserDep, session: SessionDep, address_id: AddressId, payload: AddressIn
+    user: CustomerUserDep, session: SessionDep, address_id: AddressId, payload: AddressIn
 ) -> AddressOut:
     address = await service.update_address(session, user.profile, address_id, payload)
     return service.address_out(address)
@@ -55,7 +55,7 @@ async def update_address(
     summary="Delete an address",
 )
 async def delete_address(
-    user: CurrentUserDep, session: SessionDep, address_id: AddressId
+    user: CustomerUserDep, session: SessionDep, address_id: AddressId
 ) -> Response:
     await service.delete_address(session, user.profile, address_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
