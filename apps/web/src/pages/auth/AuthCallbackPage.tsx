@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/features/auth/useAuth';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { safeInternalPath } from '@/lib/navigation';
 
 /**
  * Landing page for email-confirmation and OAuth redirects.
@@ -19,7 +20,7 @@ export default function AuthCallbackPage() {
   const { status } = useAuth();
   const [params] = useSearchParams();
   const [timedOut, setTimedOut] = useState(false);
-  const next = params.get('next') || '/profile';
+  const next = safeInternalPath(params.get('next'));
 
   useEffect(() => {
     if (status === 'authenticated') {

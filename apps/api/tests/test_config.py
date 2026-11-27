@@ -52,16 +52,13 @@ def test_cors_origins_normalise_canonical_apex_and_preview_urls() -> None:
     settings = Settings(
         _env_file=None,
         WEB_ORIGIN="https://www.tripatmsg.in/",
-        CORS_EXTRA_ORIGINS=(
-            "https://tripatmsg.in, "
-            "https://tripat-grocery-store-git-arena-660db-528c3e-jashan-uxs-projects.vercel.app/"
-        ),
+        CORS_EXTRA_ORIGINS=("https://tripatmsg.in, https://preview.example.test/"),
     )
 
     assert settings.cors_origins == [
         "https://www.tripatmsg.in",
         "https://tripatmsg.in",
-        "https://tripat-grocery-store-git-arena-660db-528c3e-jashan-uxs-projects.vercel.app",
+        "https://preview.example.test",
     ]
 
 

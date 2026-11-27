@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/features/auth/useAuth';
 import { authErrorMessage } from '@/features/auth/errors';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { safeInternalPath } from '@/lib/navigation';
 
 const schema = z
   .object({
@@ -31,7 +32,7 @@ export default function SignUpPage() {
   const [params] = useSearchParams();
   const [serverError, setServerError] = useState<string | null>(null);
   const [done, setDone] = useState<null | { needsEmailConfirmation: boolean }>(null);
-  const next = params.get('next');
+  const next = params.has('next') ? safeInternalPath(params.get('next')) : null;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),

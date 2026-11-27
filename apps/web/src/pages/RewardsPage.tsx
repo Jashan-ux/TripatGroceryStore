@@ -22,6 +22,7 @@ import {
   useScratchCards,
 } from '@/features/rewards/queries';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { publicSiteUrl } from '@/lib/navigation';
 import { formatDateOnly, formatIst, formatPaise } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
@@ -247,7 +248,7 @@ function CodeRow({ code, shareUrl }: { code: string; shareUrl: string }) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
-    const link = `${window.location.origin}${shareUrl}`;
+    const link = publicSiteUrl(shareUrl);
     try {
       await navigator.clipboard.writeText(link);
       setCopied(true);

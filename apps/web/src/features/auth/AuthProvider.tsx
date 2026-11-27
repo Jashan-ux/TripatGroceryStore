@@ -15,7 +15,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { useStoreConfig } from '@/hooks/useStoreConfig';
-import { api, setAccessTokenProvider, type ApiError } from '@/lib/api';
+import { api, setAccessTokenProvider, setUnauthorizedHandler, type ApiError } from '@/lib/api';
+import { authRedirectUrl, safeInternalPath } from '@/lib/navigation';
 import { getSupabaseClient, isAuthConfigured, resolveSupabaseConfig } from '@/lib/supabase';
 
 import { AuthContext, PROFILE_QUERY_KEY, type AuthContextValue, type AuthStatus } from './context';
@@ -53,19 +54,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data } = await client.auth.getSession();
       return data.session?.access_token ?? null;
     });
-    return () => setAccessTokenProvider(() => null);
+    setUnauthorizedHandler(async () => {
+      if (client) await client.auth.signOut({ scope: 'local' });
+    });
+    return () => {
+      setAccessTokenProvider(() => null);
+      setUnauthorizedHandler(null);
+    };
   }, [client]);
 
   useEffect(() => {
     if (!client) return;
     let active = true;
-    void client.auth.getSession().then(({ data }) => {
-      if (active) setSession(data.session);
-    });
+    let authEventReceived = false;
+    void client.auth
+      .getSession()
+      .then(({ data }) => {
+        if (active && !authEventReceived) setSession(data.session);
+      })
+      .catch(() => {
+        // Resolve the startup gate even if browser storage/session recovery fails.
+        if (active && !authEventReceived) setSession(null);
+      });
     const { data: subscription } = client.auth.onAuthStateChange((event, nextSession) => {
+      if (!active) return;
+      authEventReceived = true;
       setSession(nextSession);
       if (event === 'SIGNED_OUT') {
-        queryClient.removeQueries({ queryKey: PROFILE_QUERY_KEY });
+        queryClient.clear();
       }
     });
     return () => {
@@ -116,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
         options: {
           data: { full_name: name },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: authRedirectUrl('/auth/callback'),
         },
       });
       if (error) throw error;
@@ -128,7 +144,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = useCallback(
     async (next = '/') => {
-      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
+      const safeNext = safeInternalPath(next, '/');
+      const redirectTo = `${authRedirectUrl('/auth/callback')}?next=${encodeURIComponent(safeNext)}`;
       const { error } = await requireClient().auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo, queryParams: { prompt: 'select_account' } },
@@ -141,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const sendPasswordReset = useCallback(
     async (email: string) => {
       const { error } = await requireClient().auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+        redirectTo: `${authRedirectUrl('/auth/callback')}?next=/reset-password`,
       });
       if (error) throw error;
     },

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ApiError, api, apiFetch, setAccessTokenProvider } from './api';
+import { ApiError, api, apiFetch, setAccessTokenProvider, setUnauthorizedHandler } from './api';
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -11,6 +11,7 @@ function jsonResponse(body: unknown, status = 200) {
 
 afterEach(() => {
   setAccessTokenProvider(() => null);
+  setUnauthorizedHandler(null);
   vi.unstubAllGlobals();
 });
 
@@ -21,6 +22,27 @@ describe('apiFetch', () => {
       vi.fn(async () => jsonResponse({ status: 'ok' })),
     );
     await expect(api.get<{ status: string }>('/api/v1/status')).resolves.toEqual({ status: 'ok' });
+  });
+
+  it('uses same-origin API paths when no API base override is configured', async () => {
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL) => jsonResponse({ status: 'ok' }));
+    vi.stubGlobal('fetch', fetchMock);
+    await api.get('/api/v1/config');
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/v1/config');
+  });
+
+  it('clears a stale session on 401 without retrying the request', async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({ error: { code: 'unauthorized' } }, 401));
+    const onUnauthorized = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    setUnauthorizedHandler(onUnauthorized);
+
+    await expect(api.post('/api/v1/orders', { items: [] })).rejects.toMatchObject({
+      status: 401,
+      code: 'unauthorized',
+    });
+    expect(onUnauthorized).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 
   it('maps the backend error shape to ApiError', async () => {

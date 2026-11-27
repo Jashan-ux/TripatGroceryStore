@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/features/auth/useAuth';
 import { authErrorMessage } from '@/features/auth/errors';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { safeInternalPath } from '@/lib/navigation';
 
 const schema = z.object({
   email: z.string().trim().min(1, 'Enter your email').email('Enter a valid email address'),
@@ -25,7 +26,7 @@ export default function SignInPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
-  const next = params.get('next') || '/profile';
+  const next = safeInternalPath(params.get('next'));
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),

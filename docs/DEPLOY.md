@@ -46,13 +46,16 @@ supabase --version
    - **Direct connection**, port `5432`
      → `DATABASE_DIRECT_URL` = `postgresql+asyncpg://postgres:<password>@db.<ref>.supabase.co:5432/postgres`
 5. **Auth → Providers**: enable Email. Leave "Confirm email" on for production.
-6. **Auth → URL configuration**:
-   - Site URL: `https://www.tripatmsg.in`
-   - Redirect URLs: `https://www.tripatmsg.in/auth/callback`,
-     `https://tripatmsg.in/auth/callback`,
-     `https://staging.tripatpansari.in/auth/callback`,
-     `http://localhost:5173/auth/callback`,
-     `https://*-<your-vercel-team>.vercel.app/auth/callback` (preview deploys)
+6. **Auth → URL configuration** for the production project:
+   - Site URL: `https://www.tripatmsg.in` (the canonical site; Vercel redirects the apex to `www`).
+   - Redirect URLs: `https://www.tripatmsg.in/auth/callback` and
+     `http://localhost:5173/auth/callback` (local development only). Do not add
+     Vercel preview wildcards or preview project URLs to production Auth; app
+     callbacks from non-local hosts are pinned to the canonical site.
+   - The production project was checked during the URL/session audit: the site
+     URL and these two callback URLs are configured; refresh JWT expiry is 3600
+     seconds, refresh-token rotation is on, and inactivity/timebox limits are
+     unset (no idle-session expiry configured).
 7. **Storage**: create a bucket named `catalog`, **public read**, no public write.
    Uploads happen only through the backend with the service-role key. Set
    `SUPABASE_STORAGE_BUCKET=catalog` (the default) on the API host. Without
@@ -211,13 +214,15 @@ a live connection for stock and price validation.
 4. **Settings → Domains**: `tripatmsg.in` and `www.tripatmsg.in` are already
    attached and verified; Vercel redirects apex `tripatmsg.in` to canonical
    `www.tripatmsg.in`. DNS configuration reports no conflicts.
-5. Build-time env: set `VITE_API_BASE_URL=https://tripatgrocerystore.onrender.com`
-   for **Preview** and **Production**. The frontend CSP explicitly allows this
-   API origin. In Render, set `WEB_ORIGIN=https://www.tripatmsg.in` and
-   `CORS_EXTRA_ORIGINS` to comma-separated exact Vercel preview origins (no
-   wildcard; no trailing slash), so direct browser API calls pass CORS. The
-   application trims trailing slashes and parses comma-separated values, not
-   JSON. Supabase build-time overrides are optional: use
+5. Leave `VITE_API_BASE_URL` empty for **Preview** and **Production**. The web
+   client calls relative `/api/*` and `/healthz/*` paths; the generated Vercel
+   host config rewrites them to the configured `PRODUCTION_API_ORIGIN`, keeping
+   browser navigation and API requests on the active site origin. Use
+   `VITE_API_BASE_URL` only for local/direct API development. In Render, set
+   `WEB_ORIGIN=https://www.tripatmsg.in`; `CORS_EXTRA_ORIGINS` is not needed for
+   Vercel traffic through same-origin rewrites and should contain only exact
+   additional browser origins if a separately operated frontend must call the
+   API directly. Supabase build-time overrides are optional: use
    `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (the Vite
    config explicitly exposes those public names), or retain the legacy
    `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` aliases. They can all stay

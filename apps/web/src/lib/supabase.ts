@@ -46,6 +46,7 @@ export function getSupabaseClient(config: SupabaseConfig): SupabaseClient {
       detectSessionInUrl: true,
       // PKCE keeps the code verifier out of the URL fragment.
       flowType: 'pkce',
+      storage: window.localStorage,
       storageKey: 'msg-store-auth',
     },
     global: { headers: { 'x-client-info': 'msg-store-web' } },

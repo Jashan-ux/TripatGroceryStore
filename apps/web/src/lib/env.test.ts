@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveSupabaseBuildConfig } from './env';
+import { resolveApiBaseUrl, resolveSupabaseBuildConfig } from './env';
+
+describe('resolveApiBaseUrl', () => {
+  it('defaults to same-origin relative API routing', () => {
+    expect(resolveApiBaseUrl({})).toBe('');
+  });
+
+  it('uses only the explicitly configured API origin and strips its trailing slash', () => {
+    expect(resolveApiBaseUrl({ VITE_API_BASE_URL: ' https://api.example.test/ ' })).toBe(
+      'https://api.example.test',
+    );
+  });
+});
 
 describe('resolveSupabaseBuildConfig', () => {
   it('prefers the explicit NEXT_PUBLIC Supabase variables', () => {

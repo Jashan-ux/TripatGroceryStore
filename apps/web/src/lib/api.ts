@@ -50,6 +50,7 @@ export class ApiError extends Error {
 export type AccessTokenProvider = () => Promise<string | null> | string | null;
 
 let tokenProvider: AccessTokenProvider = () => null;
+let unauthorizedHandler: (() => Promise<void> | void) | null = null;
 
 /**
  * Register how to obtain the Supabase access token. Auth lands in Phase 1; until
@@ -58,6 +59,19 @@ let tokenProvider: AccessTokenProvider = () => null;
  */
 export function setAccessTokenProvider(provider: AccessTokenProvider): void {
   tokenProvider = provider;
+}
+
+/** Clear an invalid local session after an API 401; never retry mutations. */
+export function setUnauthorizedHandler(handler: (() => Promise<void> | void) | null): void {
+  unauthorizedHandler = handler;
+}
+
+async function notifyUnauthorized(): Promise<void> {
+  try {
+    await unauthorizedHandler?.();
+  } catch {
+    // Preserve the API's 401 as the actionable request error.
+  }
 }
 
 export interface RequestOptions {
@@ -124,7 +138,10 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     const text = await response.text();
     const payload: unknown = text ? safeJson(text) : null;
 
-    if (!response.ok) throw parseError(response.status, payload);
+    if (!response.ok) {
+      if (response.status === 401) await notifyUnauthorized();
+      throw parseError(response.status, payload);
+    }
     return payload as T;
   } catch (error) {
     if (error instanceof ApiError) throw error;
@@ -180,7 +197,10 @@ export async function apiUpload<T>(path: string, form: FormData): Promise<T> {
 
   const text = await response.text();
   const payload: unknown = text ? safeJson(text) : null;
-  if (!response.ok) throw parseError(response.status, payload);
+  if (!response.ok) {
+    if (response.status === 401) await notifyUnauthorized();
+    throw parseError(response.status, payload);
+  }
   return payload as T;
 }
 

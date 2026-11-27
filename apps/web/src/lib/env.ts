@@ -22,11 +22,15 @@ export function resolveSupabaseBuildConfig(source: ImportMetaEnvLike = rawEnv) {
   };
 }
 
+export function resolveApiBaseUrl(source: ImportMetaEnvLike = rawEnv): string {
+  return readString(source, 'VITE_API_BASE_URL').replace(/\/$/, '');
+}
+
 const supabaseBuildConfig = resolveSupabaseBuildConfig();
 
 export const env = {
   /** Empty string means same-origin: the browser calls /api/* and Vercel rewrites. */
-  apiBaseUrl: readString(rawEnv, 'VITE_API_BASE_URL').replace(/\/$/, ''),
+  apiBaseUrl: resolveApiBaseUrl(),
   mode: readString(rawEnv, 'VITE_APP_MODE') || 'production',
   /** Set only for local development; production normally reads these from /api/v1/config. */
   supabaseUrl: supabaseBuildConfig.supabaseUrl,
