@@ -40,9 +40,9 @@ class Settings(BaseSettings):
     CORS_EXTRA_ORIGINS: str = ""
 
     # --- Database -----------------------------------------------------------
-    #: Pooled (transaction-mode) URL used by the app — statement cache disabled.
+    #: Supabase transaction-pooler URL for app requests (typically port 6543).
     DATABASE_URL: str = ""
-    #: Direct (session-mode) URL used by Alembic only.
+    #: Direct/session URL for Alembic only; never used by request sessions.
     DATABASE_DIRECT_URL: str = ""
     DB_POOL_SIZE: int = Field(default=5, ge=1, le=50)
     DB_MAX_OVERFLOW: int = Field(default=5, ge=0, le=50)

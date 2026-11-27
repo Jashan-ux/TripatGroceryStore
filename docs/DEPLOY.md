@@ -111,10 +111,12 @@ recently returned `status: ok` for both API and database.
    API parser accepts comma-delimited values (not JSON) and strips trailing
    slashes. CORS is enabled in production when this extra-origin value is
    non-empty; this is necessary for direct browser calls to Render.
-2. Keep the existing pooled `DATABASE_URL`; remove `?pgbouncer=true` (asyncpg
-   rejects it). `DATABASE_DIRECT_URL` uses the direct `5432` URL for Alembic.
-   Do not alter database variables until the intended Supabase project is
-   reconciled.
+2. Keep `DATABASE_URL` on the Supabase transaction-mode pooler (port `6543`)
+   for runtime requests; remove `?pgbouncer=true` (asyncpg rejects it). The API
+   disables both asyncpg/SQLAlchemy prepared-statement caches and generates
+   unique statement names for pooler sessions. `DATABASE_DIRECT_URL` remains the
+   direct/session URL for Alembic only (port `5432`); it is not used by request
+   sessions and does not need changing for this runtime fix.
 3. Migrations are not run by the Docker `CMD`. Run Alembic via the established
    migration step/Render Pre-Deploy Command only after confirming the target DB.
 4. Recheck `https://tripatgrocerystore.onrender.com/healthz/ready` and confirm
