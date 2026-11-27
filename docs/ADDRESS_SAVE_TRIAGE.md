@@ -45,10 +45,10 @@ so a failed follow-up GET could leave the form looking unchanged.
 - `uv run --project . mypy app` — passed.
 - `uv run --project . pytest -q` from `apps/api` — passed; database-marked
   integration tests skip locally without `TEST_DATABASE_URL`.
-- GitHub Actions [run 46011145457](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/46011145457)
-  — all six jobs passed, including API PostgreSQL migration/integration tests,
-  web lint/typecheck/unit/build, E2E, Lighthouse, and Security. This includes the
-  added address-update assertion.
+- GitHub Actions [run 46011960767](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/46011960767)
+  — all six jobs passed on `daae892`, including API PostgreSQL migration/
+  integration tests, web lint/typecheck/unit/build, E2E, Lighthouse, and Security.
+  This includes the added address-update assertion.
 - npm audit currently reports **4 moderate** advisories in the PWA/Workbox
   dependency chain; `npm audit --omit=dev --audit-level=high` reports no
   production vulnerabilities. No force upgrade was applied because npm's
@@ -57,12 +57,13 @@ so a failed follow-up GET could leave the form looking unchanged.
 ## Deployment/acceptance state
 
 - Vercel connector reports production READY/PROMOTED on `tripatmsg.in` at
-  commit `81e814b`; the deployment predates this fix. It also reports the new
-  branch preview at commit `a05aa41` READY/STAGED (deployment
-  `dpl_6MmQuPXTPMSiAzc5unW9JXQXDhV8`); that preview is not the production domain.
-  This branch is not the Vercel production branch, so the fix needs promotion/
-  merge through the normal release path before it can be verified on the live
-  domain.
+  commit `81e814b`; the deployment predates this fix. It also reports the current
+  branch preview at commit `daae892` READY/STAGED at
+  [the Vercel preview](https://tripat-grocery-store-1he3tz2ly-jashan-uxs-projects.vercel.app)
+  (deployment `dpl_9NjZR7wBZ9PMwiPK9Vd4tHEaKSwv`). The preview is not the
+  production domain. This branch is not the Vercel production branch, so the fix
+  needs promotion/merge through the normal release path before it can be verified
+  on the live domain.
 - Render status could not be queried with the available connected tools. No
   credentials, secrets, or connection strings were accessed. Deploy the current
   API branch (which contains `47f5618`) to the existing Render service if that
