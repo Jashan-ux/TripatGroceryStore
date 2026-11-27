@@ -22,7 +22,7 @@ dependencies = [
     # Web Push is a Phase 7 runtime feature; deliver to opted-in browsers after
     # the offer transaction commits. Email remains an optional integration.
     "pywebpush==2.0.3",
-    "py-vapid==1.9.1",
+    "py-vapid==1.9.6",
 ]
 
 [project.optional-dependencies]
