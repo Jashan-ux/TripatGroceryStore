@@ -48,6 +48,23 @@ def test_wildcard_cors_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.cors_origins == ["http://localhost:5173"]
 
 
+def test_cors_origins_normalise_canonical_apex_and_preview_urls() -> None:
+    settings = Settings(
+        _env_file=None,
+        WEB_ORIGIN="https://www.tripatmsg.in/",
+        CORS_EXTRA_ORIGINS=(
+            "https://tripatmsg.in, "
+            "https://tripat-grocery-store-git-arena-660db-528c3e-jashan-uxs-projects.vercel.app/"
+        ),
+    )
+
+    assert settings.cors_origins == [
+        "https://www.tripatmsg.in",
+        "https://tripatmsg.in",
+        "https://tripat-grocery-store-git-arena-660db-528c3e-jashan-uxs-projects.vercel.app",
+    ]
+
+
 def test_jwks_and_issuer_derived_from_supabase_url(monkeypatch: pytest.MonkeyPatch) -> None:
     _clean_env(monkeypatch)
     settings = Settings(_env_file=None, SUPABASE_URL="https://abc.supabase.co/")

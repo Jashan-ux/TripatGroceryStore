@@ -215,8 +215,12 @@ a live connection for stock and price validation.
    `CORS_EXTRA_ORIGINS` to comma-separated exact Vercel preview origins (no
    wildcard; no trailing slash), so direct browser API calls pass CORS. The
    application trims trailing slashes and parses comma-separated values, not
-   JSON. `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` may also stay empty: the
-   app reads them from `/api/v1/config` at runtime.
+   JSON. Supabase build-time overrides are optional: use
+   `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (the Vite
+   config explicitly exposes those public names), or retain the legacy
+   `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` aliases. They can all stay
+   empty in Vercel because the app reads the URL and publishable key from
+   `/api/v1/config` at runtime.
 
 **Netlify alternative**: `netlify.toml` is generated the same way
 (`API_ORIGIN=… node scripts/render-host-config.mjs`); Netlify cannot run FastAPI,

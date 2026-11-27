@@ -54,20 +54,36 @@ already take orders — the four things only you can do:
 
 ## 1. Supabase (database, auth, storage)
 
-- ☐ 🔑 Create **two** projects (or one now, one at staging time):
-  - `tripat-msgstore-staging` (region: Mumbai / ap-south-1)
-  - `tripat-msgstore-prod`
-- ☐ 🔑 Send me, per project: project URL, **anon** key, **service_role** key,
-  pooled connection string (transaction mode, port 6543), direct connection
-  string (port 5432) and the database password.
-- ☐ In each project: Authentication → Providers → enable **Email** (password).
-- ☐ 🕒 Enable **Google** provider (needs step 6 first), then send me the client ID
-  and secret.
-- ☐ Authentication → URL configuration → Site URL + redirect allowlist
-  (`https://<your-domain>`, `https://<your-domain>/auth/callback`,
-  `http://localhost:5173/auth/callback`).
-- ☐ Storage → confirm bucket `catalog` exists after my migration runs
-  (public read, writes only through the backend).
+Read-only connector checks found two healthy projects. The owner has confirmed
+the existing Render service targets the populated project:
+
+- `tripat-msgstore` (`nhmymidaebfbrbrovbzm`, ap-south-1): populated app database;
+  migrations now reach `0010_offer_push_count`.
+- `TripatGroceryStore` (`bnsuhgjdhheiuxpzfpfd`, ap-northeast-1): no Alembic
+  version or app tables.
+
+- ✅ Owner confirmed the existing Render service and its `DATABASE_DIRECT_URL`
+  target the populated `tripat-msgstore` project; its public `/api/v1/config`
+  response independently reports that project's URL.
+- ✅ After updating the GitHub Actions `SUPABASE_DB_URL` to the session pooler,
+  the ordered `verify` → `migrate` → `verify` workflow sequence completed:
+  [45998849594](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45998849594),
+  [45998977030](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45998977030),
+  [45999107076](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/45999107076).
+  A read-only query confirms revision `0010_offer_push_count`, the
+  `push_subscriptions` table with RLS enabled, and `offers.push_queued`.
+- ✅ ORM metadata was aligned to the live schema: paise fields use `BigInteger`,
+  `last_seen_at` is timezone-aware, and the externally managed Auth FK is
+  excluded from autogenerate. The credit-entry FKs are marked deferred, removing
+  the metadata sorting cycle warning. Latest verify run
+  [46003380063](https://github.com/Jashan-ux/TripatGroceryStore/actions/runs/46003380063)
+  completed without an Alembic drift warning.
+- ☐ Recheck Render `/healthz`, `/healthz/ready`, and `/api/v1/offers/current`.
+  Post-migration fetch attempts failed at the fetch-tool layer, so no HTTP status
+  or response body was confirmed.
+- ☐ Confirm the existing project’s Auth provider/redirect settings and `catalog`
+  Storage bucket (public read; writes only through the backend).
+- ☐ 🕒 Enable **Google** provider only after the OAuth setup in section 6.
 - ☐ Backups: check the plan. Free tier has daily backups only; **PITR** needs Pro.
   Tell me which you have so `docs/DEPLOY.md` matches reality.
 
@@ -138,21 +154,27 @@ tabs, and the storefront has a real **Contact** page.
 
 ## 3. Domain
 
-- ☐ 🔑 Buy the domain (suggest `tripatpansari.in` / `msgstore.in`).
-- ☐ Point the apex at Vercel, `www` → redirect to apex, optionally
-  `api.` at the backend host. I will give you the exact DNS records after you
-  tell me the host (Render / Railway / Fly.io).
+- ✅ `tripatmsg.in` and `www.tripatmsg.in` are attached to the Vercel project and
+  DNS is verified with no conflicts; apex redirects to canonical `www`.
+- ☐ Run deployed-origin Lighthouse and full-site axe checks after access to the
+  protected production site is available.
 
 ## 4. Hosting accounts
 
-- ☐ 🔑 Vercel account → create project from this repo (root directory
-  `apps/web`). Send me the project/org IDs and a deploy token for CI.
-- ☐ 🔑 Backend host — pick one: **Render** (recommended: always-on Starter),
-  Railway or Fly.io. Create the service from `infra/`, send me the deploy hook URL
-  and the service URL.
-- ✅ No cache service to buy. Rate limits are counted in your own database, so
-  there is no Upstash/Redis signup and no key to send. (Earlier drafts of this
-  list asked for one; that requirement is gone.)
+- ✅ Vercel project `tripat-grocery-store` exists at root `apps/web`; the
+  production deployment is READY/PROMOTED and `VITE_API_BASE_URL` is configured
+  for Preview and Production.
+- ✅ Render Docker service already exists at
+  `https://tripatgrocerystore.onrender.com`. **Do not create or re-provision it.**
+- ✅ Owner reports `WEB_ORIGIN`/CORS configured for apex and frontend origins.
+  ☐ Validate actual Origin-header preflights for `www`, apex, and the active
+  Vercel branch alias; this has not been independently verified.
+- ⚠️ Before the migration, Render `/healthz` alternated between DB `down` and
+  `ok`; `/healthz/ready` returned `ok` once. ☐ Recheck readiness after the
+  completed migration and investigate any continuing connectivity instability.
+- ☐ Add the API-host VAPID secrets if browser push delivery is wanted. The public
+  config currently returns an empty VAPID public key; push is not enabled.
+- ✅ No cache service to buy. Rate limits are counted in the database.
 
 ## 5. Bot protection (only if we enable Turnstile)
 

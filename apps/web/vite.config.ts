@@ -14,6 +14,9 @@ const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 
 const API_ORIGIN = process.env.VITE_PROXY_API_ORIGIN ?? 'http://127.0.0.1:8000';
 
 export default defineConfig({
+  // Keep the Supabase NEXT_PUBLIC_* keys usable in this Vite SPA without exposing
+  // unrelated NEXT_PUBLIC_* variables; VITE_* remains the default app prefix.
+  envPrefix: ['VITE_', 'NEXT_PUBLIC_SUPABASE_'],
   plugins: [
     react(),
     VitePWA({
