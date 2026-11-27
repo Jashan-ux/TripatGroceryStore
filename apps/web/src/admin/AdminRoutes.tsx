@@ -6,6 +6,7 @@ import { AdminCustomerProfilePage } from '@/admin/AdminCustomerProfilePage';
 import { AdminCustomersPage } from '@/admin/AdminCustomersPage';
 import { AdminFeedbackPage } from '@/admin/AdminFeedbackPage';
 import { AdminLayout } from '@/admin/AdminLayout';
+import { AdminInventoryPage } from '@/admin/AdminInventoryPage';
 import { AdminOffersPage } from '@/admin/AdminOffersPage';
 import { AdminOrdersPage } from '@/admin/AdminOrdersPage';
 import { AdminProductsPage } from '@/admin/AdminProductsPage';
@@ -27,6 +28,7 @@ export default function AdminRoutes() {
         <Route path="orders" element={<AdminOrdersPage />} />
         <Route path="returns" element={<AdminReturnsPage />} />
         <Route path="products" element={<AdminProductsPage />} />
+        <Route path="inventory" element={<AdminInventoryPage />} />
         <Route path="brands" element={<AdminBrandsPage />} />
         <Route path="customers" element={<AdminCustomersPage />} />
         <Route path="customers/:customerId" element={<AdminCustomerProfilePage />} />

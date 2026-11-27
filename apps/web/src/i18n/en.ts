@@ -106,6 +106,7 @@ export const en = {
     analytics: 'Dashboard',
     orders: 'Orders',
     products: 'Products',
+    inventory: 'Inventory',
     customers: 'Customers',
     returns: 'Returns',
     offers: 'Offers',

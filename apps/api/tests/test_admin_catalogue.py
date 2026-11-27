@@ -248,6 +248,88 @@ async def test_variants_are_replaced_wholesale(
     assert patched.json()["available_stock"] == 9
 
 
+async def test_inventory_adjustments_preserve_variant_ids_and_are_audited(
+    async_client: AsyncClient, admin: dict[str, Any], catalogue: dict[str, Any]
+) -> None:
+    category_id = await _category_id(async_client, admin, catalogue["child_slug"])
+    product = await _add_product(
+        async_client,
+        admin,
+        name="Inventory Packs",
+        category_id=category_id,
+        variants=[{"label": "250 g", "price_paise": 2500, "stock": 4}],
+    )
+    variant = product["variants"][0]
+
+    adjusted = await async_client.patch(
+        f"/api/v1/admin/catalogue/products/{product['id']}/variants/{variant['id']}/stock",
+        json={"stock": 12, "note": "Received supplier delivery"},
+        headers=admin["headers"],
+    )
+    assert adjusted.status_code == 200, adjusted.text
+    after_variant = adjusted.json()["variants"][0]
+    assert after_variant["id"] == variant["id"]
+    assert after_variant["stock"] == 12
+    assert adjusted.json()["available_stock"] == 12
+
+    # The low-stock predicate uses sellable variant quantity, not product.stock.
+    low = await async_client.get(
+        "/api/v1/admin/catalogue/products",
+        params={"low_stock": "true"},
+        headers=admin["headers"],
+    )
+    assert product["id"] not in {item["id"] for item in low.json()["items"]}
+
+    zeroed = await async_client.patch(
+        f"/api/v1/admin/catalogue/products/{product['id']}/variants/{variant['id']}/stock",
+        json={"stock": 0},
+        headers=admin["headers"],
+    )
+    assert zeroed.status_code == 200, zeroed.text
+    out = await async_client.get(
+        "/api/v1/admin/catalogue/products",
+        params={"out_of_stock": "true"},
+        headers=admin["headers"],
+    )
+    assert product["id"] in {item["id"] for item in out.json()["items"]}
+
+    log = await async_client.get("/api/v1/admin/audit", headers=admin["headers"])
+    entry = next(
+        row
+        for row in log.json()["items"]
+        if row["action"] == "inventory.stock_adjusted"
+        and row["after"]["variants"][0]["stock"] == 12
+    )
+    assert entry["before"]["variants"][0]["stock"] == 4
+    assert entry["after"]["variants"][0]["stock"] == 12
+    assert entry["note"] == "Received supplier delivery"
+
+
+async def test_inventory_adjustment_is_owner_only(
+    async_client: AsyncClient,
+    admin: dict[str, Any],
+    customer: dict[str, Any],
+    catalogue: dict[str, Any],
+) -> None:
+    category_id = await _category_id(async_client, admin, catalogue["child_slug"])
+    product = await _add_product(
+        async_client, admin, name="Private Stock", category_id=category_id, stock=2
+    )
+    response = await async_client.patch(
+        f"/api/v1/admin/catalogue/products/{product['id']}/stock",
+        json={"stock": 50},
+        headers=customer["headers"],
+    )
+    assert response.status_code == 403
+    accepted = await async_client.patch(
+        f"/api/v1/admin/catalogue/products/{product['id']}/stock",
+        json={"stock": 8},
+        headers=admin["headers"],
+    )
+    assert accepted.status_code == 200, accepted.text
+    assert accepted.json()["stock"] == 8
+
+
 async def test_duplicate_variant_labels_are_refused(
     async_client: AsyncClient, admin: dict[str, Any], catalogue: dict[str, Any]
 ) -> None:

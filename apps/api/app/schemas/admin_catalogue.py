@@ -83,6 +83,11 @@ class ProductUpdateIn(APIModel):
     variants: list[VariantIn] | None = Field(default=None, max_length=20)
 
 
+class InventoryStockPatchIn(APIModel):
+    stock: int = Field(ge=0, le=1_000_000)
+    note: str = Field(default="", max_length=300)
+
+
 class ProductAdminOut(APIModel):
     id: uuid.UUID
     name: str

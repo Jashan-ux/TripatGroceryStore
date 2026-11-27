@@ -16,11 +16,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.admin import AuditLog, Feedback, Offer
-from app.models.catalogue import Brand, Category, Product
+from app.models.catalogue import Brand, Category, Product, ProductVariant
 from app.models.enums import FeedbackStatus, UserRole
 
 
-async def get_product_admin(session: AsyncSession, product_id: uuid.UUID) -> Product | None:
+async def get_product_admin(
+    session: AsyncSession, product_id: uuid.UUID, *, for_update: bool = False
+) -> Product | None:
     stmt = (
         select(Product)
         .options(
@@ -30,7 +32,20 @@ async def get_product_admin(session: AsyncSession, product_id: uuid.UUID) -> Pro
         )
         .where(Product.id == product_id)
     )
+    if for_update:
+        stmt = stmt.with_for_update(of=Product)
     return cast(Product | None, await session.scalar(stmt))
+
+
+async def lock_product_variant(
+    session: AsyncSession, product_id: uuid.UUID, variant_id: uuid.UUID
+) -> ProductVariant | None:
+    stmt = (
+        select(ProductVariant)
+        .where(ProductVariant.product_id == product_id, ProductVariant.id == variant_id)
+        .with_for_update()
+    )
+    return cast(ProductVariant | None, await session.scalar(stmt))
 
 
 async def product_slug_exists(
@@ -50,9 +65,17 @@ async def list_products_admin(
     brand_id: uuid.UUID | None,
     only_inactive: bool,
     low_stock: bool,
+    out_of_stock: bool,
     page: int,
     page_size: int,
 ) -> tuple[list[Product], int]:
+    active_variant_stock = (
+        select(func.sum(ProductVariant.stock))
+        .where(ProductVariant.product_id == Product.id, ProductVariant.is_active.is_(True))
+        .correlate(Product)
+        .scalar_subquery()
+    )
+    available_stock = func.coalesce(active_variant_stock, Product.stock)
     stmt: Select[tuple[Product]] = select(Product).options(
         selectinload(Product.variants),
         selectinload(Product.category),
@@ -68,7 +91,9 @@ async def list_products_admin(
     if only_inactive:
         stmt = stmt.where(Product.is_active.is_(False))
     if low_stock:
-        stmt = stmt.where(Product.stock <= Product.low_stock_threshold)
+        stmt = stmt.where(available_stock <= Product.low_stock_threshold)
+    if out_of_stock:
+        stmt = stmt.where(available_stock <= 0)
 
     total = await session.scalar(select(func.count()).select_from(stmt.order_by(None).subquery()))
     rows = await session.scalars(

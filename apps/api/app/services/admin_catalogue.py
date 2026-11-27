@@ -31,6 +31,7 @@ from app.schemas.admin_catalogue import (
     CategoryAdminOut,
     CategoryIn,
     CategoryUpdateIn,
+    InventoryStockPatchIn,
     ProductAdminOut,
     ProductCreateIn,
     ProductUpdateIn,
@@ -278,6 +279,71 @@ async def update_product(
         summary=product.name,
         before=before,
         after=after,
+    )
+    return product
+
+
+async def adjust_product_stock(
+    session: AsyncSession,
+    actor: Profile,
+    product_id: uuid.UUID,
+    payload: InventoryStockPatchIn,
+) -> Product:
+    """Set product-level stock while holding its row lock against checkout."""
+    product = await repo.get_product_admin(session, product_id, for_update=True)
+    if product is None:
+        raise NotFoundError("That product does not exist.", code="product_not_found")
+    if any(variant.is_active for variant in product.variants):
+        raise ValidationError(
+            "This product is sold in packs; adjust each active pack's stock instead.",
+            code="variant_stock_managed",
+        )
+
+    before = snapshot(product)
+    product.stock = payload.stock
+    await session.flush()
+    await audit.record(
+        session,
+        actor=actor,
+        action="inventory.stock_adjusted",
+        entity="product",
+        entity_id=product.id,
+        summary=product.name,
+        before=before,
+        after=snapshot(product),
+        note=payload.note.strip(),
+    )
+    return product
+
+
+async def adjust_variant_stock(
+    session: AsyncSession,
+    actor: Profile,
+    product_id: uuid.UUID,
+    variant_id: uuid.UUID,
+    payload: InventoryStockPatchIn,
+) -> Product:
+    """Set one pack's stock while holding the same row lock as checkout."""
+    variant = await repo.lock_product_variant(session, product_id, variant_id)
+    if variant is None:
+        raise NotFoundError("That pack does not exist for this product.", code="variant_not_found")
+    product = await repo.get_product_admin(session, product_id)
+    if product is None:  # pragma: no cover - FK guarantees the parent exists
+        raise NotFoundError("That product does not exist.", code="product_not_found")
+
+    before = snapshot(product)
+    variant.stock = payload.stock
+    await session.flush()
+    await audit.record(
+        session,
+        actor=actor,
+        action="inventory.stock_adjusted",
+        entity="product",
+        entity_id=product.id,
+        summary=f"{product.name} · {variant.label}",
+        before=before,
+        after=snapshot(product),
+        note=payload.note.strip(),
     )
     return product
 

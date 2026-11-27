@@ -53,6 +53,7 @@ export type FeedbackOut = Schemas['FeedbackOut'];
 export type HomeOut = Schemas['HomeOut'];
 export type HomeRailOut = Schemas['HomeRailOut'];
 export type ImageOut = Schemas['ImageOut'];
+export type InventoryStockPatchIn = Schemas['InventoryStockPatchIn'];
 export type LowStockListOut = Schemas['LowStockListOut'];
 export type LowStockOut = Schemas['LowStockOut'];
 export type LoyaltyTier = Schemas['LoyaltyTier'];
