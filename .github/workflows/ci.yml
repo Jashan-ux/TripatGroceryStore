@@ -33,7 +33,7 @@ jobs:
           --health-retries 20
     steps:
       - uses: actions/checkout@v4.2.2
-      - uses: actions/setup-python@v5.3.0
+      - uses: actions/setup-python@v7.1.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
@@ -181,7 +181,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-      - uses: actions/setup-python@v5.3.0
+      - uses: actions/setup-python@v7.1.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
@@ -242,7 +242,7 @@ jobs:
           if [ "$status" -ne 0 ]; then
             python3 apps/web/scripts/report_gitleaks.py
           fi
-      - uses: actions/setup-python@v5.3.0
+      - uses: actions/setup-python@v7.1.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: pip-audit (no high/critical vulnerabilities)
