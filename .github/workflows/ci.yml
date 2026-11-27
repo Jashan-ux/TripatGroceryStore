@@ -105,7 +105,7 @@ jobs:
           diff <(python -c "import json;print(json.dumps(json.load(open('/tmp/openapi.json')),sort_keys=True,indent=2))") \
                <(python -c "import json;print(json.dumps(json.load(open('../../packages/api-client/openapi.json')),sort_keys=True,indent=2))") \
             || (echo "::error::OpenAPI schema changed — run 'npm run api:types' and commit" && exit 1)
-      - uses: actions/upload-artifact@v4.5.0
+      - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
           name: api-coverage
@@ -135,7 +135,7 @@ jobs:
         run: |
           npm run build:only
           node scripts/check-bundle-size.mjs
-      - uses: actions/upload-artifact@v4.5.0
+      - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
           name: web-build
@@ -163,7 +163,7 @@ jobs:
         env:
           LIGHTHOUSE_REPORT: ${{ github.workspace }}/apps/web/lighthouse-report.html
         run: npm run lighthouse:ci
-      - uses: actions/upload-artifact@v4.5.0
+      - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
           name: lighthouse-mobile-report
@@ -200,13 +200,13 @@ jobs:
         env:
           CI: 'true'
         run: npx playwright test
-      - uses: actions/upload-artifact@v4.5.0
+      - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
           name: playwright-report
           path: apps/web/playwright-report
           retention-days: 14
-      - uses: actions/upload-artifact@v4.5.0
+      - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
           name: playwright-test-results
