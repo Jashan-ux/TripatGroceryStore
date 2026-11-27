@@ -8,8 +8,10 @@ const COPY: Record<
   string,
   { label: string; tone: 'brand' | 'success' | 'warning' | 'danger' | 'neutral' | 'info' }
 > = {
-  processing: { label: 'Being packed', tone: 'info' },
-  shipped: { label: 'On the way', tone: 'brand' },
+  processing: { label: 'Received', tone: 'info' },
+  accepted: { label: 'Accepted', tone: 'brand' },
+  packing: { label: 'Being packed', tone: 'info' },
+  shipped: { label: 'Packed & shipped', tone: 'brand' },
   out_for_delivery: { label: 'Out for delivery', tone: 'brand' },
   delivered: { label: 'Delivered', tone: 'success' },
   cancelled: { label: 'Cancelled', tone: 'neutral' },

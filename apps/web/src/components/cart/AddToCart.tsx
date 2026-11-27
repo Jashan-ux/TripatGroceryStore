@@ -1,4 +1,6 @@
 import { Button } from '@/components/ui/button';
+import { useStorePreview } from '@/features/store/StorePreviewContext';
+import { useStoreConfig } from '@/hooks/useStoreConfig';
 import { useCart } from '@/features/cart/useCart';
 import { MAX_LINE_QUANTITY, type CartLine } from '@/features/cart/types';
 import { cn } from '@/lib/utils';
@@ -29,6 +31,18 @@ export function AddToCart({
 }: AddToCartProps) {
   const cart = useCart();
   const quantity = cart.quantityOf(line.productId, line.variantId);
+  const previewMode = useStorePreview();
+  const config = useStoreConfig();
+
+  if (previewMode) return null;
+
+  if (config.data?.store_open === false) {
+    return (
+      <Button type="button" variant="secondary" disabled aria-label="Store is closed">
+        Store closed
+      </Button>
+    );
+  }
 
   if (disabledReason) {
     return (

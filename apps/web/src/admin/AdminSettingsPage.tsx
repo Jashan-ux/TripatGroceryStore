@@ -101,10 +101,22 @@ const NUMBER_FIELDS: {
 export function AdminSettingsPage() {
   usePageTitle(undefined, 'Settings · Admin');
   const settings = useAdminSettings();
-  if (settings.isPending || !settings.data) {
+  if (settings.isPending) {
     return (
-      <div className="container max-w-3xl py-5">
+      <div className="container max-w-3xl py-5" role="status">
         <Skeleton className="h-72 w-full rounded-xl" />
+      </div>
+    );
+  }
+  if (settings.isError || !settings.data) {
+    return (
+      <div className="container max-w-3xl space-y-3 py-5" role="alert">
+        <p className="text-sm text-warning">
+          {settings.error?.message ?? 'Settings could not be loaded.'}
+        </p>
+        <Button variant="outline" onClick={() => void settings.refetch()}>
+          Try again
+        </Button>
       </div>
     );
   }
@@ -153,6 +165,7 @@ function SettingsForm({ settings }: { settings: SettingsOut }) {
       return_window_days: form.return_window_days,
       low_stock_threshold: form.low_stock_threshold,
       default_delivery_days: form.default_delivery_days,
+      is_open: form.is_open,
       tier_gold_paise: toPaise(rupees.tier_gold_paise),
       tier_platinum_paise: toPaise(rupees.tier_platinum_paise),
       tier_diamond_paise: toPaise(rupees.tier_diamond_paise),
@@ -182,6 +195,24 @@ function SettingsForm({ settings }: { settings: SettingsOut }) {
 
       <section className="space-y-2 rounded-xl border border-border bg-card p-3">
         <h2 className="text-sm font-bold">The shop</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-3">
+          <div>
+            <p className="text-sm font-semibold">Store availability</p>
+            <p className="text-xs text-muted-foreground">
+              {form.is_open
+                ? 'Customers can place orders.'
+                : 'Ordering is paused. Existing orders are unaffected.'}
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant={form.is_open ? 'primary' : 'outline'}
+            aria-pressed={form.is_open}
+            onClick={() => setForm({ ...form, is_open: !form.is_open })}
+          >
+            {form.is_open ? 'Open' : 'Closed'}
+          </Button>
+        </div>
         <label className="block text-xs font-semibold" htmlFor="name">
           Name
           <Input

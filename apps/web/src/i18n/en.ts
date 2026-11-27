@@ -103,7 +103,7 @@ export const en = {
   },
   admin: {
     title: 'Admin',
-    analytics: 'Analytics',
+    analytics: 'Dashboard',
     orders: 'Orders',
     products: 'Products',
     customers: 'Customers',

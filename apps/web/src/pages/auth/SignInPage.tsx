@@ -26,7 +26,7 @@ export default function SignInPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
-  const next = safeInternalPath(params.get('next'));
+  const next = safeInternalPath(params.get('next'), '/');
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -36,8 +36,9 @@ export default function SignInPage() {
   const onSubmit = form.handleSubmit(async (values) => {
     setServerError(null);
     try {
-      await signInWithPassword(values.email.trim().toLowerCase(), values.password);
-      void navigate(next, { replace: true });
+      const profile = await signInWithPassword(values.email.trim().toLowerCase(), values.password);
+      const destination = profile.role === 'admin' ? '/admin' : next;
+      void navigate(destination, { replace: true });
     } catch (error) {
       setServerError(authErrorMessage(error, 'We could not sign you in. Please try again.'));
     }

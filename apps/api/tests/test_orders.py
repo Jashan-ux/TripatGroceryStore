@@ -141,6 +141,42 @@ async def test_quote_prices_the_cart_from_the_database(
     assert body["can_checkout"] is True
 
 
+async def test_closed_store_blocks_quotes_and_new_orders(
+    async_client: AsyncClient,
+    customer: dict[str, Any],
+    products: dict[str, Any],
+) -> None:
+    from app.services import settings as settings_service
+
+    sessionmaker = get_sessionmaker()
+    async with sessionmaker() as session:
+        original = bool(
+            await session.scalar(text("SELECT is_open FROM store_settings LIMIT 1"))
+        )
+        await session.execute(text("UPDATE store_settings SET is_open = false"))
+        await session.commit()
+    settings_service.invalidate_cache()
+
+    try:
+        cart_payload = cart((products["ghee"], 2))
+        quote = await async_client.post("/api/v1/checkout/quote", json=cart_payload)
+        assert quote.status_code == 200
+        assert quote.json()["can_checkout"] is False
+        assert "store_closed" in [issue["code"] for issue in quote.json()["blocking_issues"]]
+
+        response = await place(async_client, customer, cart_payload)
+        assert response.status_code == 409, response.text
+        assert response.json()["error"]["code"] == "store_closed"
+    finally:
+        async with sessionmaker() as session:
+            await session.execute(
+                text("UPDATE store_settings SET is_open = :is_open"),
+                {"is_open": original},
+            )
+            await session.commit()
+        settings_service.invalidate_cache()
+
+
 async def test_quote_reports_the_exact_shortfall_under_the_minimum(
     async_client: AsyncClient, products: dict[str, Any]
 ) -> None:

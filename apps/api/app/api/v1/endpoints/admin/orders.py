@@ -9,11 +9,14 @@ browser.
 from __future__ import annotations
 
 import uuid
+from datetime import date, datetime
 from typing import Annotated, Literal
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, BackgroundTasks, Path, Query
 
 from app.api.deps import AdminUserDep, SessionDep
+from app.core.errors import ValidationError
 from app.models.catalogue import Profile
 from app.schemas.admin_orders import (
     AdminOrderDeliveryIn,
@@ -30,7 +33,14 @@ router = APIRouter(prefix="/admin/orders", tags=["admin"])
 
 OrderId = Annotated[uuid.UUID, Path(description="Order id")]
 StatusFilter = Literal[
-    "processing", "shipped", "out_for_delivery", "delivered", "cancelled", "returned"
+    "processing",
+    "accepted",
+    "packing",
+    "shipped",
+    "out_for_delivery",
+    "delivered",
+    "cancelled",
+    "returned",
 ]
 
 
@@ -42,11 +52,35 @@ async def list_orders(
     q: Annotated[
         str | None, Query(max_length=64, description="Order number, name or phone")
     ] = None,
+    date_filter: Annotated[
+        str | None,
+        Query(
+            alias="date",
+            pattern=r"^(today|\d{4}-\d{2}-\d{2})$",
+            description="Shop date or today",
+        ),
+    ] = None,
+    payment_status: Annotated[Literal["pending", "paid"] | None, Query()] = None,
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=100)] = 25,
 ) -> AdminOrderListOut:
+    if date_filter == "today":
+        order_date = datetime.now(tz=ZoneInfo("Asia/Kolkata")).date()
+    elif date_filter:
+        try:
+            order_date = date.fromisoformat(date_filter)
+        except ValueError as exc:
+            raise ValidationError("Choose a real calendar date.", code="invalid_date") from exc
+    else:
+        order_date = None
     return await service.list_orders(
-        session, status=status, search=q, page=page, page_size=page_size
+        session,
+        status=status,
+        search=q,
+        order_date=order_date,
+        payment_status=payment_status,
+        page=page,
+        page_size=page_size,
     )
 
 

@@ -13,6 +13,7 @@ import HomePage from '@/pages/HomePage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import ProductPage from '@/pages/ProductPage';
 import SearchPage from '@/pages/SearchPage';
+import { AdminGuard } from '@/routes/AdminGuard';
 import { ProtectedRoute } from '@/routes/ProtectedRoute';
 
 // Browsing (home, categories, search, product) ships in the first load; admin,
@@ -95,9 +96,11 @@ export default function App() {
       <Route
         path="/admin/*"
         element={
-          <Suspense fallback={<RouteFallback />}>
-            <AdminRoutes />
-          </Suspense>
+          <AdminGuard>
+            <Suspense fallback={<RouteFallback />}>
+              <AdminRoutes />
+            </Suspense>
+          </AdminGuard>
         }
       />
       <Route path="/auth/callback" element={deferred(<AuthCallbackPage />)} />

@@ -15,7 +15,9 @@ from pydantic import Field
 
 from app.schemas.common import APIModel
 
-AdminStatus = Literal["processing", "shipped", "out_for_delivery", "delivered", "cancelled"]
+AdminStatus = Literal[
+    "processing", "accepted", "packing", "shipped", "out_for_delivery", "delivered", "cancelled"
+]
 
 
 class AdminOrderSummaryOut(APIModel):

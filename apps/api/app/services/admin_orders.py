@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import math
 import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -42,7 +42,13 @@ logger = get_logger(__name__)
 # Where an order may go next. Cancelling is only possible before dispatch, which
 # is what the customer app promises; after that the shop handles it by phone.
 ALLOWED_TRANSITIONS: dict[OrderStatus, frozenset[OrderStatus]] = {
-    OrderStatus.processing: frozenset({OrderStatus.shipped, OrderStatus.cancelled}),
+    # Keep the original direct-to-shipped action for orders created before the
+    # merchant workflow rollout; current UI follows accepted → packing.
+    OrderStatus.processing: frozenset(
+        {OrderStatus.accepted, OrderStatus.shipped, OrderStatus.cancelled}
+    ),
+    OrderStatus.accepted: frozenset({OrderStatus.packing, OrderStatus.cancelled}),
+    OrderStatus.packing: frozenset({OrderStatus.shipped, OrderStatus.cancelled}),
     OrderStatus.shipped: frozenset({OrderStatus.out_for_delivery}),
     OrderStatus.out_for_delivery: frozenset({OrderStatus.delivered}),
     OrderStatus.delivered: frozenset({OrderStatus.returned}),
@@ -55,7 +61,13 @@ FINISHED_STATUSES = frozenset({OrderStatus.delivered, OrderStatus.cancelled, Ord
 
 #: Orders in these states still need the shop to do something.
 OPEN_STATUSES = frozenset(
-    {OrderStatus.processing, OrderStatus.shipped, OrderStatus.out_for_delivery}
+    {
+        OrderStatus.processing,
+        OrderStatus.accepted,
+        OrderStatus.packing,
+        OrderStatus.shipped,
+        OrderStatus.out_for_delivery,
+    }
 )
 
 
@@ -84,14 +96,24 @@ async def list_orders(
     *,
     status: str | None,
     search: str | None,
+    order_date: date | None,
+    payment_status: str | None,
     page: int,
     page_size: int,
 ) -> AdminOrderListOut:
-    total = await repo.count_all_orders(session, status=status, search=search)
+    total = await repo.count_all_orders(
+        session,
+        status=status,
+        search=search,
+        order_date=order_date,
+        payment_status=payment_status,
+    )
     rows = await repo.list_all_orders(
         session,
         status=status,
         search=search,
+        order_date=order_date,
+        payment_status=payment_status,
         limit=page_size,
         offset=(page - 1) * page_size,
     )

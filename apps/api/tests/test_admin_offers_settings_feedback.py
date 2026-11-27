@@ -53,6 +53,7 @@ async def restore_settings():
         "minimum_order_paise",
         "serviceable_pincodes",
         "default_delivery_days",
+        "is_open",
         "low_stock_threshold",
         "scratch_threshold_paise",
         "scratch_min_paise",
@@ -210,6 +211,38 @@ async def test_offers_are_owner_only(async_client: AsyncClient, customer: dict[s
 # --------------------------------------------------------------------------- #
 # A-15: settings
 # --------------------------------------------------------------------------- #
+async def test_the_owner_can_pause_and_reopen_the_store(
+    async_client: AsyncClient,
+    admin: dict[str, Any],
+    customer: dict[str, Any],
+    restore_settings: None,
+) -> None:
+    closed = await async_client.patch(
+        "/api/v1/admin/settings",
+        json={"is_open": False},
+        headers=admin["headers"],
+    )
+    assert closed.status_code == 200, closed.text
+    assert closed.json()["is_open"] is False
+
+    config = await async_client.get("/api/v1/config")
+    assert config.status_code == 200
+    assert config.json()["store_open"] is False
+
+    denied = await async_client.patch(
+        "/api/v1/admin/settings", json={"is_open": True}, headers=customer["headers"]
+    )
+    assert denied.status_code == 403
+
+    reopened = await async_client.patch(
+        "/api/v1/admin/settings",
+        json={"is_open": True},
+        headers=admin["headers"],
+    )
+    assert reopened.status_code == 200
+    assert reopened.json()["is_open"] is True
+
+
 async def test_the_owner_can_read_and_change_every_number(
     async_client: AsyncClient, admin: dict[str, Any], restore_settings: None
 ) -> None:

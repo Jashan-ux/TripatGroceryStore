@@ -29,11 +29,12 @@ export function AdminLayout() {
             </p>
           </div>
           <NavLink
-            to="/"
+            to="/?preview=1"
+            aria-label="Preview storefront as a customer"
             className="ml-auto inline-flex min-h-touch items-center gap-2 rounded-xl px-3 text-sm font-semibold text-foreground hover:bg-secondary"
           >
             <Store className="size-4" aria-hidden="true" />
-            <span className="hidden sm:inline">Catalog</span>
+            <span className="hidden sm:inline">Preview store</span>
           </NavLink>
         </div>
 

@@ -261,6 +261,7 @@ class StoreSettings(Base, TimestampMixin):
     default_delivery_days: Mapped[int] = mapped_column(
         SmallInteger, nullable=False, server_default=text("1")
     )
+    is_open: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
     low_stock_threshold: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default=text("10")
     )

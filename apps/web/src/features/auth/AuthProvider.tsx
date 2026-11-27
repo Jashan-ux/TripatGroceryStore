@@ -121,6 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (email: string, password: string) => {
       const { error } = await requireClient().auth.signInWithPassword({ email, password });
       if (error) throw error;
+      // Role authority is the API's profile row, never a client-editable JWT claim.
+      return api.get<ProfileOut>('/api/v1/me');
     },
     [requireClient],
   );
@@ -168,6 +170,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     if (!client) return;
     await client.auth.signOut();
+    try {
+      window.sessionStorage.removeItem('msg-store-admin-preview');
+    } catch {
+      // Storage may be disabled; the signed-out role gate still exits preview.
+    }
     queryClient.clear();
   }, [client, queryClient]);
 

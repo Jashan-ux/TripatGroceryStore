@@ -17,6 +17,8 @@ import { api } from '@/lib/api';
 export type AdminStatusFilter =
   | 'all'
   | 'processing'
+  | 'accepted'
+  | 'packing'
   | 'shipped'
   | 'out_for_delivery'
   | 'delivered'
@@ -24,25 +26,37 @@ export type AdminStatusFilter =
 
 export const ADMIN_PAGE_SIZE = 20;
 
-export function adminOrdersKey(status: AdminStatusFilter, q: string, page: number) {
-  return ['admin', 'orders', status, q, page] as const;
+export function adminOrdersKey(
+  status: AdminStatusFilter,
+  q: string,
+  page: number,
+  date: string,
+  payment: string,
+) {
+  return ['admin', 'orders', status, q, date, payment, page] as const;
 }
 
 export function useAdminOrders({
   status,
   q,
+  date,
+  payment,
   page,
 }: {
   status: AdminStatusFilter;
   q: string;
+  date: string;
+  payment: string;
   page: number;
 }) {
   const params = new URLSearchParams({ page: String(page), page_size: String(ADMIN_PAGE_SIZE) });
   if (status !== 'all') params.set('status', status);
   if (q.trim()) params.set('q', q.trim());
+  if (date) params.set('date', date);
+  if (payment) params.set('payment_status', payment);
 
   return useQuery<AdminOrderListOut>({
-    queryKey: adminOrdersKey(status, q, page),
+    queryKey: adminOrdersKey(status, q, page, date, payment),
     queryFn: ({ signal }) =>
       api.get<AdminOrderListOut>(`/api/v1/admin/orders?${params.toString()}`, { signal }),
     // The counter phone wants fresh numbers, but not a refetch storm.
@@ -102,7 +116,11 @@ export function nextStep(
 ): { status: AdminOrderStatusIn['status']; label: string } | null {
   switch (status) {
     case 'processing':
-      return { status: 'shipped', label: 'Mark packed & shipped' };
+      return { status: 'accepted', label: 'Accept order' };
+    case 'accepted':
+      return { status: 'packing', label: 'Start packing' };
+    case 'packing':
+      return { status: 'shipped', label: 'Mark packed & ready' };
     case 'shipped':
       return { status: 'out_for_delivery', label: 'Out for delivery' };
     case 'out_for_delivery':

@@ -15,6 +15,7 @@ const settings = {
   minimum_order_paise: 50000,
   serviceable_pincodes: ['125104'],
   default_delivery_days: 1,
+  is_open: true,
   low_stock_threshold: 5,
   referral_referrer_reward_paise: 10000,
   referral_friend_discount_pct: 10,
@@ -58,6 +59,7 @@ function mockFetch(options: { reject?: boolean } = {}) {
           store_address: settings.store_address,
           store_maps_url: settings.store_maps_url,
           feedback_email: settings.feedback_email,
+          store_open: settings.is_open,
           phone_otp_enabled: false,
           turnstile_enabled: false,
           supabase_url: '',
@@ -116,6 +118,22 @@ describe('AdminSettingsPage', () => {
       expect(patch?.body).toMatchObject({ minimum_order_paise: 75000 });
     });
     expect(await screen.findByText(/the next checkout already uses these numbers/i)).toBeVisible();
+  });
+
+  it('lets the owner close the store and persists the availability switch', async () => {
+    const calls = mockFetch();
+    const user = userEvent.setup();
+    renderWithProviders(<AdminSettingsPage />, { route: '/admin/settings' });
+
+    const availability = await screen.findByRole('button', { name: 'Open' });
+    expect(availability).toHaveAttribute('aria-pressed', 'true');
+    await user.click(availability);
+    expect(screen.getByRole('button', { name: 'Closed' })).toHaveAttribute('aria-pressed', 'false');
+    await user.click(screen.getByRole('button', { name: /save settings/i }));
+
+    await waitFor(() => {
+      expect(calls.find((call) => call.method === 'PATCH')?.body).toMatchObject({ is_open: false });
+    });
   });
 
   it('shows the server’s refusal instead of pretending it saved', async () => {

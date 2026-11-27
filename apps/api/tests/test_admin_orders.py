@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Callable
-from datetime import date
+from datetime import date, datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
 from app.db.session import get_sessionmaker
@@ -119,6 +120,8 @@ async def test_the_queue_shows_who_ordered_what(
     assert body["counts"]["processing"] >= 1
     assert set(body["counts"]) == {
         "processing",
+        "accepted",
+        "packing",
         "shipped",
         "out_for_delivery",
         "delivered",
@@ -163,6 +166,20 @@ async def test_filters_by_status_and_searches_by_number_or_phone(
     assert nothing.json()["total"] == 0
 
 
+async def test_the_queue_filters_by_shop_date_and_payment(
+    async_client: AsyncClient, admin: dict[str, Any], order: dict[str, Any]
+) -> None:
+    placed_at = datetime.fromisoformat(order["placed_at"].replace("Z", "+00:00"))
+    shop_date = placed_at.astimezone(ZoneInfo("Asia/Kolkata")).date().isoformat()
+    response = await async_client.get(
+        "/api/v1/admin/orders",
+        params={"date": shop_date, "payment_status": "pending"},
+        headers=admin["headers"],
+    )
+    assert response.status_code == 200, response.text
+    assert order["id"] in {item["id"] for item in response.json()["items"]}
+
+
 async def test_the_queue_pages(
     async_client: AsyncClient, admin: dict[str, Any], order: dict[str, Any]
 ) -> None:
@@ -200,6 +217,26 @@ async def test_detail_carries_the_timeline(
 # --------------------------------------------------------------------------- #
 # Transitions
 # --------------------------------------------------------------------------- #
+async def test_the_merchant_workflow_accepts_then_packs_before_dispatch(
+    async_client: AsyncClient, admin: dict[str, Any], order: dict[str, Any]
+) -> None:
+    accepted = await _set_status(async_client, admin, order["id"], "accepted")
+    assert accepted.status_code == 200, accepted.text
+    assert accepted.json()["status"] == "accepted"
+
+    packed = await _set_status(async_client, admin, order["id"], "packing")
+    assert packed.status_code == 200, packed.text
+    assert packed.json()["status"] == "packing"
+
+    shipped = await _set_status(async_client, admin, order["id"], "shipped")
+    assert shipped.status_code == 200, shipped.text
+    assert shipped.json()["status"] == "shipped"
+
+    dispatched = await _set_status(async_client, admin, order["id"], "out_for_delivery")
+    assert dispatched.status_code == 200, dispatched.text
+    assert dispatched.json()["status"] == "out_for_delivery"
+
+
 async def test_the_happy_path_settles_the_cash_on_delivery_and_schedules_push(
     async_client: AsyncClient,
     admin: dict[str, Any],
@@ -250,7 +287,7 @@ async def test_a_skipped_step_is_refused_with_the_allowed_moves(
     error = response.json()["error"]
     assert error["code"] == "invalid_status_transition"
     assert error["details"]["status"] == "processing"
-    assert sorted(error["details"]["allowed"]) == ["cancelled", "shipped"]
+    assert sorted(error["details"]["allowed"]) == ["accepted", "cancelled", "shipped"]
 
 
 async def test_cancelling_from_the_queue_puts_the_stock_back(

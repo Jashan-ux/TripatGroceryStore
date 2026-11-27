@@ -17,7 +17,7 @@ export interface AuthContextValue {
   needsPhone: boolean;
   error: ApiError | null;
   refreshProfile: () => Promise<void>;
-  signInWithPassword: (email: string, password: string) => Promise<void>;
+  signInWithPassword: (email: string, password: string) => Promise<ProfileOut>;
   signUpWithPassword: (
     email: string,
     password: string,

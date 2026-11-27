@@ -1,6 +1,7 @@
 import { Home, LayoutGrid, ReceiptText, ShoppingBag, User } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
+import { useStorePreview } from '@/features/store/StorePreviewContext';
 import { useCart } from '@/features/cart/useCart';
 import { t } from '@/i18n';
 import { cn } from '@/lib/utils';
@@ -20,6 +21,7 @@ const items = [
  */
 export function BottomNav() {
   const { itemCount } = useCart();
+  const previewMode = useStorePreview();
 
   return (
     <nav
@@ -28,46 +30,48 @@ export function BottomNav() {
       style={{ height: 'calc(var(--bottom-nav-height) + env(safe-area-inset-bottom))' }}
     >
       <ul className="mx-auto flex h-[var(--bottom-nav-height)] max-w-lg items-stretch">
-        {items.map(({ to, labelKey, icon: Icon, end }) => (
-          <li key={to} className="flex-1">
-            <NavLink
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                cn(
-                  'flex h-full flex-col items-center justify-center gap-1 text-[11px] font-medium',
-                  isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
-                )
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <span className="relative">
-                    <Icon
-                      className="size-5"
-                      aria-hidden="true"
-                      strokeWidth={isActive ? 2.4 : 1.9}
-                    />
-                    {to === '/cart' && itemCount > 0 && (
-                      <span
-                        className="absolute -right-2 -top-1.5 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] font-bold leading-4 text-primary-foreground"
+        {items
+          .filter(({ to }) => !previewMode || to !== '/cart')
+          .map(({ to, labelKey, icon: Icon, end }) => (
+            <li key={to} className="flex-1">
+              <NavLink
+                to={to}
+                end={end}
+                className={({ isActive }) =>
+                  cn(
+                    'flex h-full flex-col items-center justify-center gap-1 text-[11px] font-medium',
+                    isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
+                  )
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <span className="relative">
+                      <Icon
+                        className="size-5"
                         aria-hidden="true"
-                      >
-                        {itemCount > 99 ? '99+' : itemCount}
-                      </span>
-                    )}
-                  </span>
-                  <span>
-                    {t(labelKey)}
-                    {to === '/cart' && itemCount > 0 && (
-                      <span className="sr-only">, {itemCount} items</span>
-                    )}
-                  </span>
-                </>
-              )}
-            </NavLink>
-          </li>
-        ))}
+                        strokeWidth={isActive ? 2.4 : 1.9}
+                      />
+                      {to === '/cart' && itemCount > 0 && (
+                        <span
+                          className="absolute -right-2 -top-1.5 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] font-bold leading-4 text-primary-foreground"
+                          aria-hidden="true"
+                        >
+                          {itemCount > 99 ? '99+' : itemCount}
+                        </span>
+                      )}
+                    </span>
+                    <span>
+                      {t(labelKey)}
+                      {to === '/cart' && itemCount > 0 && (
+                        <span className="sr-only">, {itemCount} items</span>
+                      )}
+                    </span>
+                  </>
+                )}
+              </NavLink>
+            </li>
+          ))}
       </ul>
     </nav>
   );

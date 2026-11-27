@@ -5,6 +5,7 @@ import { ProductThumb } from '@/components/catalogue/ProductCard';
 import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { cn, formatDateOnly, formatIst, formatPaise, toTelHref } from '@/lib/utils';
@@ -22,6 +23,8 @@ import {
 const TABS: { value: AdminStatusFilter; label: string; countKey: string | null }[] = [
   { value: 'all', label: 'All', countKey: null },
   { value: 'processing', label: 'New', countKey: 'processing' },
+  { value: 'accepted', label: 'Accepted', countKey: 'accepted' },
+  { value: 'packing', label: 'Packing', countKey: 'packing' },
   { value: 'shipped', label: 'Shipped', countKey: 'shipped' },
   { value: 'out_for_delivery', label: 'Out', countKey: 'out_for_delivery' },
   { value: 'delivered', label: 'Delivered', countKey: 'delivered' },
@@ -41,6 +44,8 @@ export function AdminOrdersPage() {
   const [status, setStatus] = useState<AdminStatusFilter>('processing');
   const [term, setTerm] = useState('');
   const [query, setQuery] = useState('');
+  const [orderDate, setOrderDate] = useState('');
+  const [payment, setPayment] = useState('');
   const [page, setPage] = useState(1);
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -50,7 +55,7 @@ export function AdminOrdersPage() {
     return () => clearTimeout(timer);
   }, [term]);
 
-  const orders = useAdminOrders({ status, q: query, page });
+  const orders = useAdminOrders({ status, q: query, date: orderDate, payment, page });
   const data = orders.data;
 
   return (
@@ -114,6 +119,61 @@ export function AdminOrdersPage() {
           }}
           className="pl-9"
         />
+      </div>
+      <div className="grid gap-2 sm:grid-cols-3">
+        <label className="text-xs font-semibold" htmlFor="order-date-filter">
+          Order date
+          <Input
+            id="order-date-filter"
+            className="mt-1"
+            type="date"
+            value={orderDate === 'today' ? '' : orderDate}
+            onChange={(event) => {
+              setOrderDate(event.target.value);
+              setPage(1);
+            }}
+          />
+        </label>
+        <div className="flex items-end gap-2">
+          <Button
+            variant={orderDate === 'today' ? 'secondary' : 'outline'}
+            size="sm"
+            aria-pressed={orderDate === 'today'}
+            onClick={() => {
+              setOrderDate(orderDate === 'today' ? '' : 'today');
+              setPage(1);
+            }}
+          >
+            Today
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setOrderDate('');
+              setPage(1);
+            }}
+            disabled={!orderDate}
+          >
+            Clear date
+          </Button>
+        </div>
+        <label className="text-xs font-semibold" htmlFor="payment-status-filter">
+          Payment
+          <Select
+            id="payment-status-filter"
+            className="mt-1"
+            value={payment}
+            onChange={(event) => {
+              setPayment(event.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">All payments</option>
+            <option value="pending">Unpaid</option>
+            <option value="paid">Paid</option>
+          </Select>
+        </label>
       </div>
 
       {orders.isPending ? (
@@ -201,6 +261,12 @@ function OrderRow({
   const [error, setError] = useState<string | null>(null);
 
   const move = (target: AdminOrderStatusIn['status'], text = '') => {
+    if (
+      target === 'cancelled' &&
+      !window.confirm(`Cancel order ${order.order_number}? Reserved stock will be restored.`)
+    ) {
+      return;
+    }
     setError(null);
     setStatus.mutate(
       { orderId: order.id, status: target, note: text },
@@ -276,7 +342,7 @@ function OrderRow({
             {next.label}
           </Button>
         )}
-        {order.status === 'processing' && (
+        {['processing', 'accepted', 'packing'].includes(order.status) && (
           <Button
             size="sm"
             variant="outline"
@@ -518,7 +584,7 @@ function Details({
         </ol>
       </div>
 
-      {order.status === 'processing' && (
+      {['processing', 'accepted', 'packing'].includes(order.status) && (
         <div className="flex flex-wrap items-end gap-2">
           <div className="flex-1">
             <label htmlFor="cancel-reason" className="mb-1 block text-xs font-semibold">

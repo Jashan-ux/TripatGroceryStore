@@ -1,5 +1,5 @@
 import type { ProductAdminOut } from '@tripat/api-client';
-import { Pencil, Plus, Search, Trash2, Upload } from 'lucide-react';
+import { Eye, EyeOff, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -334,7 +334,20 @@ export function AdminProductsPage() {
       </section>
 
       {products.isPending ? (
-        <Skeleton className="h-64 w-full rounded-xl" />
+        <Skeleton className="h-64 w-full rounded-xl" role="status" />
+      ) : products.isError ? (
+        <div className="rounded-xl border border-border bg-card p-4 text-sm" role="alert">
+          <p className="font-semibold">Could not load products</p>
+          <p className="text-muted-foreground">{products.error.message}</p>
+          <Button
+            size="sm"
+            variant="outline"
+            className="mt-2"
+            onClick={() => void products.refetch()}
+          >
+            Try again
+          </Button>
+        </div>
       ) : !data || data.items.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
           No products match. Clear the filters or add the first one above.
@@ -385,6 +398,32 @@ export function AdminProductsPage() {
                       onClick={() => setEditing(product)}
                     >
                       <Pencil aria-hidden="true" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={`${product.is_active ? 'Hide' : 'Show'} ${product.name} on storefront`}
+                      aria-pressed={product.is_active}
+                      onClick={() => {
+                        setError(null);
+                        update.mutate(
+                          { id: product.id, is_active: !product.is_active },
+                          {
+                            onSuccess: () =>
+                              setNotice(
+                                `${product.name} ${product.is_active ? 'hidden from' : 'shown on'} the storefront.`,
+                              ),
+                            onError: (mutationError) => setError(mutationError.message),
+                          },
+                        );
+                      }}
+                      disabled={update.isPending}
+                    >
+                      {product.is_active ? (
+                        <EyeOff aria-hidden="true" />
+                      ) : (
+                        <Eye aria-hidden="true" />
+                      )}
                     </Button>
                     <Button
                       size="icon"

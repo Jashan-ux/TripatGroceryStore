@@ -1250,7 +1250,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled";
+            status: "processing" | "accepted" | "packing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled";
         };
         /** AdminOrderSummaryOut */
         AdminOrderSummaryOut: {
@@ -1571,7 +1571,7 @@ export interface components {
              * Code
              * @enum {string}
              */
-            code: "empty_cart" | "minimum_order" | "pincode" | "stock";
+            code: "empty_cart" | "minimum_order" | "pincode" | "stock" | "store_closed";
             /** Details */
             details?: {
                 [key: string]: unknown;
@@ -2539,7 +2539,7 @@ export interface components {
          * OrderStatus
          * @enum {string}
          */
-        OrderStatus: "processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled" | "returned";
+        OrderStatus: "processing" | "accepted" | "packing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled" | "returned";
         /** OrderSummaryOut */
         OrderSummaryOut: {
             /** Deliver By */
@@ -2975,6 +2975,11 @@ export interface components {
             store_maps_url: string;
             /** Store Name */
             store_name: string;
+            /**
+             * Store Open
+             * @default true
+             */
+            store_open: boolean;
             /** Store Phone */
             store_phone: string;
             /**
@@ -3352,6 +3357,8 @@ export interface components {
             default_delivery_days: number;
             /** Feedback Email */
             feedback_email: string;
+            /** Is Open */
+            is_open: boolean;
             /** Low Stock Threshold */
             low_stock_threshold: number;
             /** Minimum Order Paise */
@@ -3403,6 +3410,8 @@ export interface components {
             default_delivery_days?: number | null;
             /** Feedback Email */
             feedback_email?: string | null;
+            /** Is Open */
+            is_open?: boolean | null;
             /** Low Stock Threshold */
             low_stock_threshold?: number | null;
             /** Minimum Order Paise */
@@ -6035,9 +6044,12 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Filter by status */
-                status?: ("processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled" | "returned") | null;
+                status?: ("processing" | "accepted" | "packing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled" | "returned") | null;
                 /** @description Order number, name or phone */
                 q?: string | null;
+                /** @description Shop date or today */
+                date?: string | null;
+                payment_status?: ("pending" | "paid") | null;
                 page?: number;
                 page_size?: number;
             };

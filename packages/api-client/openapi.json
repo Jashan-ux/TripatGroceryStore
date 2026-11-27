@@ -344,6 +344,8 @@
           "status": {
             "enum": [
               "processing",
+              "accepted",
+              "packing",
               "shipped",
               "out_for_delivery",
               "delivered",
@@ -989,7 +991,8 @@
               "empty_cart",
               "minimum_order",
               "pincode",
-              "stock"
+              "stock",
+              "store_closed"
             ],
             "title": "Code",
             "type": "string"
@@ -3297,6 +3300,8 @@
       "OrderStatus": {
         "enum": [
           "processing",
+          "accepted",
+          "packing",
           "shipped",
           "out_for_delivery",
           "delivered",
@@ -4360,6 +4365,11 @@
             "title": "Store Name",
             "type": "string"
           },
+          "store_open": {
+            "default": true,
+            "title": "Store Open",
+            "type": "boolean"
+          },
           "store_phone": {
             "title": "Store Phone",
             "type": "string"
@@ -5270,6 +5280,10 @@
             "title": "Feedback Email",
             "type": "string"
           },
+          "is_open": {
+            "title": "Is Open",
+            "type": "boolean"
+          },
           "low_stock_threshold": {
             "title": "Low Stock Threshold",
             "type": "integer"
@@ -5361,6 +5375,7 @@
           "minimum_order_paise",
           "serviceable_pincodes",
           "default_delivery_days",
+          "is_open",
           "low_stock_threshold",
           "referral_referrer_reward_paise",
           "referral_friend_discount_pct",
@@ -5405,6 +5420,17 @@
               }
             ],
             "title": "Feedback Email"
+          },
+          "is_open": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Open"
           },
           "low_stock_threshold": {
             "anyOf": [
@@ -9393,6 +9419,8 @@
                 {
                   "enum": [
                     "processing",
+                    "accepted",
+                    "packing",
                     "shipped",
                     "out_for_delivery",
                     "delivered",
@@ -9426,6 +9454,45 @@
               ],
               "description": "Order number, name or phone",
               "title": "Q"
+            }
+          },
+          {
+            "description": "Shop date or today",
+            "in": "query",
+            "name": "date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(today|\\d{4}-\\d{2}-\\d{2})$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Shop date or today",
+              "title": "Date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "payment_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending",
+                    "paid"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Payment Status"
             }
           },
           {

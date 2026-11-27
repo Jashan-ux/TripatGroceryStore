@@ -52,7 +52,7 @@ function rangeFor(days: number): RangeParams {
  * days", because a shop with two orders a day is the normal case, not an error.
  */
 export function AdminAnalyticsPage() {
-  usePageTitle(undefined, 'Analytics · Admin');
+  usePageTitle(undefined, 'Dashboard · Admin');
   const [days, setDays] = useState(30);
   const range = useMemo(() => rangeFor(days), [days]);
   const [drillDown, setDrillDown] = useState(false);
@@ -69,7 +69,7 @@ export function AdminAnalyticsPage() {
   return (
     <div className="container max-w-4xl space-y-4 py-5 pb-nav-safe md:pb-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="text-xl font-extrabold tracking-tight">Analytics</h1>
+        <h1 className="text-xl font-extrabold tracking-tight">Dashboard</h1>
         <p className="text-xs text-muted-foreground">
           {data ? `${data.range.from_date} → ${data.range.to_date}` : 'Loading…'}
         </p>
