@@ -1,28 +1,51 @@
 import { en, type Dictionary } from './en';
+import { hi } from './hi';
 
 export type Language = 'en' | 'hi';
 
-const dictionaries: Record<Language, Dictionary> = { en } as Record<Language, Dictionary>;
+const LANGUAGE_KEY = 'msg-store-language';
+const dictionaries: Record<Language, Dictionary> = { en, hi };
 
 export const DEFAULT_LANGUAGE: Language = 'en';
 
-/**
- * Minimal, dependency-free translation helper. `hi` is added in the final
- * phase; until a dictionary exists we fall back to English rather than showing
- * a missing-key placeholder.
- */
-export function translate(language: Language, key: string): string {
-  const dictionary = dictionaries[language] ?? en;
-  const segments = key.split('.');
-  let node: unknown = dictionary;
-  for (const segment of segments) {
-    if (typeof node !== 'object' || node === null) return key;
-    node = (node as Record<string, unknown>)[segment];
+/** Read the saved choice without letting disabled storage break the storefront. */
+export function getCurrentLanguage(): Language {
+  if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
+  try {
+    const saved = window.localStorage.getItem(LANGUAGE_KEY);
+    if (saved === 'hi' || saved === 'en') return saved;
+  } catch {
+    // Storage can be unavailable in private browsing or locked-down webviews.
   }
-  return typeof node === 'string' ? node : key;
+  return DEFAULT_LANGUAGE;
 }
 
-export const t = (key: string, language: Language = DEFAULT_LANGUAGE): string =>
+/** Persist the user's choice and reload so every route picks up translated copy. */
+export function setCurrentLanguage(language: Language): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(LANGUAGE_KEY, language);
+  } catch {
+    // Continue in the current language when storage is disabled.
+  }
+  if (typeof window !== 'undefined') window.location.reload();
+}
+
+function lookup(dictionary: Dictionary, key: string): string | undefined {
+  let node: unknown = dictionary;
+  for (const segment of key.split('.')) {
+    if (typeof node !== 'object' || node === null) return undefined;
+    node = (node as Record<string, unknown>)[segment];
+  }
+  return typeof node === 'string' ? node : undefined;
+}
+
+/** Missing Hindi copy falls back to English rather than a missing-key placeholder. */
+export function translate(language: Language, key: string): string {
+  return lookup(dictionaries[language], key) ?? lookup(en, key) ?? key;
+}
+
+export const t = (key: string, language: Language = getCurrentLanguage()): string =>
   translate(language, key);
 
 export type { Dictionary };

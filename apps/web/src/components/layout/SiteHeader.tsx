@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { BrandMark, Wordmark } from '@/components/common/BrandMark';
+import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +34,7 @@ export function SiteHeader() {
         </Link>
 
         <nav aria-label={t('nav.primary')} className="ml-auto flex items-center gap-0.5">
+          <LanguageSelector />
           {!previewMode && (
             <>
               <NotificationBell />

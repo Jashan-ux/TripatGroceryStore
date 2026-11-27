@@ -4,6 +4,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { adminSections } from '@/admin/adminSections';
 import { useUnreadCount } from '@/features/notifications/queries';
 import { BrandMark } from '@/components/common/BrandMark';
+import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { t } from '@/i18n';
 import { cn } from '@/lib/utils';
 
@@ -28,6 +29,7 @@ export function AdminLayout() {
               {t('admin.title')}
             </p>
           </div>
+          <LanguageSelector />
           <NavLink
             to="/?preview=1"
             aria-label="Preview storefront as a customer"

@@ -1,7 +1,6 @@
 /**
- * English copy. Hindi arrives in the final phase; every user-facing string is
- * looked up here (or in a server-provided value), so adding `hi.ts` is a data
- * change, not a refactor.
+ * English source copy. Hindi mirrors this key structure in `hi.ts`; new keys
+ * should be added to both dictionaries or they fall back to English.
  */
 export const en = {
   brand: {
@@ -52,6 +51,7 @@ export const en = {
     somethingWrong: 'Something went wrong',
     somethingWrongBody: 'Please reload the page. If it keeps happening, call the store.',
     reload: 'Reload',
+    language: 'Language',
   },
   footer: {
     about: 'MSG Store · fresh groceries and daily essentials delivered to your doorstep.',
@@ -121,4 +121,8 @@ export const en = {
   },
 } as const;
 
-export type Dictionary = typeof en;
+type WidenStrings<T> = {
+  [Key in keyof T]: T[Key] extends string ? string : WidenStrings<T[Key]>;
+};
+
+export type Dictionary = WidenStrings<typeof en>;
