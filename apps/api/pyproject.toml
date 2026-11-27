@@ -21,7 +21,7 @@ dependencies = [
     "pillow==13.0.0",
     # Web Push is a Phase 7 runtime feature; deliver to opted-in browsers after
     # the offer transaction commits. Email remains an optional integration.
-    "pywebpush==2.0.3",
+    "pywebpush==2.5.0",
     "py-vapid==1.9.1",
 ]
 
