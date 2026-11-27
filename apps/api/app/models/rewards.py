@@ -208,7 +208,7 @@ class ScratchCard(Base, TimestampMixin):
     revealed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     credited_entry_id: Mapped[uuid.UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
-        ForeignKey("wallet_entries.id", ondelete="SET NULL"),
+        ForeignKey("wallet_entries.id", ondelete="SET NULL", use_alter=True),
         nullable=True,
         unique=True,
     )

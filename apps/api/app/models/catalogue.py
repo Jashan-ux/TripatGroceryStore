@@ -11,6 +11,7 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     CheckConstraint,
+    DateTime,
     ForeignKey,
     Index,
     Integer,
@@ -41,6 +42,8 @@ class Profile(Base, TimestampMixin):
 
     __tablename__ = "profiles"
 
+    # The migration-owned FK to auth.users is cross-schema and intentionally
+    # excluded from Alembic model comparison (see app.db.alembic_utils).
     id: Mapped[uuid.UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False, server_default="")
     email: Mapped[str] = mapped_column(String(320), nullable=False)
@@ -69,7 +72,7 @@ class Profile(Base, TimestampMixin):
     notification_prefs: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
-    last_seen_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     __table_args__ = (
         CheckConstraint("lifetime_spend_paise >= 0", name="lifetime_spend_non_negative"),
@@ -150,8 +153,8 @@ class Product(Base, TimestampMixin):
     category_id: Mapped[uuid.UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("categories.id", ondelete="RESTRICT"), nullable=False
     )
-    mrp_paise: Mapped[int] = mapped_column(nullable=False, server_default=text("0"))
-    price_paise: Mapped[int] = mapped_column(nullable=False, server_default=text("0"))
+    mrp_paise: Mapped[int] = mapped_column(BigInteger, nullable=False, server_default=text("0"))
+    price_paise: Mapped[int] = mapped_column(BigInteger, nullable=False, server_default=text("0"))
     unit_label: Mapped[str] = mapped_column(String(40), nullable=False, server_default="")
     stock: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
     low_stock_threshold: Mapped[int] = mapped_column(
@@ -206,8 +209,8 @@ class ProductVariant(Base, TimestampMixin):
         PGUUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"), nullable=False
     )
     label: Mapped[str] = mapped_column(String(40), nullable=False)
-    mrp_paise: Mapped[int] = mapped_column(nullable=False, server_default=text("0"))
-    price_paise: Mapped[int] = mapped_column(nullable=False, server_default=text("0"))
+    mrp_paise: Mapped[int] = mapped_column(BigInteger, nullable=False, server_default=text("0"))
+    price_paise: Mapped[int] = mapped_column(BigInteger, nullable=False, server_default=text("0"))
     stock: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
     sort_order: Mapped[int] = mapped_column(SmallInteger, nullable=False, server_default=text("0"))
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
@@ -249,7 +252,9 @@ class StoreSettings(Base, TimestampMixin):
     )
 
     # Order rules
-    minimum_order_paise: Mapped[int] = mapped_column(nullable=False, server_default=text("50000"))
+    minimum_order_paise: Mapped[int] = mapped_column(
+        BigInteger, nullable=False, server_default=text("50000")
+    )
     serviceable_pincodes: Mapped[list[str]] = mapped_column(
         ARRAY(Text), nullable=False, server_default=text("'{125104,125201}'::text[]")
     )
@@ -262,7 +267,7 @@ class StoreSettings(Base, TimestampMixin):
 
     # Rewards
     referral_referrer_reward_paise: Mapped[int] = mapped_column(
-        nullable=False, server_default=text("2000")
+        BigInteger, nullable=False, server_default=text("2000")
     )
     referral_friend_discount_pct: Mapped[int] = mapped_column(
         SmallInteger, nullable=False, server_default=text("10")
@@ -271,19 +276,29 @@ class StoreSettings(Base, TimestampMixin):
         String(16), nullable=False, server_default="delivered"
     )
     scratch_threshold_paise: Mapped[int] = mapped_column(
-        nullable=False, server_default=text("200000")
+        BigInteger, nullable=False, server_default=text("200000")
     )
-    scratch_min_paise: Mapped[int] = mapped_column(nullable=False, server_default=text("5000"))
-    scratch_max_paise: Mapped[int] = mapped_column(nullable=False, server_default=text("10000"))
+    scratch_min_paise: Mapped[int] = mapped_column(
+        BigInteger, nullable=False, server_default=text("5000")
+    )
+    scratch_max_paise: Mapped[int] = mapped_column(
+        BigInteger, nullable=False, server_default=text("10000")
+    )
     scratch_expiry_days: Mapped[int] = mapped_column(
         SmallInteger, nullable=False, server_default=text("30")
     )
     return_window_days: Mapped[int] = mapped_column(
         SmallInteger, nullable=False, server_default=text("3")
     )
-    tier_gold_paise: Mapped[int] = mapped_column(nullable=False, server_default=text("2000000"))
-    tier_platinum_paise: Mapped[int] = mapped_column(nullable=False, server_default=text("5000000"))
-    tier_diamond_paise: Mapped[int] = mapped_column(nullable=False, server_default=text("10000000"))
+    tier_gold_paise: Mapped[int] = mapped_column(
+        BigInteger, nullable=False, server_default=text("2000000")
+    )
+    tier_platinum_paise: Mapped[int] = mapped_column(
+        BigInteger, nullable=False, server_default=text("5000000")
+    )
+    tier_diamond_paise: Mapped[int] = mapped_column(
+        BigInteger, nullable=False, server_default=text("10000000")
+    )
 
     notification_email: Mapped[str] = mapped_column(String(320), nullable=False, server_default="")
 

@@ -13,6 +13,7 @@ from logging.config import fileConfig
 import app.models  # noqa: F401  (registers every table on Base.metadata)
 from alembic import context
 from app.core.config import get_settings
+from app.db.alembic_utils import include_object
 from app.models.base import Base
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
@@ -43,6 +44,7 @@ def _configure(connection: Connection) -> None:
         compare_type=True,
         compare_server_default=True,
         include_schemas=False,
+        include_object=include_object,
         render_as_batch=False,
     )
 
