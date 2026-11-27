@@ -48,6 +48,7 @@ export function AddressForm({
   address,
   submitting,
   serverError,
+  serverFieldErrors = {},
   onSubmit,
   onCancel,
 }: {
@@ -55,7 +56,8 @@ export function AddressForm({
   address?: AddressOut | null;
   submitting: boolean;
   serverError?: string | null;
-  onSubmit: (values: AddressIn) => void;
+  serverFieldErrors?: Record<string, string>;
+  onSubmit: (values: AddressIn) => void | Promise<void>;
   onCancel?: () => void;
 }) {
   const form = useForm<AddressFormValues>({
@@ -68,12 +70,21 @@ export function AddressForm({
     <form
       className="space-y-3 rounded-xl border border-border bg-card p-4"
       noValidate
+      aria-busy={submitting}
       onSubmit={(event) => {
-        void form.handleSubmit((values) => onSubmit(toAddressIn(values)))(event);
+        void form.handleSubmit(
+          async (values) => onSubmit(toAddressIn(values)),
+          () => undefined,
+        )(event);
       }}
     >
       <h2 className="text-sm font-bold">{address ? 'Edit address' : 'New delivery address'}</h2>
 
+      {form.formState.isSubmitted && Object.keys(errors).length > 0 && (
+        <p role="alert" className="rounded-lg bg-warning-soft p-2 text-xs font-medium text-warning">
+          Please check the highlighted fields and try again.
+        </p>
+      )}
       {serverError && (
         <p role="alert" className="rounded-lg bg-warning-soft p-2 text-xs font-medium text-warning">
           {serverError}
@@ -81,7 +92,11 @@ export function AddressForm({
       )}
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Full name" error={errors.recipient_name?.message} htmlFor="recipient_name">
+        <Field
+          label="Full name"
+          error={errors.recipient_name?.message ?? serverFieldErrors.recipient_name}
+          htmlFor="recipient_name"
+        >
           <Input
             id="recipient_name"
             autoComplete="name"
@@ -89,7 +104,11 @@ export function AddressForm({
             {...form.register('recipient_name')}
           />
         </Field>
-        <Field label="Mobile number" error={errors.phone?.message} htmlFor="phone">
+        <Field
+          label="Mobile number"
+          error={errors.phone?.message ?? serverFieldErrors.phone}
+          htmlFor="phone"
+        >
           <Input
             id="phone"
             type="tel"
@@ -102,7 +121,11 @@ export function AddressForm({
         </Field>
       </div>
 
-      <Field label="House / flat, street" error={errors.line1?.message} htmlFor="line1">
+      <Field
+        label="House / flat, street"
+        error={errors.line1?.message ?? serverFieldErrors.line1}
+        htmlFor="line1"
+      >
         <Input
           id="line1"
           autoComplete="address-line1"
@@ -112,16 +135,28 @@ export function AddressForm({
       </Field>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Area / locality (optional)" error={errors.line2?.message} htmlFor="line2">
+        <Field
+          label="Area / locality (optional)"
+          error={errors.line2?.message ?? serverFieldErrors.line2}
+          htmlFor="line2"
+        >
           <Input id="line2" autoComplete="address-line2" {...form.register('line2')} />
         </Field>
-        <Field label="Landmark (optional)" error={errors.landmark?.message} htmlFor="landmark">
+        <Field
+          label="Landmark (optional)"
+          error={errors.landmark?.message ?? serverFieldErrors.landmark}
+          htmlFor="landmark"
+        >
           <Input id="landmark" placeholder="Near the school gate" {...form.register('landmark')} />
         </Field>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Field label="Pincode" error={errors.pincode?.message} htmlFor="pincode">
+        <Field
+          label="Pincode"
+          error={errors.pincode?.message ?? serverFieldErrors.pincode}
+          htmlFor="pincode"
+        >
           <Input
             id="pincode"
             inputMode="numeric"
@@ -131,10 +166,18 @@ export function AddressForm({
             {...form.register('pincode')}
           />
         </Field>
-        <Field label="Town / city" error={errors.city?.message} htmlFor="city">
+        <Field
+          label="Town / city"
+          error={errors.city?.message ?? serverFieldErrors.city}
+          htmlFor="city"
+        >
           <Input id="city" autoComplete="address-level2" {...form.register('city')} />
         </Field>
-        <Field label="State" error={errors.state?.message} htmlFor="state">
+        <Field
+          label="State"
+          error={errors.state?.message ?? serverFieldErrors.state}
+          htmlFor="state"
+        >
           <Input id="state" autoComplete="address-level1" {...form.register('state')} />
         </Field>
       </div>

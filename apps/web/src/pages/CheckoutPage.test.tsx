@@ -121,8 +121,19 @@ function walletAwareQuote(balance: number, overrides: Partial<QuoteOut> = {}): Q
   });
 }
 
-function mockFetch(respond: (body: unknown) => QuoteOut) {
+type MockAddress = typeof ADDRESS & { created_at?: string };
+
+function mockFetch(
+  respond: (body: unknown) => QuoteOut,
+  options: {
+    initialAddresses?: MockAddress[];
+    failAddressReloadAfterSave?: boolean;
+    failAddressSave?: boolean;
+  } = {},
+) {
   const calls: { url: string; method: string; body: unknown; headers: Headers }[] = [];
+  let savedAddresses: MockAddress[] = [...(options.initialAddresses ?? [ADDRESS])];
+  let addressSaveCount = 0;
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -138,7 +149,42 @@ function mockFetch(respond: (body: unknown) => QuoteOut) {
 
       if (url.includes('/api/v1/config')) return json(configResponse);
       if (url.includes('/api/v1/checkout/quote')) return json(respond(body));
-      if (url.includes('/api/v1/addresses')) return json([ADDRESS]);
+      if (url.includes('/api/v1/addresses')) {
+        if (method === 'GET') {
+          if (options.failAddressReloadAfterSave && addressSaveCount > 0) {
+            return json(
+              { error: { code: 'temporarily_unavailable', message: 'Address refresh failed.' } },
+              503,
+            );
+          }
+          return json(savedAddresses);
+        }
+        if (method === 'POST' || method === 'PUT') {
+          addressSaveCount += 1;
+          if (options.failAddressSave) {
+            return json(
+              {
+                error: { code: 'database_unavailable', message: 'We could not save that address.' },
+              },
+              503,
+            );
+          }
+          const id =
+            method === 'POST'
+              ? 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'
+              : (url.split('/').at(-1) ?? ADDRESS.id);
+          const saved = {
+            ...(body as Record<string, unknown>),
+            id,
+            created_at: '2026-11-25T09:30:00Z',
+          } as MockAddress;
+          savedAddresses =
+            method === 'POST'
+              ? [...savedAddresses, saved]
+              : savedAddresses.map((address) => (address.id === id ? saved : address));
+          return json(saved, method === 'POST' ? 201 : 200);
+        }
+      }
       if (url.includes('/api/v1/orders'))
         return json({ id: '99999999-9999-9999-9999-999999999999' }, 201);
       return json({ error: { code: 'not_found', message: 'no' } }, 404);
@@ -150,11 +196,74 @@ function mockFetch(respond: (body: unknown) => QuoteOut) {
 const quoteBodies = (calls: { url: string; body: unknown }[]) =>
   calls.filter((call) => call.url.includes('/api/v1/checkout/quote')).map((call) => call.body);
 
-describe('CheckoutPage wallet', () => {
+describe('CheckoutPage wallet and addresses', () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
     localStorage.clear();
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  });
+
+  it('persists a new address and shows it even if the follow-up refresh fails', async () => {
+    const calls = mockFetch(() => quote(), {
+      initialAddresses: [],
+      failAddressReloadAfterSave: true,
+    });
+    const user = userEvent.setup();
+    renderWithProviders(<CheckoutPage />, { route: '/checkout' });
+
+    await user.type(await screen.findByLabelText('Full name'), 'Jashan Kumar');
+    await user.type(screen.getByLabelText('Mobile number'), '9876543210');
+    await user.type(screen.getByLabelText('House / flat, street'), '12 Gali 3 Main Road');
+    await user.type(screen.getByLabelText('Pincode'), '122001');
+    await user.click(screen.getByRole('button', { name: 'Save address' }));
+
+    await waitFor(() => {
+      const saveCall = calls.find(
+        (call) => call.url.endsWith('/api/v1/addresses') && call.method === 'POST',
+      );
+      expect(saveCall?.body).toMatchObject({
+        recipient_name: 'Jashan Kumar',
+        phone: '9876543210',
+        line1: '12 Gali 3 Main Road',
+        pincode: '122001',
+      });
+    });
+    expect(await screen.findByText('Jashan Kumar')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /add another address/i })).toBeInTheDocument();
+  });
+
+  it('shows a server failure and keeps Save Address available for retry', async () => {
+    const calls = mockFetch(() => quote(), { initialAddresses: [], failAddressSave: true });
+    const user = userEvent.setup();
+    renderWithProviders(<CheckoutPage />, { route: '/checkout' });
+
+    await user.type(await screen.findByLabelText('Full name'), 'Jashan Kumar');
+    await user.type(screen.getByLabelText('Mobile number'), '9876543210');
+    await user.type(screen.getByLabelText('House / flat, street'), '12 Gali 3 Main Road');
+    await user.type(screen.getByLabelText('Pincode'), '122001');
+    await user.click(screen.getByRole('button', { name: 'Save address' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('We could not save that address.');
+    expect(
+      calls.filter((call) => call.method === 'POST' && call.url.endsWith('/api/v1/addresses')),
+    ).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Save address' })).toBeEnabled();
+  });
+
+  it('explains client-side validation instead of silently ignoring the submit', async () => {
+    const calls = mockFetch(() => quote(), { initialAddresses: [] });
+    const user = userEvent.setup();
+    renderWithProviders(<CheckoutPage />, { route: '/checkout' });
+
+    await user.click(await screen.findByRole('button', { name: 'Save address' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Please check the highlighted fields and try again.',
+    );
+    expect(screen.getByText('Who should we ask for?')).toBeInTheDocument();
+    expect(
+      calls.some((call) => call.method === 'POST' && call.url.endsWith('/api/v1/addresses')),
+    ).toBe(false);
   });
 
   it('asks for the balance first, without spending it', async () => {

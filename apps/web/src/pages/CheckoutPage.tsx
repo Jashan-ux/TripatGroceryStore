@@ -56,6 +56,7 @@ export default function CheckoutPage() {
   const [editing, setEditing] = useState<AddressOut | null>(null);
   const [note, setNote] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
+  const [addressFieldErrors, setAddressFieldErrors] = useState<Record<string, string>>({});
   const [phoneDraft, setPhoneDraft] = useState('');
   const [orderError, setOrderError] = useState<ApiError | null>(null);
   const [useWallet, setUseWallet] = useState(false);
@@ -118,20 +119,25 @@ export default function CheckoutPage() {
     Boolean(quote.data?.can_checkout) &&
     !placeOrder.isPending;
 
-  const submitAddress = (values: AddressIn) => {
+  const submitAddress = async (values: AddressIn) => {
     setFormError(null);
-    saveAddress.mutate(
-      { ...values, ...(editing ? { id: editing.id } : {}) },
-      {
-        onSuccess: (address) => {
-          chooseAddress(address.id);
-          setFormOpen(false);
-          setEditing(null);
-        },
-        onError: (error) =>
-          setFormError(error instanceof ApiError ? error.message : 'Could not save the address.'),
-      },
-    );
+    setAddressFieldErrors({});
+    try {
+      const address = await saveAddress.mutateAsync({
+        ...values,
+        ...(editing ? { id: editing.id } : {}),
+      });
+      chooseAddress(address.id);
+      setFormOpen(false);
+      setEditing(null);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setFormError(error.message);
+        setAddressFieldErrors(error.fieldErrors);
+      } else {
+        setFormError('We could not save your address. Please try again.');
+      }
+    }
   };
 
   const onPlaceOrder = () => {
@@ -181,13 +187,30 @@ export default function CheckoutPage() {
               Delivery address
             </h2>
 
-            {addresses.isPending ? (
+            {addresses.isError && !addresses.data ? (
+              <div
+                role="alert"
+                className="rounded-xl border border-border bg-warning-soft p-3 text-sm"
+              >
+                <p className="font-semibold">We could not load your saved addresses.</p>
+                <p className="mt-1">Check your connection and try again before saving.</p>
+                <Button
+                  className="mt-2"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void addresses.refetch()}
+                >
+                  Try again
+                </Button>
+              </div>
+            ) : addresses.isPending ? (
               <Skeleton className="h-24 w-full rounded-xl" />
             ) : savedAddresses.length === 0 || formOpen ? (
               <AddressForm
                 address={editing}
                 submitting={saveAddress.isPending}
                 serverError={formError}
+                serverFieldErrors={addressFieldErrors}
                 onSubmit={submitAddress}
                 onCancel={
                   savedAddresses.length > 0

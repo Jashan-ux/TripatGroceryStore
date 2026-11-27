@@ -42,7 +42,6 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.1",
-    "@hookform/resolvers": "3.9.1",
     "@playwright/test": "1.65.1",
     "@testing-library/jest-dom": "6.6.3",
     "@testing-library/react": "16.3.3",

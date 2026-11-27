@@ -64,6 +64,22 @@ async def test_address_crud_and_default_handling(
         headers=headers,
     )
     assert second.status_code == 201
+
+    edited = await async_client.put(
+        f"/api/v1/addresses/{second.json()['id']}",
+        json={
+            **ADDRESS,
+            "label": "Shop",
+            "line1": "Shop 4, Grain Market",
+            "phone": "+91 98765-43210",
+            "is_default": True,
+        },
+        headers=headers,
+    )
+    assert edited.status_code == 200, edited.text
+    assert edited.json()["line1"] == "Shop 4, Grain Market"
+    assert edited.json()["phone"] == "9876543210"
+
     rows = (await async_client.get("/api/v1/addresses", headers=headers)).json()
     assert len(rows) == 2
     assert sum(1 for row in rows if row["is_default"]) == 1

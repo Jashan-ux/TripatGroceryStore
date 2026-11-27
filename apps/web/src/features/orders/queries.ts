@@ -72,7 +72,17 @@ export function useSaveAddress() {
       id
         ? api.put<AddressOut>(`/api/v1/addresses/${id}`, body)
         : api.post<AddressOut>('/api/v1/addresses', body),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['addresses'] }),
+    onSuccess: (saved) => {
+      // Put the committed row into the active cache immediately. If the follow-up
+      // GET is offline/fails, the checkout still reflects the successful write.
+      queryClient.setQueryData<AddressOut[]>(['addresses'], (current) => {
+        if (!current) return [saved];
+        const index = current.findIndex((address) => address.id === saved.id);
+        if (index < 0) return [...current, saved];
+        return current.map((address) => (address.id === saved.id ? saved : address));
+      });
+      void queryClient.invalidateQueries({ queryKey: ['addresses'] });
+    },
   });
 }
 
