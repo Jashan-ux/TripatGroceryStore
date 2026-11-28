@@ -150,9 +150,7 @@ async def test_closed_store_blocks_quotes_and_new_orders(
 
     sessionmaker = get_sessionmaker()
     async with sessionmaker() as session:
-        original = bool(
-            await session.scalar(text("SELECT is_open FROM store_settings LIMIT 1"))
-        )
+        original = bool(await session.scalar(text("SELECT is_open FROM store_settings LIMIT 1")))
         await session.execute(text("UPDATE store_settings SET is_open = false"))
         await session.commit()
     settings_service.invalidate_cache()
