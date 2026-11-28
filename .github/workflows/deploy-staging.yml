@@ -22,7 +22,7 @@ jobs:
       - name: Alembic upgrade (staging database)
         working-directory: apps/api
         env:
-          DATABASE_DIRECT_URL: ${{ secrets.STAGING_DATABASE_DIRECT_URL }}
+          DATABASE_DIRECT_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           pip install -e .
           alembic upgrade head
