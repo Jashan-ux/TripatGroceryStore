@@ -59,8 +59,8 @@ supabase --version
 7. **Storage**: in the *same Supabase project whose API URL is configured as
    `SUPABASE_URL` on the backend host, create an existing bucket named exactly
    `catalog`. The API's `SUPABASE_STORAGE_BUCKET` setting defaults to `catalog`;
-   set `SUPABASE_STORAGE_BUCKET=catalog` explicitly on the API host so the
-   deployment configuration is unambiguous. This bucket must be **public read**
+   the Render and Fly deployment templates set `SUPABASE_STORAGE_BUCKET=catalog`
+   explicitly, and other API hosts should do the same. This bucket must be **public read**
    because product URLs use Supabase's public-object route. Allow anonymous
    downloads only; do not grant public insert/update/delete. Uploads use the
    backend-only `SUPABASE_SERVICE_ROLE_KEY`. No Alembic migration or application
