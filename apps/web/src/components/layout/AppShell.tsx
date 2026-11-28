@@ -9,8 +9,6 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { OfferBanner } from '@/components/layout/OfferBanner';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { PhonePrompt } from '@/features/auth/PhonePrompt';
 import { useAuth } from '@/features/auth/useAuth';
 import { CartProvider } from '@/features/cart/CartProvider';
@@ -45,41 +43,16 @@ const CUSTOMER_ONLY_PATHS = [
 /** Customer storefront shell with admin-only editing tools layered onto it. */
 export function AppShell() {
   const location = useLocation();
-  const { status, profile, isAdmin, error: profileError } = useAuth();
+  const { profile, isAdmin } = useAuth();
   const config = useStoreConfig();
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [adminNotice, setAdminNotice] = useState<string | null>(null);
   // Admins work in the same storefront page customers see, with editing tools
   // layered over it; there is no separate read-only preview mode.
   const adminStoreMode = isAdmin;
-  const offline = typeof navigator !== 'undefined' && !navigator.onLine;
-
-  // Keep the public storefront available from the app shell offline. No admin
-  // tools are shown until the API confirms the role; the separate /admin route
-  // remains gated while identity is unresolved.
-  if (
-    !offline &&
-    (status === 'loading' || (status === 'authenticated' && !profile && !profileError))
-  ) {
-    return (
-      <div className="container space-y-3 py-8" role="status" aria-live="polite">
-        <span className="sr-only">Checking your account</span>
-        <Skeleton className="h-6 w-1/3" />
-        <Skeleton className="h-32 w-full rounded-xl" />
-      </div>
-    );
-  }
-  if (!offline && status === 'authenticated' && !profile) {
-    return (
-      <div className="container max-w-lg py-10" role="alert">
-        <p className="font-semibold">We could not load your account.</p>
-        <p className="mt-1 text-sm text-muted-foreground">{profileError?.message}</p>
-        <Button className="mt-3" onClick={() => window.location.reload()}>
-          Try again
-        </Button>
-      </div>
-    );
-  }
+  // Public storefront routes render even while identity/configuration is still
+  // loading or the device is offline. No admin tools are shown until the API
+  // confirms the role; the separate /admin route remains gated independently.
 
   // Delivery profiles use their own route surface; admins keep the storefront
   // as their workspace and receive the editing toolbar there.
