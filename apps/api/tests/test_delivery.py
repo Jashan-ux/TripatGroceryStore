@@ -108,7 +108,7 @@ async def test_default_driver_auto_assignment_and_assigned_order_isolation(
     make_token: Callable[..., str],
 ) -> None:
     headers = admin["headers"]
-    profiles = await async_client.get("/api/v1/admin/orders/delivery-profiles", headers=headers)
+    profiles = await async_client.get("/api/v1/admin/delivery/profiles", headers=headers)
     assert profiles.status_code == 200, profiles.text
     assert driver["profile"]["id"] in {row["id"] for row in profiles.json()}
     assert customer["profile"]["id"] not in {row["id"] for row in profiles.json()}

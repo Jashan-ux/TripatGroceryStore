@@ -68,10 +68,15 @@ try {
   if (!result) throw new Error('Lighthouse returned no report.');
 
   await writeFile(reportPath, result.report);
-  const performance = Math.round((result.lhr.categories.performance?.score ?? 0) * 100);
-  const accessibility = Math.round((result.lhr.categories.accessibility?.score ?? 0) * 100);
+  const performanceScore = result.lhr.categories.performance?.score;
+  const accessibilityScore = result.lhr.categories.accessibility?.score;
+  const performance = Number.isFinite(performanceScore) ? Math.round(performanceScore * 100) : null;
+  const accessibility = Number.isFinite(accessibilityScore)
+    ? Math.round(accessibilityScore * 100)
+    : null;
+  const scoreLabel = (score) => (score === null ? 'unavailable' : String(score));
   console.log(
-    `Mobile simulated-4G Lighthouse: Performance ${performance}, Accessibility ${accessibility}`,
+    `Mobile simulated-4G Lighthouse: Performance ${scoreLabel(performance)}, Accessibility ${scoreLabel(accessibility)}`,
   );
   console.log(`Full HTML report: ${reportPath}`);
   const weakPerformanceAudits = (result.lhr.categories.performance?.auditRefs ?? [])
@@ -83,8 +88,8 @@ try {
   const summary = [
     '### Lighthouse mobile simulated-4G',
     '',
-    `- Performance: **${performance}** (target ≥ 85)`,
-    `- Accessibility: **${accessibility}** (target ≥ 95)`,
+    `- Performance: **${scoreLabel(performance)}** (target ≥ 85)`,
+    `- Accessibility: **${scoreLabel(accessibility)}** (target ≥ 95)`,
     ...(weakPerformanceAudits.length
       ? [
           '',
@@ -113,16 +118,25 @@ try {
     ? `; layout-shift elements ${layoutShiftSources.join(' | ')}`
     : '';
   process.stderr.write(
-    `::notice title=Lighthouse mobile metrics::Performance ${performance}; Accessibility ${accessibility}; CLS ${cls}; LCP ${lcp}; TBT ${tbt}${shiftSummary}.\n`,
+    `::notice title=Lighthouse mobile metrics::Performance ${scoreLabel(performance)}; Accessibility ${scoreLabel(accessibility)}; CLS ${cls}; LCP ${lcp}; TBT ${tbt}${shiftSummary}.\n`,
   );
 
-  if (performance < 85 || accessibility < 95) {
+  const failedAudits = Object.entries(result.lhr.audits)
+    .filter(([, audit]) => audit.scoreDisplayMode === 'error' || audit.errorMessage)
+    .slice(0, 8)
+    .map(([id, audit]) => `${id}: ${audit.errorMessage ?? audit.explanation ?? audit.title}`);
+  const runtimeError = result.lhr.runtimeError
+    ? `${result.lhr.runtimeError.code}: ${result.lhr.runtimeError.message}`
+    : '';
+  if (performance === null || performance < 85 || accessibility === null || accessibility < 95) {
     const details = [
+      ...(runtimeError ? [`Lighthouse runtime error: ${runtimeError}`] : []),
+      ...failedAudits,
       ...weakPerformanceAudits.slice(0, 5),
       ...layoutShiftSources.map((source) => `layout shift: ${source}`),
     ].join('; ');
     const message =
-      `Lighthouse below target: Performance ${performance}/85, Accessibility ${accessibility}/95. ${details}`.slice(
+      `Lighthouse below target: Performance ${scoreLabel(performance)}/85, Accessibility ${scoreLabel(accessibility)}/95. ${details}`.slice(
         0,
         2000,
       );
