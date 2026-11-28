@@ -8,6 +8,7 @@
  *  * out-of-stock items stay visible but are not clickable into a dead end.
  */
 import type { ProductCardOut } from '@tripat/api-client';
+import { useState } from 'react';
 import { Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -52,13 +53,15 @@ export function ProductThumb({
 }) {
   const tile = monogram(name);
   const text = size === 'lg' ? 'text-4xl' : size === 'sm' ? 'text-lg' : 'text-2xl';
-  if (imageUrl) {
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
+  if (imageUrl && imageUrl !== failedImageUrl) {
     return (
       <img
         src={imageUrl}
         alt={name}
         loading="lazy"
         decoding="async"
+        onError={() => setFailedImageUrl(imageUrl)}
         className={cn('size-full object-cover', className)}
       />
     );
