@@ -175,13 +175,17 @@ async function inspectRenderedPage(targetUrl) {
     const page = await probe.newPage({ viewport: { width: 360, height: 800 } });
     const pageErrors = [];
     page.on('pageerror', (error) => pageErrors.push(error.message.slice(0, 200)));
+    page.on('console', (message) => {
+      if (message.type() === 'error') pageErrors.push(message.text().slice(0, 300));
+    });
     const response = await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.waitForTimeout(1500);
     const rendered = await page.evaluate(() => ({
       readyState: document.readyState,
       rootHasChildren: Boolean(document.querySelector('#root')?.childElementCount),
       headingCount: document.querySelectorAll('h1').length,
-      bodyTextLength: document.body.innerText.trim().length,
+      bodyText: document.body.innerText.trim().slice(0, 500),
+      rootText: document.querySelector('#root')?.innerText.trim().slice(0, 500) ?? '',
     }));
     return `Playwright render probe: HTTP ${response?.status() ?? 'none'}, ${JSON.stringify(rendered)}, page errors: ${pageErrors.join(' | ') || 'none'}`;
   } catch (error) {
