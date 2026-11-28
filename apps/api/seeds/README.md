@@ -26,3 +26,13 @@ variants), so re-running updates prices and stock instead of duplicating them.
 
 `load_catalogue.sql` fetches this file over HTTPS with `pg_net` and upserts it, so
 no database password is needed on the machine doing the seeding.
+
+## MSG supplier catalogue import
+
+`msg_products_with_parent_categories.csv` is the supplied MSG catalogue source;
+`import_msg_catalogue.sql` is the reviewed, one-time supplement used to add it to
+an existing hosted catalogue. It preserves the CSV's parent/child taxonomy,
+creates the MSG brand, sets blank stock to 20 (leaving explicit zeroes at zero),
+and skips conflicting duplicate rows as documented in the SQL header. The SQL is
+transactional and inserts products only when their slugs are new; it does not
+replace or deactivate the existing 70-product catalogue.
