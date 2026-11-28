@@ -29,8 +29,8 @@ export function SiteHeader() {
       <div className="container flex items-center gap-2 py-2">
         <Link to="/" className="flex items-center gap-2 rounded-xl focus-visible:outline-none">
           <BrandMark decorative />
-          <Wordmark className="hidden xs:flex" />
-          <span className="sr-only xs:hidden">{t('brand.full')}</span>
+          <Wordmark className="hidden sm:flex" />
+          <span className="sr-only sm:hidden">{t('brand.full')}</span>
         </Link>
 
         <nav aria-label={t('nav.primary')} className="ml-auto flex items-center gap-0.5">

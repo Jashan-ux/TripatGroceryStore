@@ -46,25 +46,38 @@ try {
   }
   if (!ready) throw new Error(`Vite preview did not become ready:\n${serverOutput}`);
 
-  browser = await launch({
-    chromePath: chromium.executablePath(),
-    chromeFlags: ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage'],
-  });
-  const result = await lighthouse(url, {
-    port: browser.port,
-    output: 'html',
-    onlyCategories: ['performance', 'accessibility'],
-    formFactor: 'mobile',
-    throttlingMethod: 'simulate',
-    screenEmulation: {
-      mobile: true,
-      width: 360,
-      height: 800,
-      deviceScaleFactor: 1,
-      disabled: false,
-    },
-    logLevel: 'error',
-  });
+  const launchBrowser = () =>
+    launch({
+      chromePath: chromium.executablePath(),
+      chromeFlags: ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage'],
+    });
+  const audit = () =>
+    lighthouse(url, {
+      port: browser.port,
+      output: 'html',
+      onlyCategories: ['performance', 'accessibility'],
+      formFactor: 'mobile',
+      throttlingMethod: 'simulate',
+      screenEmulation: {
+        mobile: true,
+        width: 360,
+        height: 800,
+        deviceScaleFactor: 1,
+        disabled: false,
+      },
+      logLevel: 'error',
+    });
+  browser = await launchBrowser();
+  let result = await audit();
+  // CI occasionally starts Chromium before its first paint is ready. Retry this
+  // specific transient Lighthouse failure with a clean browser; real score or
+  // page errors still fail below with diagnostics.
+  if (result?.lhr.runtimeError?.code === 'NO_FCP') {
+    await browser.kill();
+    await delay(1_000);
+    browser = await launchBrowser();
+    result = await audit();
+  }
   if (!result) throw new Error('Lighthouse returned no report.');
 
   await writeFile(reportPath, result.report);
@@ -129,8 +142,11 @@ try {
     ? `${result.lhr.runtimeError.code}: ${result.lhr.runtimeError.message}`
     : '';
   if (performance === null || performance < 85 || accessibility === null || accessibility < 95) {
+    const renderDiagnostics =
+      result.lhr.runtimeError?.code === 'NO_FCP' ? await inspectRenderedPage(url) : '';
     const details = [
       ...(runtimeError ? [`Lighthouse runtime error: ${runtimeError}`] : []),
+      ...(renderDiagnostics ? [renderDiagnostics] : []),
       ...failedAudits,
       ...weakPerformanceAudits.slice(0, 5),
       ...layoutShiftSources.map((source) => `layout shift: ${source}`),
@@ -147,6 +163,32 @@ try {
 } finally {
   await browser?.kill();
   server.kill('SIGTERM');
+}
+
+async function inspectRenderedPage(targetUrl) {
+  let probe;
+  try {
+    probe = await chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-dev-shm-usage'],
+    });
+    const page = await probe.newPage({ viewport: { width: 360, height: 800 } });
+    const pageErrors = [];
+    page.on('pageerror', (error) => pageErrors.push(error.message.slice(0, 200)));
+    const response = await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForTimeout(1500);
+    const rendered = await page.evaluate(() => ({
+      readyState: document.readyState,
+      rootHasChildren: Boolean(document.querySelector('#root')?.childElementCount),
+      headingCount: document.querySelectorAll('h1').length,
+      bodyTextLength: document.body.innerText.trim().length,
+    }));
+    return `Playwright render probe: HTTP ${response?.status() ?? 'none'}, ${JSON.stringify(rendered)}, page errors: ${pageErrors.join(' | ') || 'none'}`;
+  } catch (error) {
+    return `Playwright render probe failed: ${error.message}`;
+  } finally {
+    await probe?.close();
+  }
 }
 
 async function readLayoutShiftSources(targetUrl) {
