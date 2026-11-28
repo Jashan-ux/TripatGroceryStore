@@ -17,7 +17,7 @@ import re
 import unicodedata
 import uuid
 
-from sqlalchemy import update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ConflictError, NotFoundError, ValidationError
@@ -31,8 +31,10 @@ from app.schemas.admin_catalogue import (
     CategoryAdminOut,
     CategoryIn,
     CategoryUpdateIn,
+    InventoryStockPatchIn,
     ProductAdminOut,
     ProductCreateIn,
+    ProductOrderIn,
     ProductUpdateIn,
     VariantIn,
 )
@@ -159,6 +161,8 @@ def snapshot(product: Product) -> dict[str, object]:
         "unit_label": product.unit_label,
         "description": product.description,
         "is_active": product.is_active,
+        "is_featured": product.is_featured,
+        "sort_order": product.sort_order,
         "images": list(product.images or []),
         "tags": list(product.tags or []),
         "variants": [
@@ -182,6 +186,11 @@ async def create_product(
     category = await _require_category(session, payload.category_id)
     brand = await _require_brand(session, payload.brand_id) if payload.brand_id else None
     _check_prices(payload.mrp_paise, payload.price_paise)
+    # Append new products after the existing catalogue by default. Starting each
+    # at zero makes newly added items collide with a merchant's explicit shelf
+    # order and can place an unfeatured item between the products they reordered.
+    max_sort_order = await session.scalar(select(func.max(Product.sort_order)))
+    next_sort_order = (max_sort_order if max_sort_order is not None else -1) + 1
 
     product = Product(
         name=payload.name.strip(),
@@ -197,6 +206,8 @@ async def create_product(
         images=payload.images,
         tags=payload.tags,
         is_active=payload.is_active,
+        is_featured=payload.is_featured,
+        sort_order=next_sort_order,
         variants=_variant_rows(payload.variants),
     )
     product.category = category
@@ -257,6 +268,8 @@ async def update_product(
         product.tags = [entry.strip() for entry in payload.tags if entry.strip()]
     if payload.is_active is not None:
         product.is_active = payload.is_active
+    if payload.is_featured is not None:
+        product.is_featured = payload.is_featured
     if payload.variants is not None:
         # Replace the option list wholesale: the shop is showing exactly these
         # packs on the product page, so a deleted variant must disappear.
@@ -278,6 +291,110 @@ async def update_product(
         summary=product.name,
         before=before,
         after=after,
+    )
+    return product
+
+
+async def reorder_products(
+    session: AsyncSession, actor: Profile, payload: ProductOrderIn
+) -> list[Product]:
+    """Persist one visible rail's order as a single admin action."""
+    if len(set(payload.product_ids)) != len(payload.product_ids):
+        raise ValidationError(
+            "A product can only appear once in this order.", code="duplicate_product"
+        )
+
+    locked: dict[uuid.UUID, Product] = {}
+    for product_id in sorted(payload.product_ids, key=str):
+        product = await repo.get_product_admin(session, product_id, for_update=True)
+        if product is None:
+            raise NotFoundError(
+                "A product in this order no longer exists.", code="product_not_found"
+            )
+        locked[product_id] = product
+
+    products: list[Product] = []
+    for order, product_id in enumerate(payload.product_ids):
+        product = locked[product_id]
+        before = snapshot(product)
+        product.sort_order = order
+        await session.flush()
+        await audit.record(
+            session,
+            actor=actor,
+            action="product.reordered",
+            entity="product",
+            entity_id=product.id,
+            summary=product.name,
+            before=before,
+            after=snapshot(product),
+        )
+        products.append(product)
+    await session.flush()
+    return products
+
+
+async def adjust_product_stock(
+    session: AsyncSession,
+    actor: Profile,
+    product_id: uuid.UUID,
+    payload: InventoryStockPatchIn,
+) -> Product:
+    """Set product-level stock while holding its row lock against checkout."""
+    product = await repo.get_product_admin(session, product_id, for_update=True)
+    if product is None:
+        raise NotFoundError("That product does not exist.", code="product_not_found")
+    if any(variant.is_active for variant in product.variants):
+        raise ValidationError(
+            "This product is sold in packs; adjust each active pack's stock instead.",
+            code="variant_stock_managed",
+        )
+
+    before = snapshot(product)
+    product.stock = payload.stock
+    await session.flush()
+    await audit.record(
+        session,
+        actor=actor,
+        action="inventory.stock_adjusted",
+        entity="product",
+        entity_id=product.id,
+        summary=product.name,
+        before=before,
+        after=snapshot(product),
+        note=payload.note.strip(),
+    )
+    return product
+
+
+async def adjust_variant_stock(
+    session: AsyncSession,
+    actor: Profile,
+    product_id: uuid.UUID,
+    variant_id: uuid.UUID,
+    payload: InventoryStockPatchIn,
+) -> Product:
+    """Set one pack's stock while holding the same row lock as checkout."""
+    variant = await repo.lock_product_variant(session, product_id, variant_id)
+    if variant is None:
+        raise NotFoundError("That pack does not exist for this product.", code="variant_not_found")
+    product = await repo.get_product_admin(session, product_id)
+    if product is None:  # pragma: no cover - FK guarantees the parent exists
+        raise NotFoundError("That product does not exist.", code="product_not_found")
+
+    before = snapshot(product)
+    variant.stock = payload.stock
+    await session.flush()
+    await audit.record(
+        session,
+        actor=actor,
+        action="inventory.stock_adjusted",
+        entity="product",
+        entity_id=product.id,
+        summary=f"{product.name} · {variant.label}",
+        before=before,
+        after=snapshot(product),
+        note=payload.note.strip(),
     )
     return product
 
@@ -353,6 +470,7 @@ def product_out(product: Product) -> ProductAdminOut:
         tags=list(product.tags or []),
         rating=float(product.rating or 0),
         is_active=product.is_active,
+        is_featured=product.is_featured,
         variants=[
             AdminVariantOut(
                 id=variant.id,

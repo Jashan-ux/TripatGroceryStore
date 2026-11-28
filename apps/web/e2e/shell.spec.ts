@@ -19,10 +19,30 @@ test.describe('C-01 storefront shell', () => {
     );
 
     // Page never scrolls sideways (defect 6.4) at any width.
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    );
-    expect(overflow).toBeLessThanOrEqual(1);
+    const { overflow, offenders } = await page.evaluate(() => {
+      const viewport = document.documentElement.clientWidth;
+      return {
+        overflow: document.documentElement.scrollWidth - viewport,
+        offenders: Array.from(document.querySelectorAll('body *'))
+          .map((element) => {
+            const rect = element.getBoundingClientRect();
+            return {
+              tag: element.tagName.toLowerCase(),
+              id: element.id,
+              className: typeof element.className === 'string' ? element.className : '',
+              left: Math.round(rect.left),
+              right: Math.round(rect.right),
+              width: Math.round(rect.width),
+            };
+          })
+          .filter((element) => element.left < -1 || element.right > viewport + 1)
+          .slice(0, 8),
+      };
+    });
+    expect(
+      overflow,
+      `horizontal overflow ${overflow}px; offending elements: ${JSON.stringify(offenders)}`,
+    ).toBeLessThanOrEqual(1);
   });
 
   test('bottom nav and footer never overlap content', async ({ page }) => {
@@ -64,16 +84,13 @@ test.describe('C-01 storefront shell', () => {
   });
 });
 
-test.describe('A-16 admin shell separation', () => {
-  test('admin has tabs, no customer search and no customer footer', async ({ page }) => {
+test.describe('A-16 admin access gate', () => {
+  test('signed-out visitors are sent to sign-in instead of seeing admin pages', async ({
+    page,
+  }) => {
     await page.goto('/admin');
-    await expect(page.getByRole('heading', { name: 'Analytics' })).toBeVisible();
-    await expect(page.getByRole('searchbox')).toHaveCount(0);
-    await expect(page.getByText(/All rights reserved/i)).toHaveCount(0);
-
-    for (const label of ['Analytics', 'Orders', 'Products', 'Customers', 'Settings']) {
-      await expect(page.getByRole('link', { name: label }).first()).toBeVisible();
-    }
+    await expect(page).toHaveURL(/\/sign-in\?next=%2Fadmin$/);
+    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
   });
 
   test('admin bundle is not part of the customer page load', async ({ page }) => {

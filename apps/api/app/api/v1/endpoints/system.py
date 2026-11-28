@@ -116,6 +116,7 @@ async def public_config(session: OptionalSessionDep) -> PublicConfig:
                 "minimum_order_paise": store.minimum_order_paise,
                 "serviceable_pincodes": list(store.serviceable_pincodes),
                 "default_delivery_days": store.default_delivery_days,
+                "store_open": store.is_open,
             }
         )
     return PublicConfig.model_validate(payload)

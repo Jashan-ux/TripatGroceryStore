@@ -13,7 +13,7 @@ FastAPI container (Render / Fly / Railway, always on)
    │  routers → services → repositories
    ├── Supabase Postgres (transaction pooler, asyncpg)
    ├── Supabase Auth (JWT verification via JWKS)
-   ├── Supabase Storage (bucket `catalog`, public read / backend-only write)
+   ├── Supabase Storage (`SUPABASE_STORAGE_BUCKET`, default `catalog`; public read / backend-only write)
    ├── (rate limits are rows in the same Postgres — no cache service)
    ├── Resend (transactional email)
    └── Web Push (VAPID)

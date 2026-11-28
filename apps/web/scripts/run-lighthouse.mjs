@@ -46,32 +46,50 @@ try {
   }
   if (!ready) throw new Error(`Vite preview did not become ready:\n${serverOutput}`);
 
-  browser = await launch({
-    chromePath: chromium.executablePath(),
-    chromeFlags: ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage'],
-  });
-  const result = await lighthouse(url, {
-    port: browser.port,
-    output: 'html',
-    onlyCategories: ['performance', 'accessibility'],
-    formFactor: 'mobile',
-    throttlingMethod: 'simulate',
-    screenEmulation: {
-      mobile: true,
-      width: 360,
-      height: 800,
-      deviceScaleFactor: 1,
-      disabled: false,
-    },
-    logLevel: 'error',
-  });
+  const launchBrowser = () =>
+    launch({
+      chromePath: chromium.executablePath(),
+      chromeFlags: ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage'],
+    });
+  const audit = () =>
+    lighthouse(url, {
+      port: browser.port,
+      output: 'html',
+      onlyCategories: ['performance', 'accessibility'],
+      formFactor: 'mobile',
+      throttlingMethod: 'simulate',
+      screenEmulation: {
+        mobile: true,
+        width: 360,
+        height: 800,
+        deviceScaleFactor: 1,
+        disabled: false,
+      },
+      logLevel: 'error',
+    });
+  browser = await launchBrowser();
+  let result = await audit();
+  // CI occasionally starts Chromium before its first paint is ready. Retry this
+  // specific transient Lighthouse failure with a clean browser; real score or
+  // page errors still fail below with diagnostics.
+  if (result?.lhr.runtimeError?.code === 'NO_FCP') {
+    await browser.kill();
+    await delay(1_000);
+    browser = await launchBrowser();
+    result = await audit();
+  }
   if (!result) throw new Error('Lighthouse returned no report.');
 
   await writeFile(reportPath, result.report);
-  const performance = Math.round((result.lhr.categories.performance?.score ?? 0) * 100);
-  const accessibility = Math.round((result.lhr.categories.accessibility?.score ?? 0) * 100);
+  const performanceScore = result.lhr.categories.performance?.score;
+  const accessibilityScore = result.lhr.categories.accessibility?.score;
+  const performance = Number.isFinite(performanceScore) ? Math.round(performanceScore * 100) : null;
+  const accessibility = Number.isFinite(accessibilityScore)
+    ? Math.round(accessibilityScore * 100)
+    : null;
+  const scoreLabel = (score) => (score === null ? 'unavailable' : String(score));
   console.log(
-    `Mobile simulated-4G Lighthouse: Performance ${performance}, Accessibility ${accessibility}`,
+    `Mobile simulated-4G Lighthouse: Performance ${scoreLabel(performance)}, Accessibility ${scoreLabel(accessibility)}`,
   );
   console.log(`Full HTML report: ${reportPath}`);
   const weakPerformanceAudits = (result.lhr.categories.performance?.auditRefs ?? [])
@@ -83,8 +101,8 @@ try {
   const summary = [
     '### Lighthouse mobile simulated-4G',
     '',
-    `- Performance: **${performance}** (target ≥ 85)`,
-    `- Accessibility: **${accessibility}** (target ≥ 95)`,
+    `- Performance: **${scoreLabel(performance)}** (target ≥ 85)`,
+    `- Accessibility: **${scoreLabel(accessibility)}** (target ≥ 95)`,
     ...(weakPerformanceAudits.length
       ? [
           '',
@@ -113,16 +131,28 @@ try {
     ? `; layout-shift elements ${layoutShiftSources.join(' | ')}`
     : '';
   process.stderr.write(
-    `::notice title=Lighthouse mobile metrics::Performance ${performance}; Accessibility ${accessibility}; CLS ${cls}; LCP ${lcp}; TBT ${tbt}${shiftSummary}.\n`,
+    `::notice title=Lighthouse mobile metrics::Performance ${scoreLabel(performance)}; Accessibility ${scoreLabel(accessibility)}; CLS ${cls}; LCP ${lcp}; TBT ${tbt}${shiftSummary}.\n`,
   );
 
-  if (performance < 85 || accessibility < 95) {
+  const failedAudits = Object.entries(result.lhr.audits)
+    .filter(([, audit]) => audit.scoreDisplayMode === 'error' || audit.errorMessage)
+    .slice(0, 8)
+    .map(([id, audit]) => `${id}: ${audit.errorMessage ?? audit.explanation ?? audit.title}`);
+  const runtimeError = result.lhr.runtimeError
+    ? `${result.lhr.runtimeError.code}: ${result.lhr.runtimeError.message}`
+    : '';
+  if (performance === null || performance < 85 || accessibility === null || accessibility < 95) {
+    const renderDiagnostics =
+      result.lhr.runtimeError?.code === 'NO_FCP' ? await inspectRenderedPage(url) : '';
     const details = [
+      ...(runtimeError ? [`Lighthouse runtime error: ${runtimeError}`] : []),
+      ...(renderDiagnostics ? [renderDiagnostics] : []),
+      ...failedAudits,
       ...weakPerformanceAudits.slice(0, 5),
       ...layoutShiftSources.map((source) => `layout shift: ${source}`),
     ].join('; ');
     const message =
-      `Lighthouse below target: Performance ${performance}/85, Accessibility ${accessibility}/95. ${details}`.slice(
+      `Lighthouse below target: Performance ${scoreLabel(performance)}/85, Accessibility ${scoreLabel(accessibility)}/95. ${details}`.slice(
         0,
         2000,
       );
@@ -133,6 +163,36 @@ try {
 } finally {
   await browser?.kill();
   server.kill('SIGTERM');
+}
+
+async function inspectRenderedPage(targetUrl) {
+  let probe;
+  try {
+    probe = await chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-dev-shm-usage'],
+    });
+    const page = await probe.newPage({ viewport: { width: 360, height: 800 } });
+    const pageErrors = [];
+    page.on('pageerror', (error) => pageErrors.push(error.message.slice(0, 200)));
+    page.on('console', (message) => {
+      if (message.type() === 'error') pageErrors.push(message.text().slice(0, 300));
+    });
+    const response = await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForTimeout(1500);
+    const rendered = await page.evaluate(() => ({
+      readyState: document.readyState,
+      rootHasChildren: Boolean(document.querySelector('#root')?.childElementCount),
+      headingCount: document.querySelectorAll('h1').length,
+      bodyText: document.body.innerText.trim().slice(0, 500),
+      rootText: document.querySelector('#root')?.innerText.trim().slice(0, 500) ?? '',
+    }));
+    return `Playwright render probe: HTTP ${response?.status() ?? 'none'}, ${JSON.stringify(rendered)}, page errors: ${pageErrors.join(' | ') || 'none'}`;
+  } catch (error) {
+    return `Playwright render probe failed: ${error.message}`;
+  } finally {
+    await probe?.close();
+  }
 }
 
 async function readLayoutShiftSources(targetUrl) {

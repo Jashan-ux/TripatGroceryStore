@@ -93,6 +93,9 @@ function mockFetch() {
       if (url.includes('/api/v1/admin/analytics/low-stock')) {
         return json({ items: [], total: 0 });
       }
+      if (url.includes('/api/v1/admin/catalogue/products')) {
+        return json({ items: [], total: 0, page: 1, page_size: 20, total_pages: 0 });
+      }
       if (url.includes('/api/v1/admin/customers')) {
         return json({
           items: [

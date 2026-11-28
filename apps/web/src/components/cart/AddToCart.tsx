@@ -1,5 +1,8 @@
 import { Button } from '@/components/ui/button';
+import { useAdminStoreView } from '@/features/store/StorePreviewContext';
+import { useStoreConfig } from '@/hooks/useStoreConfig';
 import { useCart } from '@/features/cart/useCart';
+import { t } from '@/i18n';
 import { MAX_LINE_QUANTITY, type CartLine } from '@/features/cart/types';
 import { cn } from '@/lib/utils';
 
@@ -20,15 +23,37 @@ export interface AddToCartProps {
  * directly, so a product card, the product page and the cart page all stay in
  * sync without passing callbacks around.
  */
-export function AddToCart({
-  line,
-  label = 'ADD',
-  size = 'sm',
-  className,
-  disabledReason,
-}: AddToCartProps) {
+export function AddToCart({ line, label, size = 'sm', className, disabledReason }: AddToCartProps) {
   const cart = useCart();
   const quantity = cart.quantityOf(line.productId, line.variantId);
+  const adminStoreMode = useAdminStoreView();
+  const config = useStoreConfig();
+
+  if (adminStoreMode) {
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        size={size}
+        className={cn(
+          'w-full border-primary bg-primary-50 font-extrabold text-primary-800',
+          className,
+        )}
+        disabled
+        title="Ordering is disabled in the admin store view."
+      >
+        {label ?? t('catalogue.addToCart')}
+      </Button>
+    );
+  }
+
+  if (config.data?.store_open === false) {
+    return (
+      <Button type="button" variant="secondary" disabled aria-label={t('cart.storeClosed')}>
+        {t('cart.storeClosed')}
+      </Button>
+    );
+  }
 
   if (disabledReason) {
     return (
@@ -51,9 +76,9 @@ export function AddToCart({
         size={size}
         className={cn('border-primary bg-primary-50 font-extrabold text-primary-800', className)}
         onClick={() => cart.add(line)}
-        aria-label={`Add ${line.name}${line.variantLabel ? ` (${line.variantLabel})` : ''} to cart`}
+        aria-label={`${t('cart.add')} ${line.name}${line.variantLabel ? ` (${line.variantLabel})` : ''} ${t('cart.toCart')}`}
       >
-        {label}
+        {label ?? t('catalogue.addToCart')}
       </Button>
     );
   }

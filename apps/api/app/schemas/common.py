@@ -43,6 +43,7 @@ class PublicConfig(APIModel):
     minimum_order_paise: int = 50_000
     serviceable_pincodes: list[str] = Field(default_factory=lambda: ["125104", "125201"])
     default_delivery_days: int = 1
+    store_open: bool = True
     phone_otp_enabled: bool
     turnstile_enabled: bool
     supabase_url: str = ""

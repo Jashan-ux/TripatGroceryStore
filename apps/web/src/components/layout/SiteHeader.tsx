@@ -1,12 +1,14 @@
-import { Menu, Search, ShoppingCart, User } from 'lucide-react';
+import { Boxes, ClipboardList, Menu, Search, ShoppingCart, User } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { BrandMark, Wordmark } from '@/components/common/BrandMark';
+import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/features/auth/useAuth';
+import { useAdminStoreView } from '@/features/store/StorePreviewContext';
 import { useCart } from '@/features/cart/useCart';
 import { t } from '@/i18n';
 
@@ -20,55 +22,77 @@ export function SiteHeader() {
   const [term, setTerm] = useState('');
   const { status, profile } = useAuth();
   const { itemCount } = useCart();
+  const adminStoreMode = useAdminStoreView();
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
       <div className="container flex items-center gap-2 py-2">
         <Link to="/" className="flex items-center gap-2 rounded-xl focus-visible:outline-none">
           <BrandMark decorative />
-          <Wordmark className="hidden xs:flex" />
-          <span className="sr-only xs:hidden">{t('brand.full')}</span>
+          <Wordmark className="hidden sm:flex" />
+          <span className="sr-only sm:hidden">{t('brand.full')}</span>
         </Link>
 
         <nav aria-label={t('nav.primary')} className="ml-auto flex items-center gap-0.5">
-          <NotificationBell />
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            aria-label={
-              status === 'authenticated' ? `${profile?.name || 'My account'}` : t('nav.profile')
-            }
-          >
-            <Link to={status === 'authenticated' ? '/profile' : '/sign-in'}>
-              <User aria-hidden="true" />
-            </Link>
-          </Button>
+          <LanguageSelector />
+          {adminStoreMode ? (
+            <Button asChild variant="ghost" size="icon" aria-label="Orders">
+              <Link to="/admin/orders">
+                <ClipboardList aria-hidden="true" />
+              </Link>
+            </Button>
+          ) : (
+            <>
+              <NotificationBell />
+              <Button
+                asChild
+                variant="ghost"
+                size="icon"
+                aria-label={
+                  status === 'authenticated' ? `${profile?.name || 'My account'}` : t('nav.profile')
+                }
+              >
+                <Link to={status === 'authenticated' ? '/profile' : '/sign-in'}>
+                  <User aria-hidden="true" />
+                </Link>
+              </Button>
+            </>
+          )}
           {/* Cart is in the bottom nav on phones: keeping both would overflow 360px. */}
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            aria-label={t('nav.cart')}
-            className="hidden sm:inline-flex"
-          >
-            <Link to="/cart" className="relative">
-              <ShoppingCart aria-hidden="true" />
-              {itemCount > 0 && (
-                <span
-                  className="absolute -right-1 -top-1 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] font-bold leading-4 text-primary-foreground"
-                  aria-hidden="true"
-                >
-                  {itemCount > 99 ? '99+' : itemCount}
-                </span>
-              )}
-            </Link>
-          </Button>
-          <Button asChild variant="ghost" size="icon" aria-label={t('nav.menu')}>
-            <Link to="/menu">
-              <Menu aria-hidden="true" />
-            </Link>
-          </Button>
+          {!adminStoreMode && (
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              aria-label={t('nav.cart')}
+              className="hidden sm:inline-flex"
+            >
+              <Link to="/cart" className="relative">
+                <ShoppingCart aria-hidden="true" />
+                {itemCount > 0 && (
+                  <span
+                    className="absolute -right-1 -top-1 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] font-bold leading-4 text-primary-foreground"
+                    aria-hidden="true"
+                  >
+                    {itemCount > 99 ? '99+' : itemCount}
+                  </span>
+                )}
+              </Link>
+            </Button>
+          )}
+          {adminStoreMode ? (
+            <Button asChild variant="ghost" size="icon" aria-label="Products">
+              <Link to="/admin/products">
+                <Boxes aria-hidden="true" />
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild variant="ghost" size="icon" aria-label={t('nav.menu')}>
+              <Link to="/menu">
+                <Menu aria-hidden="true" />
+              </Link>
+            </Button>
+          )}
         </nav>
       </div>
 

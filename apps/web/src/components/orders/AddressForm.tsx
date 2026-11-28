@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { addressSchema, toAddressIn, type AddressFormValues } from '@/features/orders/address';
+import { t } from '@/i18n';
 
 const EMPTY: AddressFormValues = {
   recipient_name: '',
@@ -78,11 +79,13 @@ export function AddressForm({
         )(event);
       }}
     >
-      <h2 className="text-sm font-bold">{address ? 'Edit address' : 'New delivery address'}</h2>
+      <h2 className="text-sm font-bold">
+        {address ? t('checkout.editAddress') : t('checkout.newAddress')}
+      </h2>
 
       {form.formState.isSubmitted && Object.keys(errors).length > 0 && (
         <p role="alert" className="rounded-lg bg-warning-soft p-2 text-xs font-medium text-warning">
-          Please check the highlighted fields and try again.
+          {t('checkout.invalidFields')}
         </p>
       )}
       {serverError && (
@@ -93,7 +96,7 @@ export function AddressForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Field
-          label="Full name"
+          label={t('checkout.fullName')}
           error={errors.recipient_name?.message ?? serverFieldErrors.recipient_name}
           htmlFor="recipient_name"
         >
@@ -105,7 +108,7 @@ export function AddressForm({
           />
         </Field>
         <Field
-          label="Mobile number"
+          label={t('checkout.mobileNumber')}
           error={errors.phone?.message ?? serverFieldErrors.phone}
           htmlFor="phone"
         >
@@ -122,7 +125,7 @@ export function AddressForm({
       </div>
 
       <Field
-        label="House / flat, street"
+        label={t('checkout.houseStreet')}
         error={errors.line1?.message ?? serverFieldErrors.line1}
         htmlFor="line1"
       >
@@ -136,7 +139,7 @@ export function AddressForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Field
-          label="Area / locality (optional)"
+          label={t('checkout.areaOptional')}
           error={errors.line2?.message ?? serverFieldErrors.line2}
           htmlFor="line2"
         >
@@ -148,13 +151,13 @@ export function AddressForm({
           />
         </Field>
         <Field
-          label="Landmark (optional)"
+          label={t('checkout.landmarkOptional')}
           error={errors.landmark?.message ?? serverFieldErrors.landmark}
           htmlFor="landmark"
         >
           <Input
             id="landmark"
-            placeholder="Near the school gate"
+            placeholder={t('checkout.landmarkPlaceholder')}
             aria-invalid={Boolean(errors.landmark || serverFieldErrors.landmark)}
             {...form.register('landmark')}
           />
@@ -163,7 +166,7 @@ export function AddressForm({
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Field
-          label="Pincode"
+          label={t('checkout.pincode')}
           error={errors.pincode?.message ?? serverFieldErrors.pincode}
           htmlFor="pincode"
         >
@@ -177,7 +180,7 @@ export function AddressForm({
           />
         </Field>
         <Field
-          label="Town / city"
+          label={t('checkout.townCity')}
           error={errors.city?.message ?? serverFieldErrors.city}
           htmlFor="city"
         >
@@ -189,7 +192,7 @@ export function AddressForm({
           />
         </Field>
         <Field
-          label="State"
+          label={t('checkout.state')}
           error={errors.state?.message ?? serverFieldErrors.state}
           htmlFor="state"
         >
@@ -209,16 +212,20 @@ export function AddressForm({
             className="size-4 accent-primary"
             {...form.register('is_default')}
           />
-          Use as my default address
+          {t('checkout.defaultAddress')}
         </label>
         <div className="flex gap-2">
           {onCancel && (
             <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-              Cancel
+              {t('checkout.cancel')}
             </Button>
           )}
           <Button type="submit" size="sm" disabled={submitting}>
-            {submitting ? 'Saving…' : address ? 'Save changes' : 'Save address'}
+            {submitting
+              ? t('checkout.saving')
+              : address
+                ? t('checkout.saveChanges')
+                : t('checkout.saveAddress')}
           </Button>
         </div>
       </div>
@@ -243,7 +250,18 @@ function Field({
         {label}
       </label>
       {children}
-      {error && <p className="mt-1 text-xs text-primary-700">{error}</p>}
+      {error && <p className="mt-1 text-xs text-primary-700">{translatedAddressError(error)}</p>}
     </div>
   );
+}
+
+function translatedAddressError(error: string): string {
+  const translations: Record<string, string> = {
+    'Who should we ask for?': t('checkout.validationName'),
+    'Enter a 10-digit Indian mobile number': t('checkout.validationPhone'),
+    'Add the house / flat number and street': t('checkout.validationStreet'),
+    'Add your town or city': t('checkout.validationCity'),
+    'Enter the 6-digit pincode': t('checkout.validationPincode'),
+  };
+  return translations[error] ?? error;
 }

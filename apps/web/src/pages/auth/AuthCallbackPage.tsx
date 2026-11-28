@@ -17,23 +17,23 @@ import { safeInternalPath } from '@/lib/navigation';
  */
 export default function AuthCallbackPage() {
   usePageTitle('auth.signInTitle');
-  const { status } = useAuth();
+  const { status, profile } = useAuth();
   const [params] = useSearchParams();
   const [timedOut, setTimedOut] = useState(false);
   const next = safeInternalPath(params.get('next'));
 
   useEffect(() => {
-    if (status === 'authenticated') {
-      window.location.replace(next);
+    if (status === 'authenticated' && profile) {
+      window.location.replace(profile.role === 'admin' ? '/admin' : next);
       return;
     }
     const timer = window.setTimeout(() => setTimedOut(true), 8000);
     return () => window.clearTimeout(timer);
-  }, [status, next]);
+  }, [status, profile, next]);
 
   return (
     <div className="container max-w-md space-y-3 py-12" role="status" aria-live="polite">
-      {timedOut && status !== 'authenticated' ? (
+      {timedOut && !(status === 'authenticated' && profile) ? (
         <>
           <h1 className="text-xl font-bold">That link did not work</h1>
           <p className="text-sm text-muted-foreground">

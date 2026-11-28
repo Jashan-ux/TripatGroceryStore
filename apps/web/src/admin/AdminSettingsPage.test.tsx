@@ -15,6 +15,8 @@ const settings = {
   minimum_order_paise: 50000,
   serviceable_pincodes: ['125104'],
   default_delivery_days: 1,
+  default_delivery_profile_id: null,
+  is_open: true,
   low_stock_threshold: 5,
   referral_referrer_reward_paise: 10000,
   referral_friend_discount_pct: 10,
@@ -37,6 +39,10 @@ interface Call {
 
 function mockFetch(options: { reject?: boolean } = {}) {
   const calls: Call[] = [];
+  const candidates = [
+    { id: 'driver-profile-id', name: 'Delivery Worker', email: 'driver@example.com', phone: null },
+  ];
+  let deliveryProfiles: typeof candidates = [];
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -58,12 +64,26 @@ function mockFetch(options: { reject?: boolean } = {}) {
           store_address: settings.store_address,
           store_maps_url: settings.store_maps_url,
           feedback_email: settings.feedback_email,
+          store_open: settings.is_open,
           phone_otp_enabled: false,
           turnstile_enabled: false,
           supabase_url: '',
           supabase_anon_key: '',
           vapid_public_key: '',
         });
+      }
+      if (url.includes('/api/v1/admin/delivery/profiles') && method === 'POST') {
+        const profile = candidates.find(
+          (item) => item.id === (body as { profile_id: string }).profile_id,
+        );
+        if (profile) deliveryProfiles = [profile];
+        return json(profile ?? {}, profile ? 200 : 404);
+      }
+      if (url.includes('/api/v1/admin/delivery/profiles')) return json(deliveryProfiles);
+      if (url.includes('/api/v1/admin/delivery/candidates')) {
+        return json(
+          candidates.filter((item) => !deliveryProfiles.some((driver) => driver.id === item.id)),
+        );
       }
       if (url.includes('/api/v1/admin/settings')) {
         if (method === 'PATCH') {
@@ -118,6 +138,22 @@ describe('AdminSettingsPage', () => {
     expect(await screen.findByText(/the next checkout already uses these numbers/i)).toBeVisible();
   });
 
+  it('lets the owner close the store and persists the availability switch', async () => {
+    const calls = mockFetch();
+    const user = userEvent.setup();
+    renderWithProviders(<AdminSettingsPage />, { route: '/admin/settings' });
+
+    const availability = await screen.findByRole('button', { name: 'Open' });
+    expect(availability).toHaveAttribute('aria-pressed', 'true');
+    await user.click(availability);
+    expect(screen.getByRole('button', { name: 'Closed' })).toHaveAttribute('aria-pressed', 'false');
+    await user.click(screen.getByRole('button', { name: /save settings/i }));
+
+    await waitFor(() => {
+      expect(calls.find((call) => call.method === 'PATCH')?.body).toMatchObject({ is_open: false });
+    });
+  });
+
   it('shows the server’s refusal instead of pretending it saved', async () => {
     mockFetch({ reject: true });
     const user = userEvent.setup();
@@ -128,6 +164,30 @@ describe('AdminSettingsPage', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Gold cannot be above Platinum.');
     expect(screen.queryByText(/the next checkout already uses/i)).not.toBeInTheDocument();
+  });
+
+  it('enables an existing account as a driver and saves it as the default', async () => {
+    const calls = mockFetch();
+    const user = userEvent.setup();
+    renderWithProviders(<AdminSettingsPage />, { route: '/admin/settings' });
+
+    await screen.findByRole('option', { name: /Delivery Worker · driver@example.com/i });
+    await user.selectOptions(
+      screen.getByLabelText(/enable an existing account for delivery/i),
+      'driver-profile-id',
+    );
+    await user.click(screen.getByRole('button', { name: 'Enable driver' }));
+    await waitFor(() => expect(screen.getByText(/delivery access enabled/i)).toBeVisible());
+    await user.click(screen.getByRole('button', { name: /save settings/i }));
+
+    await waitFor(() => {
+      expect(calls.find((call) => call.method === 'POST')?.body).toEqual({
+        profile_id: 'driver-profile-id',
+      });
+      expect(calls.find((call) => call.method === 'PATCH')?.body).toMatchObject({
+        default_delivery_profile_id: 'driver-profile-id',
+      });
+    });
   });
 
   it('sends pincodes as a clean list', async () => {

@@ -34,6 +34,7 @@ def _from_env() -> StoreSettings:
         store_address=settings.STORE_ADDRESS,
         store_maps_url=settings.STORE_MAPS_URL,
         feedback_email=settings.FEEDBACK_EMAIL,
+        store_open=True,
     )
 
 

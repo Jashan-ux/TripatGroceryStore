@@ -14,6 +14,8 @@ import { canCancel } from '@/features/orders/status';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { ApiError } from '@/lib/api';
 import { formatDateOnly, formatIst, formatPaise } from '@/lib/utils';
+import { t } from '@/i18n';
+import { apiErrorMessage } from '@/i18n/messages';
 
 /**
  * One order, end to end: what was ordered, where it is going, what it costs and
@@ -27,7 +29,10 @@ export default function OrderDetailPage() {
   const justPlaced = params.get('placed') === '1';
 
   const order = useOrder(orderId);
-  usePageTitle(undefined, order.data ? `Order ${order.data.order_number}` : 'Order');
+  usePageTitle(
+    undefined,
+    order.data ? `${t('orders.order')} ${order.data.order_number}` : t('orders.order'),
+  );
 
   const cancel = useCancelOrder();
   const [confirming, setConfirming] = useState(false);
@@ -37,7 +42,7 @@ export default function OrderDetailPage() {
   if (order.isPending) {
     return (
       <div className="container max-w-3xl space-y-4 py-6" role="status" aria-live="polite">
-        <span className="sr-only">Loading your order</span>
+        <span className="sr-only">{t('orders.detailLoading')}</span>
         <Skeleton className="h-8 w-1/2" />
         <Skeleton className="h-24 w-full rounded-xl" />
         <Skeleton className="h-40 w-full rounded-xl" />
@@ -51,15 +56,11 @@ export default function OrderDetailPage() {
       <div className="container max-w-3xl py-8">
         <EmptyState
           icon={ReceiptText}
-          title={notFound ? 'We could not find that order' : 'We could not load this order'}
-          body={
-            notFound
-              ? 'The link may be old, or the order belongs to another account.'
-              : 'Check your connection and try again.'
-          }
+          title={notFound ? t('orders.notFoundTitle') : t('orders.detailErrorTitle')}
+          body={notFound ? t('orders.notFoundBody') : t('orders.detailErrorBody')}
           action={
             <Button asChild className="mt-2">
-              <Link to="/orders">All orders</Link>
+              <Link to="/orders">{t('orders.all')}</Link>
             </Button>
           }
         />
@@ -77,7 +78,7 @@ export default function OrderDetailPage() {
         className="mb-3 inline-flex items-center gap-1 text-sm font-semibold text-primary"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
-        All orders
+        {t('orders.all')}
       </Link>
 
       {justPlaced && (
@@ -87,11 +88,13 @@ export default function OrderDetailPage() {
         >
           <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <div>
-            <p className="font-bold">Order placed — thank you!</p>
+            <p className="font-bold">{t('orders.placedThanks')}</p>
             <p>
-              We will call {data.customer_phone} before delivering
-              {data.deliver_by ? ` on ${formatDateOnly(data.deliver_by)}` : ''}. Keep{' '}
-              {formatPaise(data.total_paise)} ready in cash.
+              {t('orders.callBefore').replace('{phone}', data.customer_phone)}
+              {data.deliver_by
+                ? `${t('orders.deliveryDatePrefix')}${formatDateOnly(data.deliver_by)}`
+                : ''}
+              . {formatPaise(data.total_paise)} {t('orders.keepCash')}
             </p>
           </div>
         </div>
@@ -103,20 +106,21 @@ export default function OrderDetailPage() {
           <OrderStatusBadge status={data.status} />
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          Placed {formatIst(data.placed_at)} · {data.item_count} item
-          {data.item_count === 1 ? '' : 's'} · {formatPaise(data.total_paise)}
+          {t('orders.placed')} {formatIst(data.placed_at)} · {data.item_count}{' '}
+          {data.item_count === 1 ? t('orders.item') : t('orders.items')} ·{' '}
+          {formatPaise(data.total_paise)}
         </p>
         {data.deliver_by && data.status !== 'cancelled' && data.status !== 'delivered' && (
           <p className="mt-2 flex items-center gap-1.5 text-sm font-medium">
             <Truck className="size-4 text-primary" aria-hidden="true" />
-            Expected by{' '}
+            {t('orders.expectedBy')}{' '}
             {formatDateOnly(data.deliver_by, { weekday: 'short', day: 'numeric', month: 'short' })}
           </p>
         )}
         {data.status === 'cancelled' && (
           <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
             <XCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            Cancelled {data.cancelled_at ? formatIst(data.cancelled_at) : ''}
+            {t('orders.cancelled')} {data.cancelled_at ? formatIst(data.cancelled_at) : ''}
             {data.cancelled_reason ? ` — ${data.cancelled_reason}` : ''}
           </p>
         )}
@@ -129,7 +133,7 @@ export default function OrderDetailPage() {
             className="rounded-xl border border-border bg-card"
           >
             <h2 id="items-heading" className="border-b border-border px-4 py-3 text-sm font-bold">
-              Items
+              {t('orders.itemsHeading')}
             </h2>
             <ul className="divide-y divide-border">
               {data.items.map((item) => (
@@ -168,7 +172,7 @@ export default function OrderDetailPage() {
             className="rounded-xl border border-border bg-card p-4"
           >
             <h2 id="timeline-heading" className="mb-3 text-sm font-bold">
-              What happened
+              {t('orders.timeline')}
             </h2>
             <ol className="space-y-3">
               {[...data.events].reverse().map((event, index) => (
@@ -204,7 +208,7 @@ export default function OrderDetailPage() {
           >
             <h2 id="address-heading" className="mb-2 flex items-center gap-2 font-bold">
               <MapPin className="size-4 text-primary" aria-hidden="true" />
-              Delivering to
+              {t('orders.deliveringTo')}
             </h2>
             <p className="font-semibold">{data.address.recipient_name}</p>
             <p className="text-muted-foreground">
@@ -228,10 +232,10 @@ export default function OrderDetailPage() {
           </section>
 
           <section className="rounded-xl border border-border bg-card p-4 text-sm">
-            <h2 className="mb-1 font-bold">Payment</h2>
+            <h2 className="mb-1 font-bold">{t('orders.payment')}</h2>
             <p className="text-muted-foreground">
-              Cash on delivery ·{' '}
-              {data.payment_status === 'paid' ? 'paid' : 'to be paid on delivery'}
+              {t('checkout.cod')} ·{' '}
+              {data.payment_status === 'paid' ? t('orders.paid') : t('orders.toBePaid')}
             </p>
           </section>
 
@@ -241,13 +245,11 @@ export default function OrderDetailPage() {
             <section className="rounded-xl border border-border bg-card p-4">
               {confirming ? (
                 <div className="space-y-2">
-                  <p className="text-sm font-semibold">Cancel this order?</p>
-                  <p className="text-xs text-muted-foreground">
-                    The items go back on the shelf and nothing is charged.
-                  </p>
+                  <p className="text-sm font-semibold">{t('orders.cancelQuestion')}</p>
+                  <p className="text-xs text-muted-foreground">{t('orders.cancelExplainer')}</p>
                   <input
-                    aria-label="Reason for cancelling (optional)"
-                    placeholder="Reason (optional)"
+                    aria-label={t('orders.cancelReason')}
+                    placeholder={t('orders.reasonOptional')}
                     value={reason}
                     maxLength={200}
                     onChange={(event) => setReason(event.target.value)}
@@ -271,15 +273,18 @@ export default function OrderDetailPage() {
                               setConfirming(false);
                               setReason('');
                             },
-                            onError: (error) => setCancelError(error.message),
+                            onError: (error) =>
+                              setCancelError(
+                                error instanceof ApiError ? apiErrorMessage(error) : error.message,
+                              ),
                           },
                         )
                       }
                     >
-                      {cancel.isPending ? 'Cancelling…' : 'Yes, cancel'}
+                      {cancel.isPending ? t('orders.cancelling') : t('orders.yesCancel')}
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => setConfirming(false)}>
-                      Keep it
+                      {t('orders.keepIt')}
                     </Button>
                   </div>
                 </div>
@@ -290,7 +295,7 @@ export default function OrderDetailPage() {
                   className="w-full"
                   onClick={() => setConfirming(true)}
                 >
-                  Cancel this order
+                  {t('orders.cancelOrder')}
                 </Button>
               )}
             </section>

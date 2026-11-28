@@ -32,9 +32,11 @@ from app.schemas.admin_catalogue import (
     CategoryIn,
     CategoryUpdateIn,
     ImageOut,
+    InventoryStockPatchIn,
     ProductAdminOut,
     ProductCreateIn,
     ProductDeleteOut,
+    ProductOrderIn,
     ProductUpdateIn,
 )
 from app.services import admin_catalogue as service
@@ -43,6 +45,7 @@ from app.services import bulk_import, uploads
 router = APIRouter(prefix="/admin/catalogue", tags=["admin"])
 
 ProductId = Annotated[uuid.UUID, Path(description="Product id")]
+VariantId = Annotated[uuid.UUID, Path(description="Product pack id")]
 CategoryId = Annotated[uuid.UUID, Path(description="Category id")]
 BrandId = Annotated[uuid.UUID, Path(description="Brand id")]
 
@@ -56,6 +59,7 @@ async def list_products(
     brand_id: uuid.UUID | None = None,
     include_inactive: Annotated[bool, Query(description="Also show hidden products")] = False,
     low_stock: Annotated[bool, Query(description="Only rows at or below their threshold")] = False,
+    out_of_stock: Annotated[bool, Query(description="Only rows with no sellable stock")] = False,
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=100)] = 20,
 ) -> AdminProductListOut:
@@ -66,6 +70,7 @@ async def list_products(
         brand_id=brand_id,
         only_inactive=include_inactive,
         low_stock=low_stock,
+        out_of_stock=out_of_stock,
         page=page,
         page_size=page_size,
     )
@@ -111,6 +116,64 @@ async def update_product(
     user: AdminUserDep, session: SessionDep, product_id: ProductId, payload: ProductUpdateIn
 ) -> ProductAdminOut:
     product = await service.update_product(session, user.profile, product_id, payload)
+    await session.commit()
+    fresh = await repo.get_product_admin(session, product.id)
+    assert fresh is not None
+    return service.product_out(fresh)
+
+
+@router.put(
+    "/products/order", response_model=list[ProductAdminOut], summary="Reorder a storefront rail"
+)
+async def reorder_products(
+    user: AdminUserDep, session: SessionDep, payload: ProductOrderIn
+) -> list[ProductAdminOut]:
+    products = await service.reorder_products(session, user.profile, payload)
+    await session.commit()
+    # SQLAlchemy may expire server-updated timestamps during the flush. Reload
+    # each row with its eager relationships before shaping the response so the
+    # async endpoint never triggers an implicit lazy refresh (MissingGreenlet).
+    refreshed: list[ProductAdminOut] = []
+    for product in products:
+        fresh = await repo.get_product_admin(session, product.id)
+        assert fresh is not None
+        refreshed.append(service.product_out(fresh))
+    return refreshed
+
+
+@router.patch(
+    "/products/{product_id}/stock",
+    response_model=ProductAdminOut,
+    summary="Set product stock during an inventory count",
+)
+async def adjust_product_stock(
+    user: AdminUserDep,
+    session: SessionDep,
+    product_id: ProductId,
+    payload: InventoryStockPatchIn,
+) -> ProductAdminOut:
+    product = await service.adjust_product_stock(session, user.profile, product_id, payload)
+    await session.commit()
+    fresh = await repo.get_product_admin(session, product.id)
+    assert fresh is not None
+    return service.product_out(fresh)
+
+
+@router.patch(
+    "/products/{product_id}/variants/{variant_id}/stock",
+    response_model=ProductAdminOut,
+    summary="Set stock for one product pack during an inventory count",
+)
+async def adjust_variant_stock(
+    user: AdminUserDep,
+    session: SessionDep,
+    product_id: ProductId,
+    variant_id: VariantId,
+    payload: InventoryStockPatchIn,
+) -> ProductAdminOut:
+    product = await service.adjust_variant_stock(
+        session, user.profile, product_id, variant_id, payload
+    )
     await session.commit()
     fresh = await repo.get_product_admin(session, product.id)
     assert fresh is not None

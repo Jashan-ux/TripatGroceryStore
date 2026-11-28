@@ -1,6 +1,12 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+import { getCurrentLanguage } from '@/i18n';
+
+function locale(): string {
+  return getCurrentLanguage() === 'hi' ? 'hi-IN' : 'en-IN';
+}
+
 /** Merge conditional class names with Tailwind conflict resolution. */
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
@@ -13,7 +19,7 @@ export function cn(...inputs: ClassValue[]): string {
 export function formatPaise(paise: number, options: { decimals?: boolean } = {}): string {
   const rupees = paise / 100;
   const hasFraction = paise % 100 !== 0;
-  return new Intl.NumberFormat('en-IN', {
+  return new Intl.NumberFormat(locale(), {
     style: 'currency',
     currency: 'INR',
     minimumFractionDigits: hasFraction || options.decimals ? 2 : 0,
@@ -34,7 +40,7 @@ export function formatIst(
 ): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
-  return new Intl.DateTimeFormat('en-IN', { ...options, timeZone: 'Asia/Kolkata' }).format(date);
+  return new Intl.DateTimeFormat(locale(), { ...options, timeZone: 'Asia/Kolkata' }).format(date);
 }
 
 /**
@@ -48,7 +54,7 @@ export function formatDateOnly(
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
   if (!match) return formatIst(iso, options);
   const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12));
-  return new Intl.DateTimeFormat('en-IN', { ...options, timeZone: 'Asia/Kolkata' }).format(date);
+  return new Intl.DateTimeFormat(locale(), { ...options, timeZone: 'Asia/Kolkata' }).format(date);
 }
 
 /** Tel-safe href: "+91 87089-73386" → "tel:+918708973386". */

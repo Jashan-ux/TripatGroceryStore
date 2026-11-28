@@ -128,7 +128,7 @@ async def get_optional_user(
     except UnauthenticatedError:
         return None
     profile = await get_profile(session, claims.sub)
-    if profile is None:
+    if profile is None or profile.role is not UserRole.customer:
         return None
     request.state.token_claims = claims
     request.state.user = profile
@@ -145,7 +145,25 @@ async def require_admin(user: CurrentUserDep) -> CurrentUser:
     return user
 
 
+async def require_delivery_user(user: CurrentUserDep) -> CurrentUser:
+    """Drivers have a separate route surface and never inherit merchant access."""
+    if user.profile.role is not UserRole.delivery:
+        raise ForbiddenError(
+            "This area is for the assigned delivery partner only.", code="delivery_only"
+        )
+    return user
+
+
+async def require_customer(user: CurrentUserDep) -> CurrentUser:
+    """Customer account and checkout operations are not available to staff roles."""
+    if user.profile.role is not UserRole.customer:
+        raise ForbiddenError("This action is only available to customers.", code="customer_only")
+    return user
+
+
 AdminUserDep = Annotated[CurrentUser, Depends(require_admin)]
+DeliveryUserDep = Annotated[CurrentUser, Depends(require_delivery_user)]
+CustomerUserDep = Annotated[CurrentUser, Depends(require_customer)]
 
 
 # --------------------------------------------------------------------------- #

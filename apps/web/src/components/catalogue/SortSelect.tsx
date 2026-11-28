@@ -1,6 +1,16 @@
 import { SlidersHorizontal } from 'lucide-react';
 
 import { SORT_OPTIONS, type SortKey } from '@/features/catalogue/queries';
+
+const SORT_LABELS: Record<SortKey, string> = {
+  popular: 'catalogue.sortPopular',
+  price_asc: 'catalogue.sortPriceAsc',
+  price_desc: 'catalogue.sortPriceDesc',
+  rating: 'catalogue.sortTopRated',
+  newest: 'catalogue.sortNewest',
+  name: 'catalogue.sortName',
+};
+import { t } from '@/i18n';
 import { cn } from '@/lib/utils';
 
 /** Native select on purpose: it is the fastest control on a low-end phone. */
@@ -16,7 +26,7 @@ export function SortSelect({
   return (
     <label className={cn('inline-flex items-center gap-2 text-sm', className)}>
       <SlidersHorizontal className="size-4 text-muted-foreground" aria-hidden="true" />
-      <span className="sr-only">Sort products</span>
+      <span className="sr-only">{t('catalogue.sortLabel')}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value as SortKey)}
@@ -24,7 +34,7 @@ export function SortSelect({
       >
         {SORT_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>
-            {option.label}
+            {t(SORT_LABELS[option.value])}
           </option>
         ))}
       </select>

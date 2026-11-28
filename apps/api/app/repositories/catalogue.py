@@ -19,7 +19,7 @@ from app.models.catalogue import Brand, Category, Product, ProductVariant
 SortKey = str
 
 SORTS: dict[str, tuple[Any, ...]] = {
-    "popular": (Product.rating.desc(), Product.name.asc()),
+    "popular": (Product.sort_order.asc(), Product.rating.desc(), Product.name.asc()),
     "rating": (Product.rating.desc(), Product.name.asc()),
     "price_asc": (Product.price_paise.asc(), Product.name.asc()),
     "price_desc": (Product.price_paise.desc(), Product.name.asc()),
@@ -159,8 +159,12 @@ async def products_for_categories(
 
     stmt = (
         select(Product)
-        .where(Product.category_id.in_(list(parent_of)), Product.is_active.is_(True))
-        .order_by(Product.rating.desc(), Product.name)
+        .where(
+            Product.category_id.in_(list(parent_of)),
+            Product.is_active.is_(True),
+            Product.is_featured.is_(True),
+        )
+        .order_by(Product.sort_order.asc(), Product.rating.desc(), Product.name)
         .options(selectinload(Product.variants))
     )
     rows = list((await session.scalars(stmt)).unique().all())

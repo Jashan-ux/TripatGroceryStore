@@ -1,16 +1,25 @@
-import { Home, LayoutGrid, ReceiptText, ShoppingBag, User } from 'lucide-react';
+import { Boxes, Home, LayoutGrid, ReceiptText, ShoppingBag, User, Warehouse } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
+import { useAdminStoreView } from '@/features/store/StorePreviewContext';
 import { useCart } from '@/features/cart/useCart';
 import { t } from '@/i18n';
 import { cn } from '@/lib/utils';
 
-const items = [
+const customerItems = [
   { to: '/', labelKey: 'nav.home', icon: Home, end: true },
   { to: '/categories', labelKey: 'nav.category', icon: LayoutGrid, end: false },
   { to: '/cart', labelKey: 'nav.cart', icon: ShoppingBag, end: false },
   { to: '/orders', labelKey: 'nav.orders', icon: ReceiptText, end: false },
   { to: '/profile', labelKey: 'nav.profile', icon: User, end: false },
+] as const;
+
+const adminItems = [
+  { to: '/', labelKey: 'admin.analytics', icon: Home, end: true },
+  { to: '/categories', labelKey: 'nav.category', icon: LayoutGrid, end: false },
+  { to: '/admin/orders', labelKey: 'admin.orders', icon: ReceiptText, end: false },
+  { to: '/admin/products', labelKey: 'admin.products', icon: Boxes, end: false },
+  { to: '/admin/inventory', labelKey: 'admin.inventory', icon: Warehouse, end: false },
 ] as const;
 
 /**
@@ -20,6 +29,7 @@ const items = [
  */
 export function BottomNav() {
   const { itemCount } = useCart();
+  const adminStoreMode = useAdminStoreView();
 
   return (
     <nav
@@ -28,7 +38,7 @@ export function BottomNav() {
       style={{ height: 'calc(var(--bottom-nav-height) + env(safe-area-inset-bottom))' }}
     >
       <ul className="mx-auto flex h-[var(--bottom-nav-height)] max-w-lg items-stretch">
-        {items.map(({ to, labelKey, icon: Icon, end }) => (
+        {(adminStoreMode ? adminItems : customerItems).map(({ to, labelKey, icon: Icon, end }) => (
           <li key={to} className="flex-1">
             <NavLink
               to={to}

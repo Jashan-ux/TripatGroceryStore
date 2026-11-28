@@ -129,6 +129,9 @@ function mockFetch() {
       if (url.endsWith(`/api/v1/admin/catalogue/products/${ghee.id}`) && method === 'GET') {
         return json(ghee);
       }
+      if (url.endsWith(`/api/v1/admin/catalogue/products/${ghee.id}`) && method === 'PATCH') {
+        return json({ ...ghee, ...(JSON.parse(String(init?.body)) as object) });
+      }
       if (url.includes('/api/v1/admin/catalogue/products/') && method === 'DELETE') {
         return json({
           id: ghee.id,
@@ -158,6 +161,21 @@ describe('AdminProductsPage', () => {
     // 4 ≤ threshold 5, so the stock number is called out.
     const stock = screen.getByText('4', { selector: 'td' });
     expect(stock.className).toContain('text-warning');
+  });
+
+  it('hides or shows a product without deleting its catalogue history', async () => {
+    const calls = mockFetch();
+    const user = userEvent.setup();
+    renderWithProviders(<AdminProductsPage />, { route: '/admin/products' });
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Hide Desi Ghee 1 L on storefront' }),
+    );
+    await waitFor(() => {
+      const patch = calls.find((call) => call.method === 'PATCH');
+      expect(patch?.body).toMatchObject({ is_active: false });
+    });
+    expect(await screen.findByText(/hidden from the storefront/i)).toBeInTheDocument();
   });
 
   it('adds one product from the inline row and converts rupees to paise', async () => {

@@ -268,6 +268,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/catalogue/products/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reorder a storefront rail */
+        put: operations["reorder_products_api_v1_admin_catalogue_products_order_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/catalogue/products/{product_id}": {
         parameters: {
             query?: never;
@@ -285,6 +302,40 @@ export interface paths {
         head?: never;
         /** Edit a product */
         patch: operations["update_product_api_v1_admin_catalogue_products__product_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/catalogue/products/{product_id}/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set product stock during an inventory count */
+        patch: operations["adjust_product_stock_api_v1_admin_catalogue_products__product_id__stock_patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/catalogue/products/{product_id}/variants/{variant_id}/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set stock for one product pack during an inventory count */
+        patch: operations["adjust_variant_stock_api_v1_admin_catalogue_products__product_id__variants__variant_id__stock_patch"];
         trace?: never;
     };
     "/api/v1/admin/customers": {
@@ -315,6 +366,41 @@ export interface paths {
         get: operations["get_customer_api_v1_admin_customers__customer_id__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Candidates */
+        get: operations["list_candidates_api_v1_admin_delivery_candidates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Delivery Profiles */
+        get: operations["list_delivery_profiles_api_v1_admin_delivery_profiles_get"];
+        put?: never;
+        /** Enable an existing customer account as a delivery profile */
+        post: operations["promote_profile_api_v1_admin_delivery_profiles_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -405,6 +491,40 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{order_id}/assign-default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assign the configured default delivery profile */
+        post: operations["assign_default_api_v1_admin_orders__order_id__assign_default_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{order_id}/assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Assign or unassign a delivery profile */
+        patch: operations["set_assignment_api_v1_admin_orders__order_id__assignment_patch"];
         trace?: never;
     };
     "/api/v1/admin/orders/{order_id}/delivery-days": {
@@ -616,6 +736,57 @@ export interface paths {
         get: operations["public_config_api_v1_config_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/delivery/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My active assigned deliveries */
+        get: operations["list_my_orders_api_v1_delivery_orders_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/delivery/orders/{order_id}/delivered": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark an assigned order delivered */
+        post: operations["mark_delivered_api_v1_delivery_orders__order_id__delivered_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/delivery/orders/{order_id}/out-for-delivery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark an assigned order out for delivery */
+        post: operations["mark_out_for_delivery_api_v1_delivery_orders__order_id__out_for_delivery_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1250,10 +1421,17 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled";
+            status: "processing" | "accepted" | "packing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled";
         };
         /** AdminOrderSummaryOut */
         AdminOrderSummaryOut: {
+            /**
+             * Assigned Driver Name
+             * @default
+             */
+            assigned_driver_name: string;
+            /** Assigned To */
+            assigned_to?: string | null;
             /** Customer Name */
             customer_name: string;
             /** Customer Phone */
@@ -1571,7 +1749,7 @@ export interface components {
              * Code
              * @enum {string}
              */
-            code: "empty_cart" | "minimum_order" | "pincode" | "stock";
+            code: "empty_cart" | "minimum_order" | "pincode" | "stock" | "store_closed";
             /** Details */
             details?: {
                 [key: string]: unknown;
@@ -2046,6 +2224,91 @@ export interface components {
              */
             to_date: string;
         };
+        /** DeliveryAssignmentIn */
+        DeliveryAssignmentIn: {
+            /**
+             * Profile Id
+             * @description Delivery profile id, or null to unassign the order.
+             */
+            profile_id: string | null;
+        };
+        /** DeliveryCandidateOut */
+        DeliveryCandidateOut: {
+            /** Email */
+            email: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Phone */
+            phone?: string | null;
+        };
+        /** DeliveryOrderItemOut */
+        DeliveryOrderItemOut: {
+            /** Line Total Paise */
+            line_total_paise: number;
+            /** Name */
+            name: string;
+            /** Quantity */
+            quantity: number;
+            /** Unit Label */
+            unit_label: string;
+            /** Variant Label */
+            variant_label: string;
+        };
+        /** DeliveryOrderListOut */
+        DeliveryOrderListOut: {
+            /** Items */
+            items: components["schemas"]["DeliveryOrderOut"][];
+            /** Total */
+            total: number;
+        };
+        /** DeliveryOrderOut */
+        DeliveryOrderOut: {
+            address: components["schemas"]["AddressSnapshotOut"];
+            /** Customer Name */
+            customer_name: string;
+            /** Customer Phone */
+            customer_phone: string;
+            /** Delivered At */
+            delivered_at?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Item Count */
+            item_count: number;
+            /** Items */
+            items: components["schemas"]["DeliveryOrderItemOut"][];
+            /** Order Number */
+            order_number: string;
+            /** Out For Delivery At */
+            out_for_delivery_at?: string | null;
+            /** Payment Method */
+            payment_method: string;
+            /** Payment Status */
+            payment_status: string;
+            /** Status */
+            status: string;
+            /** Total Paise */
+            total_paise: number;
+        };
+        /** DeliveryProfileOut */
+        DeliveryProfileOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Phone */
+            phone?: string | null;
+        };
         /** ErrorDetail */
         ErrorDetail: {
             /** Code */
@@ -2190,6 +2453,16 @@ export interface components {
             url: string;
             /** Width */
             width: number;
+        };
+        /** InventoryStockPatchIn */
+        InventoryStockPatchIn: {
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Stock */
+            stock: number;
         };
         /** LowStockListOut */
         LowStockListOut: {
@@ -2539,7 +2812,7 @@ export interface components {
          * OrderStatus
          * @enum {string}
          */
-        OrderStatus: "processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled" | "returned";
+        OrderStatus: "processing" | "accepted" | "packing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled" | "returned";
         /** OrderSummaryOut */
         OrderSummaryOut: {
             /** Deliver By */
@@ -2627,6 +2900,11 @@ export interface components {
             images?: string[];
             /** Is Active */
             is_active: boolean;
+            /**
+             * Is Featured
+             * @default true
+             */
+            is_featured: boolean;
             /** Low Stock Threshold */
             low_stock_threshold: number;
             /** Mrp Paise */
@@ -2724,6 +3002,11 @@ export interface components {
              * @default true
              */
             is_active: boolean;
+            /**
+             * Is Featured
+             * @default true
+             */
+            is_featured: boolean;
             /**
              * Low Stock Threshold
              * @default 10
@@ -2838,6 +3121,14 @@ export interface components {
             /** Total Pages */
             total_pages: number;
         };
+        /**
+         * ProductOrderIn
+         * @description The ordered product IDs in one storefront rail, from first to last.
+         */
+        ProductOrderIn: {
+            /** Product Ids */
+            product_ids: string[];
+        };
         /** ProductSalesListOut */
         ProductSalesListOut: {
             /** Items */
@@ -2882,6 +3173,8 @@ export interface components {
             images?: string[] | null;
             /** Is Active */
             is_active?: boolean | null;
+            /** Is Featured */
+            is_featured?: boolean | null;
             /** Low Stock Threshold */
             low_stock_threshold?: number | null;
             /** Mrp Paise */
@@ -2946,6 +3239,14 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** PromoteDeliveryProfileIn */
+        PromoteDeliveryProfileIn: {
+            /**
+             * Profile Id
+             * Format: uuid
+             */
+            profile_id: string;
+        };
         /** PublicConfig */
         PublicConfig: {
             /**
@@ -2975,6 +3276,11 @@ export interface components {
             store_maps_url: string;
             /** Store Name */
             store_name: string;
+            /**
+             * Store Open
+             * @default true
+             */
+            store_open: boolean;
             /** Store Phone */
             store_phone: string;
             /**
@@ -3350,8 +3656,12 @@ export interface components {
         SettingsOut: {
             /** Default Delivery Days */
             default_delivery_days: number;
+            /** Default Delivery Profile Id */
+            default_delivery_profile_id?: string | null;
             /** Feedback Email */
             feedback_email: string;
+            /** Is Open */
+            is_open: boolean;
             /** Low Stock Threshold */
             low_stock_threshold: number;
             /** Minimum Order Paise */
@@ -3401,8 +3711,12 @@ export interface components {
         SettingsPatchIn: {
             /** Default Delivery Days */
             default_delivery_days?: number | null;
+            /** Default Delivery Profile Id */
+            default_delivery_profile_id?: string | null;
             /** Feedback Email */
             feedback_email?: string | null;
+            /** Is Open */
+            is_open?: boolean | null;
             /** Low Stock Threshold */
             low_stock_threshold?: number | null;
             /** Minimum Order Paise */
@@ -5096,6 +5410,8 @@ export interface operations {
                 include_inactive?: boolean;
                 /** @description Only rows at or below their threshold */
                 low_stock?: boolean;
+                /** @description Only rows with no sellable stock */
+                out_of_stock?: boolean;
                 page?: number;
                 page_size?: number;
             };
@@ -5268,6 +5584,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BulkResultOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reorder_products_api_v1_admin_catalogue_products_order_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductOrderIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductAdminOut"][];
                 };
             };
             /** @description Missing, expired or invalid token. */
@@ -5561,6 +5955,170 @@ export interface operations {
             };
         };
     };
+    adjust_product_stock_api_v1_admin_catalogue_products__product_id__stock_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Product id */
+                product_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InventoryStockPatchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductAdminOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adjust_variant_stock_api_v1_admin_catalogue_products__product_id__variants__variant_id__stock_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Product id */
+                product_id: string;
+                /** @description Product pack id */
+                variant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InventoryStockPatchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductAdminOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_customers_api_v1_admin_customers_get: {
         parameters: {
             query?: {
@@ -5662,6 +6220,234 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CustomerProfileOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_candidates_api_v1_admin_delivery_candidates_get: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryCandidateOut"][];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_delivery_profiles_api_v1_admin_delivery_profiles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryProfileOut"][];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    promote_profile_api_v1_admin_delivery_profiles_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromoteDeliveryProfileIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryProfileOut"];
                 };
             };
             /** @description Missing, expired or invalid token. */
@@ -6035,9 +6821,12 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Filter by status */
-                status?: ("processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled" | "returned") | null;
+                status?: ("processing" | "accepted" | "packing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled" | "returned") | null;
                 /** @description Order number, name or phone */
                 q?: string | null;
+                /** @description Shop date or today */
+                date?: string | null;
+                payment_status?: ("pending" | "paid") | null;
                 page?: number;
                 page_size?: number;
             };
@@ -6131,6 +6920,164 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    assign_default_api_v1_admin_orders__order_id__assign_default_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Order id */
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderSummaryOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_assignment_api_v1_admin_orders__order_id__assignment_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Order id */
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeliveryAssignmentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderSummaryOut"];
                 };
             };
             /** @description Missing, expired or invalid token. */
@@ -7136,6 +8083,234 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicConfig"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_my_orders_api_v1_delivery_orders_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryOrderListOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    mark_delivered_api_v1_delivery_orders__order_id__delivered_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Assigned delivery order id */
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryOrderOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    mark_out_for_delivery_api_v1_delivery_orders__order_id__out_for_delivery_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Assigned delivery order id */
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryOrderOut"];
                 };
             };
             /** @description Missing, expired or invalid token. */

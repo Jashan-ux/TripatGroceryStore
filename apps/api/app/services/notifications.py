@@ -28,7 +28,9 @@ from app.services.format import day, day_count, items_phrase, rupees
 logger = get_logger(__name__)
 
 STATUS_COPY: dict[OrderStatus, tuple[str, str]] = {
-    OrderStatus.processing: ("Order confirmed", "We have your order and are packing it."),
+    OrderStatus.processing: ("Order received", "The store has received your order."),
+    OrderStatus.accepted: ("Order accepted", "The store has accepted your order."),
+    OrderStatus.packing: ("Being packed", "The store is packing your order."),
     OrderStatus.shipped: ("Packed and shipped", "Your order has left the shop."),
     OrderStatus.out_for_delivery: (
         "Out for delivery",

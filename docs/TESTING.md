@@ -94,7 +94,7 @@ It **refuses to run** when `ENVIRONMENT=production` and prints why.
 | Real iOS install (16.4+) | Safari → Share → Add to Home Screen → open standalone → push permission prompt appears |
 | Real Web Push on Android | install, subscribe, place an order from another device, notification arrives |
 | Real email delivery | Resend dashboard shows `delivered`, check spam folder once |
-| Real photo upload | Admin → Products → edit → choose a phone photo; the returned URL must open from a different device (needs `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and the public `catalog` bucket) |
+| Real photo upload | Admin → Products → edit → choose a phone photo; the returned URL must open from a different device (needs `SUPABASE_URL`, backend-only `SUPABASE_SERVICE_ROLE_KEY`, and an existing public-read `catalog` bucket in that same Supabase project; set `SUPABASE_STORAGE_BUCKET=catalog`) |
 | Lighthouse PWA installability | Chrome DevTools → Lighthouse, throttled 4G, mobile |
 | securityheaders.com grade A | production URL |
 | Restore drill | `docs/DEPLOY.md` §9 |

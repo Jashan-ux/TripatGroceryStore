@@ -41,6 +41,7 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
+from app.models.catalogue import Profile
 from app.models.enums import OrderStatus, PaymentMethod, PaymentStatus
 
 
@@ -102,6 +103,13 @@ class Order(Base, TimestampMixin):
     profile_id: Mapped[uuid.UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("profiles.id", ondelete="RESTRICT"), nullable=False
     )
+    assigned_to: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("profiles.id", ondelete="SET NULL"), nullable=True
+    )
+    out_for_delivery_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[OrderStatus] = mapped_column(
         # Declared in migration 0003 rather than inferred, so the type name and
         # values match the database exactly.
@@ -154,6 +162,9 @@ class Order(Base, TimestampMixin):
     #: charging twice. Unique per customer, not globally.
     idempotency_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
+    delivery_profile: Mapped[Profile | None] = relationship(
+        "Profile", foreign_keys=[assigned_to], lazy="selectin"
+    )
     items: Mapped[list[OrderItem]] = relationship(
         back_populates="order", cascade="all, delete-orphan", lazy="selectin"
     )

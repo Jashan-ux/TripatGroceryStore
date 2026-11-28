@@ -168,6 +168,8 @@ class Product(Base, TimestampMixin):
     )
     rating: Mapped[Decimal] = mapped_column(Numeric(2, 1), nullable=False, server_default=text("0"))
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+    is_featured: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1000"))
     search_text: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     brand: Mapped[Brand | None] = relationship(lazy="joined")
@@ -260,6 +262,10 @@ class StoreSettings(Base, TimestampMixin):
     )
     default_delivery_days: Mapped[int] = mapped_column(
         SmallInteger, nullable=False, server_default=text("1")
+    )
+    is_open: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+    default_delivery_profile_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("profiles.id", ondelete="SET NULL"), nullable=True
     )
     low_stock_threshold: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default=text("10")

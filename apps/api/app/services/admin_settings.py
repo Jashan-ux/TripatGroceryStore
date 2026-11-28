@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import UnavailableError, ValidationError
 from app.models.catalogue import Profile, StoreSettings
+from app.models.enums import UserRole
 from app.repositories import settings as repo
 from app.schemas.admin_ops import SettingsOut, SettingsPatchIn
 from app.services import audit
@@ -62,6 +63,8 @@ def settings_out(row: StoreSettings) -> SettingsOut:
         minimum_order_paise=row.minimum_order_paise,
         serviceable_pincodes=list(row.serviceable_pincodes or []),
         default_delivery_days=row.default_delivery_days,
+        default_delivery_profile_id=row.default_delivery_profile_id,
+        is_open=row.is_open,
         low_stock_threshold=row.low_stock_threshold,
         referral_referrer_reward_paise=row.referral_referrer_reward_paise,
         referral_friend_discount_pct=row.referral_friend_discount_pct,
@@ -88,6 +91,10 @@ def _snapshot(row: StoreSettings) -> dict[str, Any]:
         "minimum_order_paise": row.minimum_order_paise,
         "serviceable_pincodes": list(row.serviceable_pincodes or []),
         "default_delivery_days": row.default_delivery_days,
+        "default_delivery_profile_id": (
+            str(row.default_delivery_profile_id) if row.default_delivery_profile_id else None
+        ),
+        "is_open": row.is_open,
         "low_stock_threshold": row.low_stock_threshold,
         "referral_referrer_reward_paise": row.referral_referrer_reward_paise,
         "referral_friend_discount_pct": row.referral_friend_discount_pct,
@@ -115,7 +122,20 @@ async def update(session: AsyncSession, actor: Profile, payload: SettingsPatchIn
         raise UnavailableError("The settings row is missing.", code="settings_missing")
 
     before = _snapshot(row)
+    if "default_delivery_profile_id" in payload.model_fields_set:
+        driver_id = payload.default_delivery_profile_id
+        if driver_id is not None:
+            driver = await session.get(Profile, driver_id)
+            if driver is None or driver.role is not UserRole.delivery:
+                raise ValidationError(
+                    "Choose an existing delivery profile as the default driver.",
+                    code="invalid_delivery_profile",
+                    details={"field": "default_delivery_profile_id"},
+                )
+        row.default_delivery_profile_id = driver_id
     for field in payload.model_fields_set:
+        if field == "default_delivery_profile_id":
+            continue
         value = getattr(payload, field)
         if value is None:
             continue

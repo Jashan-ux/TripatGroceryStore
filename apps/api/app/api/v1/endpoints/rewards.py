@@ -1,6 +1,6 @@
 """The Rewards hub: wallet, referral code, scratch cards and the badge.
 
-Every route depends on ``CurrentUserDep``; there is no route here that takes a
+Every route depends on ``CustomerUserDep``; there is no route here that takes a
 profile id, so one customer can never read or move another's money.
 """
 
@@ -11,7 +11,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Query
 
-from app.api.deps import CurrentUserDep, SessionDep, rate_limit_user
+from app.api.deps import CustomerUserDep, SessionDep, rate_limit_user
 from app.schemas.rewards import (
     ReferralJoinIn,
     ReferralProgramOut,
@@ -32,14 +32,14 @@ CardId = Annotated[uuid.UUID, Path(description="Scratch card id")]
 
 
 @router.get("", response_model=RewardsSummaryOut, summary="Wallet, referrals, cards and badge")
-async def summary(user: CurrentUserDep, session: SessionDep) -> RewardsSummaryOut:
+async def summary(user: CustomerUserDep, session: SessionDep) -> RewardsSummaryOut:
     settings = await get_store_settings(session)
     return await rewards_service.summary(session, user.profile, settings)
 
 
 @router.get("/wallet", response_model=WalletOut, summary="Wallet balance and statement")
 async def wallet_statement(
-    user: CurrentUserDep,
+    user: CustomerUserDep,
     session: SessionDep,
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=50)] = 20,
@@ -56,7 +56,7 @@ async def wallet_statement(
     dependencies=[Depends(rate_limit_user("referral"))],
 )
 async def join_referral(
-    user: CurrentUserDep, session: SessionDep, payload: ReferralJoinIn
+    user: CustomerUserDep, session: SessionDep, payload: ReferralJoinIn
 ) -> ReferralProgramOut:
     settings = await get_store_settings(session)
     await referrals_service.join(session, user.profile, payload.code, settings)
@@ -64,7 +64,7 @@ async def join_referral(
 
 
 @router.get("/scratch-cards", response_model=ScratchCardListOut, summary="My scratch cards")
-async def list_cards(user: CurrentUserDep, session: SessionDep) -> ScratchCardListOut:
+async def list_cards(user: CustomerUserDep, session: SessionDep) -> ScratchCardListOut:
     return await scratch_service.list_cards(session, user.profile)
 
 
@@ -75,6 +75,6 @@ async def list_cards(user: CurrentUserDep, session: SessionDep) -> ScratchCardLi
     dependencies=[Depends(rate_limit_user("scratch"))],
 )
 async def reveal_card(
-    user: CurrentUserDep, session: SessionDep, card_id: CardId
+    user: CustomerUserDep, session: SessionDep, card_id: CardId
 ) -> ScratchRevealOut:
     return await scratch_service.reveal(session, user.profile, card_id)

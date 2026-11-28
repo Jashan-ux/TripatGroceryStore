@@ -26,6 +26,8 @@ class SettingsOut(APIModel):
     minimum_order_paise: int
     serviceable_pincodes: list[str]
     default_delivery_days: int
+    default_delivery_profile_id: uuid.UUID | None = None
+    is_open: bool
     low_stock_threshold: int
     referral_referrer_reward_paise: int
     referral_friend_discount_pct: int
@@ -52,6 +54,8 @@ class SettingsPatchIn(APIModel):
     minimum_order_paise: int | None = Field(default=None, ge=0, le=10_00_00_000)
     serviceable_pincodes: list[Pincode] | None = Field(default=None, max_length=200)
     default_delivery_days: int | None = Field(default=None, ge=0, le=14)
+    default_delivery_profile_id: uuid.UUID | None = None
+    is_open: bool | None = None
     low_stock_threshold: int | None = Field(default=None, ge=0, le=100_000)
     referral_referrer_reward_paise: int | None = Field(default=None, ge=0, le=1_00_000)
     referral_friend_discount_pct: int | None = Field(default=None, ge=0, le=50)

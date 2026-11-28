@@ -180,6 +180,7 @@ class Settings(BaseSettings):
             "minimum_order_paise": 50_000,
             "serviceable_pincodes": ["125104", "125201"],
             "default_delivery_days": 1,
+            "store_open": True,
             "phone_otp_enabled": self.PHONE_OTP_ENABLED,
             "turnstile_enabled": self.TURNSTILE_ENABLED,
             "supabase_url": self.SUPABASE_URL,

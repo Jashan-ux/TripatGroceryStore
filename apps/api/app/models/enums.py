@@ -25,7 +25,9 @@ class LoyaltyTier(enum.StrEnum):
 
 class OrderStatus(enum.StrEnum):
     processing = "processing"
-    shipped = "shipped"
+    accepted = "accepted"
+    packing = "packing"
+    shipped = "shipped"  # Legacy persisted state; new transitions use accepted/packing.
     out_for_delivery = "out_for_delivery"
     delivered = "delivered"
     cancelled = "cancelled"

@@ -350,6 +350,13 @@ async def quote(
                 },
             )
         )
+    if not settings.is_open:
+        issues.append(
+            BlockingIssue(
+                code="store_closed",
+                message="The store is closed right now. Please try again later.",
+            )
+        )
     serviceable: bool | None = None
     if payload.pincode is not None:
         serviceable = payload.pincode in settings.serviceable_pincodes
@@ -385,7 +392,8 @@ async def quote(
         blocking_issues=issues,
         # A pincode only blocks when the customer has chosen one; the cart page
         # gets its answer before checkout asks for an address.
-        can_checkout=subtotal > 0
+        can_checkout=settings.is_open
+        and subtotal > 0
         and shortfall == 0
         and not unavailable
         and serviceable is not False,
@@ -445,6 +453,10 @@ async def place_order(
         raise NotFoundError("Choose a delivery address.", code="address_not_found")
 
     settings = await get_store_settings(session)
+    if not settings.is_open:
+        raise ConflictError(
+            "The store is closed right now. Please try again later.", code="store_closed"
+        )
     if address.pincode not in settings.serviceable_pincodes:
         raise ValidationError(
             "We do not deliver to that pincode yet.",

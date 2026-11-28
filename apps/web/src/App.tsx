@@ -13,6 +13,8 @@ import HomePage from '@/pages/HomePage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import ProductPage from '@/pages/ProductPage';
 import SearchPage from '@/pages/SearchPage';
+import { AdminGuard } from '@/routes/AdminGuard';
+import { DeliveryGuard } from '@/routes/DeliveryGuard';
 import { ProtectedRoute } from '@/routes/ProtectedRoute';
 
 // Browsing (home, categories, search, product) ships in the first load; admin,
@@ -20,6 +22,9 @@ import { ProtectedRoute } from '@/routes/ProtectedRoute';
 // validation libraries, so keeping them out of the entry chunk is what keeps the
 // initial budget honest.
 const AdminRoutes = lazy(() => import('@/admin/AdminRoutes'));
+const DeliveryPage = lazy(() =>
+  import('@/delivery/DeliveryPage').then((module) => ({ default: module.DeliveryPage })),
+);
 const AuthCallbackPage = lazy(() => import('@/pages/auth/AuthCallbackPage'));
 const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'));
 const SignInPage = lazy(() => import('@/pages/auth/SignInPage'));
@@ -95,10 +100,16 @@ export default function App() {
       <Route
         path="/admin/*"
         element={
-          <Suspense fallback={<RouteFallback />}>
-            <AdminRoutes />
-          </Suspense>
+          <AdminGuard>
+            <Suspense fallback={<RouteFallback />}>
+              <AdminRoutes />
+            </Suspense>
+          </AdminGuard>
         }
+      />
+      <Route
+        path="/delivery"
+        element={<DeliveryGuard>{deferred(<DeliveryPage />)}</DeliveryGuard>}
       />
       <Route path="/auth/callback" element={deferred(<AuthCallbackPage />)} />
       <Route element={<AppShell />}>

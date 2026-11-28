@@ -14,7 +14,7 @@ from typing import Any
 
 import httpx
 import pytest
-from app.core.errors import ValidationError
+from app.core.errors import UnavailableError, ValidationError
 from app.services import uploads
 from httpx import AsyncClient
 from PIL import Image
@@ -161,7 +161,7 @@ async def test_a_broken_upload_is_a_plain_503_not_a_crash(
     monkeypatch.setattr(
         uploads,
         "_storage_ready",
-        lambda: ("https://project.supabase.co", "svc-key", "catalog"),
+        lambda: ("https://project.supabase.co", "unit-test-only", "catalog"),
     )
 
     class Refusing:
@@ -236,6 +236,33 @@ async def test_the_endpoint_refuses_junk_with_a_readable_message(
     response = await _upload(async_client, admin, b"not an image", "evil.svg")
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "image_unreadable"
+
+
+async def test_a_missing_bucket_is_returned_as_an_actionable_503(
+    async_client: AsyncClient,
+    admin: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def missing_bucket(
+        image: uploads.NormalisedImage,
+        *,
+        original_name: str,
+        client: httpx.AsyncClient | None = None,
+    ) -> str:
+        raise UnavailableError(
+            "Image storage bucket 'catalog' was not found. Create a public-read Supabase "
+            "Storage bucket named 'catalog' in the project configured by SUPABASE_URL, "
+            "then set SUPABASE_STORAGE_BUCKET to 'catalog'. Keep writes backend-only.",
+            code="storage_bucket_not_found",
+            details={"bucket": "catalog"},
+        )
+
+    monkeypatch.setattr(uploads, "store_image", missing_bucket)
+    response = await _upload(async_client, admin, _image_bytes(), "product.png")
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "storage_bucket_not_found"
+    assert response.json()["error"]["details"] == {"bucket": "catalog"}
+    assert "SUPABASE_STORAGE_BUCKET" in response.json()["error"]["message"]
 
 
 async def test_the_endpoint_refuses_an_oversized_file(

@@ -1,5 +1,6 @@
 import { Minus, Plus } from 'lucide-react';
 
+import { t } from '@/i18n';
 import { cn } from '@/lib/utils';
 
 /**
@@ -42,7 +43,7 @@ export function QuantityStepper({
         type="button"
         className={cn(button, 'hover:bg-primary-100')}
         onClick={onDecrease}
-        aria-label={`Remove one ${label}`}
+        aria-label={`${t('cart.removeOne')} ${label}`}
       >
         <Minus className="size-4" aria-hidden="true" />
       </button>
@@ -57,7 +58,7 @@ export function QuantityStepper({
         className={cn(button, 'hover:bg-primary-100')}
         onClick={onIncrease}
         disabled={atMax}
-        aria-label={atMax ? `${label} is at the maximum we have` : `Add one more ${label}`}
+        aria-label={atMax ? `${label} ${t('cart.atMax')}` : `${t('cart.addOneMore')} ${label}`}
       >
         <Plus className="size-4" aria-hidden="true" />
       </button>

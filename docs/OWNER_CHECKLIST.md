@@ -147,10 +147,13 @@ tabs, and the storefront has a real **Contact** page.
   order, save, then try to check out a smaller cart as a customer. It is refused
   straight away, and *Activity* shows the old and new value next to your email.
   (A-15, S-12.)
-- ☐ 🕒 **Photo upload needs one thing from you.** Create/confirm the public
-  Storage bucket named `catalog` and send me the **service-role** key for the
-  backend (never the frontend). Until then the upload button answers
-  *"Image storage is not configured"* and you can still paste an image URL.
+- ☐ 🕒 **Photo upload needs Storage configured.** In the Supabase project whose
+  URL is set as `SUPABASE_URL` on the API host, create/confirm a bucket named
+  exactly `catalog` with public read (anonymous downloads only; no public writes).
+  Set `SUPABASE_STORAGE_BUCKET=catalog` on the API host. Keep
+  `SUPABASE_SERVICE_ROLE_KEY` in that host's secret store only; never paste or
+  send it in chat or put it in the frontend. Until the bucket exists, uploads
+  return `storage_bucket_not_found`; you can still paste an image URL.
 
 ## 3. Domain
 

@@ -46,6 +46,7 @@ export interface ProductFilters {
   q: string;
   categoryId: string;
   lowStock: boolean;
+  outOfStock?: boolean;
   page: number;
 }
 
@@ -66,6 +67,7 @@ export function useAdminProducts(filters: ProductFilters) {
   if (filters.q.trim()) params.set('q', filters.q.trim());
   if (filters.categoryId) params.set('category_id', filters.categoryId);
   if (filters.lowStock) params.set('low_stock', 'true');
+  if (filters.outOfStock) params.set('out_of_stock', 'true');
 
   return useQuery<AdminProductListOut>({
     queryKey: ['admin', 'catalogue', 'products', params.toString()],
@@ -90,6 +92,15 @@ export interface ProductDraft {
   images?: string[];
   tags?: string[];
   is_active?: boolean;
+  is_featured?: boolean;
+  variants?: {
+    label: string;
+    mrp_paise: number;
+    price_paise: number;
+    stock: number;
+    sort_order: number;
+    is_active: boolean;
+  }[];
 }
 
 export function useCreateProduct() {
@@ -105,6 +116,43 @@ export function useUpdateProduct() {
   return useMutation<ProductAdminOut, Error, { id: string } & Partial<ProductDraft>>({
     mutationFn: ({ id, ...body }) =>
       api.patch<ProductAdminOut>(`/api/v1/admin/catalogue/products/${id}`, body),
+    onSuccess: () => bustCatalogue(queryClient),
+  });
+}
+
+export function useReorderProducts() {
+  const queryClient = useQueryClient();
+  return useMutation<ProductAdminOut[], Error, { product_ids: string[] }>({
+    mutationFn: (body) =>
+      api.put<ProductAdminOut[]>('/api/v1/admin/catalogue/products/order', body),
+    onSuccess: () => bustCatalogue(queryClient),
+  });
+}
+
+export function useUpdateProductStock() {
+  const queryClient = useQueryClient();
+  return useMutation<ProductAdminOut, Error, { productId: string; stock: number; note?: string }>({
+    mutationFn: ({ productId, stock, note }) =>
+      api.patch<ProductAdminOut>(`/api/v1/admin/catalogue/products/${productId}/stock`, {
+        stock,
+        note: note ?? '',
+      }),
+    onSuccess: () => bustCatalogue(queryClient),
+  });
+}
+
+export function useUpdateVariantStock() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ProductAdminOut,
+    Error,
+    { productId: string; variantId: string; stock: number; note?: string }
+  >({
+    mutationFn: ({ productId, variantId, stock, note }) =>
+      api.patch<ProductAdminOut>(
+        `/api/v1/admin/catalogue/products/${productId}/variants/${variantId}/stock`,
+        { stock, note: note ?? '' },
+      ),
     onSuccess: () => bustCatalogue(queryClient),
   });
 }
@@ -141,12 +189,13 @@ export function useUploadImage() {
 // --------------------------------------------------------------------------- //
 // Categories & brands
 // --------------------------------------------------------------------------- //
-export function useAdminCategories() {
+export function useAdminCategories(enabled = true) {
   return useQuery<AdminCategoryListOut>({
     queryKey: ['admin', 'catalogue', 'categories'],
     queryFn: ({ signal }) =>
       api.get<AdminCategoryListOut>('/api/v1/admin/catalogue/categories', { signal }),
     staleTime: 30 * 1000,
+    enabled,
   });
 }
 
@@ -190,11 +239,12 @@ export function useDeleteCategory() {
   });
 }
 
-export function useAdminBrands() {
+export function useAdminBrands(enabled = true) {
   return useQuery<BrandListOut>({
     queryKey: ['admin', 'catalogue', 'brands'],
     queryFn: ({ signal }) => api.get<BrandListOut>('/api/v1/admin/catalogue/brands', { signal }),
     staleTime: 30 * 1000,
+    enabled,
   });
 }
 

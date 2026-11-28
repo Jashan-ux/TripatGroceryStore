@@ -14,7 +14,9 @@ properties of the SQL itself:
 from __future__ import annotations
 
 import uuid
+from datetime import date, datetime, time, timedelta
 from typing import cast
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import ColumnElement, delete, func, or_, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -207,10 +209,31 @@ async def get_order_any(session: AsyncSession, order_id: uuid.UUID) -> Order | N
     return cast("Order | None", await session.scalar(stmt))
 
 
-def _admin_filters(status: str | None, search: str | None) -> list[ColumnElement[bool]]:
+async def lock_order_any(session: AsyncSession, order_id: uuid.UUID) -> Order | None:
+    """Serialize admin status/assignment changes against driver retries."""
+    stmt = (
+        select(Order)
+        .where(Order.id == order_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    return cast("Order | None", await session.scalar(stmt))
+
+
+def _admin_filters(
+    status: str | None,
+    search: str | None,
+    order_date: date | None,
+    payment_status: str | None,
+) -> list[ColumnElement[bool]]:
     filters: list[ColumnElement[bool]] = []
     if status:
         filters.append(Order.status == status)
+    if order_date:
+        start = datetime.combine(order_date, time.min, tzinfo=ZoneInfo("Asia/Kolkata"))
+        filters.extend((Order.placed_at >= start, Order.placed_at < start + timedelta(days=1)))
+    if payment_status:
+        filters.append(Order.payment_status == payment_status)
     term = (search or "").strip()
     if term:
         like = f"%{term.lower()}%"
@@ -229,20 +252,27 @@ async def list_all_orders(
     *,
     status: str | None = None,
     search: str | None = None,
+    order_date: date | None = None,
+    payment_status: str | None = None,
     limit: int,
     offset: int,
 ) -> list[Order]:
     stmt = select(Order).order_by(Order.placed_at.desc()).limit(limit).offset(offset)
-    for condition in _admin_filters(status, search):
+    for condition in _admin_filters(status, search, order_date, payment_status):
         stmt = stmt.where(condition)
     return list((await session.scalars(stmt)).all())
 
 
 async def count_all_orders(
-    session: AsyncSession, *, status: str | None = None, search: str | None = None
+    session: AsyncSession,
+    *,
+    status: str | None = None,
+    search: str | None = None,
+    order_date: date | None = None,
+    payment_status: str | None = None,
 ) -> int:
     stmt = select(func.count()).select_from(Order)
-    for condition in _admin_filters(status, search):
+    for condition in _admin_filters(status, search, order_date, payment_status):
         stmt = stmt.where(condition)
     return int(await session.scalar(stmt) or 0)
 

@@ -91,7 +91,7 @@ class QuoteLineOut(APIModel):
 
 class BlockingIssue(APIModel):
     #: `empty_cart` | `minimum_order` | `pincode` | `stock`
-    code: Literal["empty_cart", "minimum_order", "pincode", "stock"]
+    code: Literal["empty_cart", "minimum_order", "pincode", "stock", "store_closed"]
     message: str
     details: dict[str, object] = Field(default_factory=dict)
 

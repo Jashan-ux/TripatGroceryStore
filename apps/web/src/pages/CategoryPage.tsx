@@ -12,6 +12,7 @@ import { SortSelect } from '@/components/catalogue/SortSelect';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useCategories, useProducts, type SortKey } from '@/features/catalogue/queries';
 import { cn } from '@/lib/utils';
+import { t } from '@/i18n';
 
 const PAGE_SIZE = 24;
 
@@ -70,26 +71,26 @@ export default function CategoryPage() {
 
   return (
     <div className="container py-5">
-      <nav aria-label="Breadcrumb" className="mb-2 text-xs text-muted-foreground">
+      <nav aria-label={t('catalogue.breadcrumb')} className="mb-2 text-xs text-muted-foreground">
         <Link to="/" className="hover:text-primary-700">
-          Home
+          {t('catalogue.home')}
         </Link>
         <span aria-hidden="true"> / </span>
-        <span aria-current="page">{category?.name ?? 'Category'}</span>
+        <span aria-current="page">{category?.name ?? t('catalogue.category')}</span>
       </nav>
 
       <header className="mb-4">
         <h1 className="text-xl font-extrabold tracking-tight sm:text-2xl">
           {category?.emoji ? `${category.emoji} ` : ''}
-          {category?.name ?? 'Category'}
+          {category?.name ?? t('catalogue.category')}
         </h1>
         {category?.description && (
           <p className="mt-1 text-sm text-muted-foreground">{category.description}</p>
         )}
         <p className="mt-1 text-sm text-muted-foreground" aria-live="polite">
           {products.data
-            ? `${products.data.total} product${products.data.total === 1 ? '' : 's'}`
-            : 'Loading…'}
+            ? `${products.data.total} ${products.data.total === 1 ? t('catalogue.productCountOne') : t('catalogue.productCount')}`
+            : t('catalogue.loading')}
         </p>
       </header>
 
@@ -121,7 +122,7 @@ export default function CategoryPage() {
               onChange={(event) => update('in_stock', event.target.checked ? 'true' : null)}
               className="size-4 rounded border-border"
             />
-            In stock only
+            {t('catalogue.inStockOnly')}
           </label>
         </div>
       </div>
@@ -136,15 +137,15 @@ export default function CategoryPage() {
       ) : products.isError ? (
         <EmptyState
           icon={PackageSearch}
-          title="We could not load this category"
-          body="Please check your connection and try again."
+          title={t('catalogue.loadErrorTitle')}
+          body={t('catalogue.loadErrorBody')}
           action={<CallStoreButton />}
         />
       ) : products.data && products.data.items.length === 0 ? (
         <EmptyState
           icon={PackageSearch}
-          title="Nothing here yet"
-          body="This category is being restocked. Call the store and we will arrange it."
+          title={t('catalogue.emptyTitle')}
+          body={t('catalogue.emptyBody')}
           action={<CallStoreButton />}
         />
       ) : (

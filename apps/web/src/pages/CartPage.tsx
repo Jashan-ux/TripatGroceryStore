@@ -16,6 +16,8 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useStoreConfig } from '@/hooks/useStoreConfig';
 import { ApiError } from '@/lib/api';
 import { formatPaise } from '@/lib/utils';
+import { getCurrentLanguage, t } from '@/i18n';
+import { blockingIssueMessage } from '@/i18n/messages';
 
 /**
  * The basket.
@@ -26,7 +28,7 @@ import { formatPaise } from '@/lib/utils';
  * wins and the shopper is told why, in the same place they can fix it.
  */
 export default function CartPage() {
-  usePageTitle(undefined, 'Your cart');
+  usePageTitle(undefined, t('cart.title'));
   const cart = useCart();
   const config = useStoreConfig();
   const items = useMemo(() => toQuoteItems(cart.lines), [cart.lines]);
@@ -40,14 +42,14 @@ export default function CartPage() {
   if (cart.lines.length === 0) {
     return (
       <div className="container py-8">
-        <h1 className="mb-4 text-xl font-extrabold tracking-tight">Your cart</h1>
+        <h1 className="mb-4 text-xl font-extrabold tracking-tight">{t('cart.title')}</h1>
         <EmptyState
           icon={ShoppingBag}
-          title="Your cart is empty"
-          body="Add groceries from the shop and they will show up here. You can pay cash when the order arrives."
+          title={t('cart.emptyTitle')}
+          body={t('cart.emptyBody')}
           action={
             <Button asChild className="mt-2">
-              <Link to="/categories">Start shopping</Link>
+              <Link to="/categories">{t('cart.startShopping')}</Link>
             </Button>
           }
         />
@@ -61,9 +63,9 @@ export default function CartPage() {
   return (
     <div className="container py-6 pb-nav-safe md:pb-8">
       <div className="mb-4 flex items-baseline justify-between gap-3">
-        <h1 className="text-xl font-extrabold tracking-tight">Your cart</h1>
+        <h1 className="text-xl font-extrabold tracking-tight">{t('cart.title')}</h1>
         <span className="text-sm text-muted-foreground">
-          {totalQuantity} item{totalQuantity === 1 ? '' : 's'}
+          {totalQuantity} {totalQuantity === 1 ? t('cart.item') : t('cart.items')}
         </span>
       </div>
 
@@ -75,20 +77,16 @@ export default function CartPage() {
           <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <div className="flex-1">
             <p className="font-semibold">
-              {offline ? 'You are offline' : 'We could not refresh your prices'}
+              {offline ? t('cart.offlineTitle') : t('cart.priceErrorTitle')}
             </p>
-            <p>
-              {offline
-                ? 'Your cart is saved on this device. Reconnect to see live prices.'
-                : 'Prices shown are the last ones we saw. Retry before checkout.'}
-            </p>
+            <p>{offline ? t('cart.offlineBody') : t('cart.priceErrorBody')}</p>
             <Button
               variant="outline"
               size="sm"
               className="mt-2"
               onClick={() => void quote.refetch()}
             >
-              Retry
+              {t('cart.retry')}
             </Button>
           </div>
         </div>
@@ -115,7 +113,7 @@ export default function CartPage() {
 
         <aside className="space-y-4">
           <div className="rounded-xl border border-border bg-card p-4">
-            <h2 className="mb-3 text-sm font-bold">Bill details</h2>
+            <h2 className="mb-3 text-sm font-bold">{t('cart.billDetails')}</h2>
             {quote.data ? (
               <>
                 <OrderTotals
@@ -127,12 +125,15 @@ export default function CartPage() {
                 />
                 <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
                   {quote.data.can_checkout
-                    ? `Delivery by ${new Date(quote.data.deliver_by).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        timeZone: 'Asia/Kolkata',
-                      })} · Cash on delivery`
-                    : 'Fix the items below to continue'}
+                    ? `${t('cart.deliveryBy')} ${new Date(quote.data.deliver_by).toLocaleDateString(
+                        getCurrentLanguage() === 'hi' ? 'hi-IN' : 'en-IN',
+                        {
+                          day: 'numeric',
+                          month: 'short',
+                          timeZone: 'Asia/Kolkata',
+                        },
+                      )} · ${t('cart.cashOnDelivery')}`
+                    : t('cart.fixItems')}
                 </p>
               </>
             ) : (
@@ -151,7 +152,7 @@ export default function CartPage() {
                 className="mt-3 flex items-start gap-1.5 text-xs font-medium text-warning"
               >
                 <AlertTriangle className="mt-px size-3.5 shrink-0" aria-hidden="true" />
-                {issue.message}
+                {blockingIssueMessage(issue)}
               </p>
             ))}
           </div>
@@ -166,13 +167,13 @@ export default function CartPage() {
               className={quote.data?.can_checkout ? undefined : 'pointer-events-none opacity-60'}
             >
               {quote.data?.can_checkout
-                ? `Proceed to checkout · ${formatPaise(quote.data.total_paise)}`
-                : 'Proceed to checkout'}
+                ? `${t('cart.proceed')} · ${formatPaise(quote.data.total_paise)}`
+                : t('cart.proceed')}
             </Link>
           </Button>
           {config.data?.store_phone && (
             <p className="text-center text-xs text-muted-foreground">
-              Need help? Call the store on{' '}
+              {t('cart.needHelp')}{' '}
               <a
                 href={`tel:${config.data.store_phone.replace(/[^\d+]/g, '')}`}
                 className="font-semibold text-primary"
@@ -236,10 +237,10 @@ function CartRow({
         {issue && (
           <Badge tone="warning" className="mt-1.5">
             {issue === 'out_of_stock'
-              ? 'Out of stock — remove to continue'
+              ? t('cart.outOfStockRemove')
               : issue === 'partially_available'
-                ? `Only ${availableStock} left`
-                : 'No longer sold'}
+                ? `${t('cart.onlyLeft')} ${availableStock} ${t('catalogue.left')}`
+                : t('cart.noLongerSold')}
           </Badge>
         )}
 
@@ -259,7 +260,7 @@ function CartRow({
         type="button"
         onClick={onRemove}
         className="self-start rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-destructive"
-        aria-label={`Remove ${line.name} from cart`}
+        aria-label={t('cart.removeFromCartAria').replace('{product}', line.name)}
       >
         <Trash2 className="size-4" aria-hidden="true" />
       </button>

@@ -31,7 +31,7 @@ import httpx
 from PIL import Image, UnidentifiedImageError
 
 from app.core.config import get_settings
-from app.core.errors import ConflictError, UnavailableError, ValidationError
+from app.core.errors import UnavailableError, ValidationError
 from app.core.logging import get_logger
 from app.schemas.admin_catalogue import ImageOut
 
@@ -181,13 +181,40 @@ def safe_remote_image_url(url: str) -> str:
 def _storage_ready() -> tuple[str, str, str]:
     settings = get_settings()
     base = settings.SUPABASE_URL.rstrip("/")
+    bucket = settings.SUPABASE_STORAGE_BUCKET.strip()
     if not base or not settings.SUPABASE_SERVICE_ROLE_KEY:
         raise UnavailableError(
             "Image storage is not configured on this server yet "
             "(SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY).",
             code="storage_not_configured",
         )
-    return base, settings.SUPABASE_SERVICE_ROLE_KEY, settings.SUPABASE_STORAGE_BUCKET
+    if not bucket:
+        raise UnavailableError(
+            "Image storage has no bucket configured. Set SUPABASE_STORAGE_BUCKET to the "
+            "name of an existing Supabase Storage bucket (the expected name is 'catalog').",
+            code="storage_bucket_not_configured",
+        )
+    return base, settings.SUPABASE_SERVICE_ROLE_KEY, bucket
+
+
+def _response_means_bucket_missing(response: httpx.Response) -> bool:
+    """Recognise Supabase's missing-bucket response without retaining its body in logs."""
+    if response.status_code != 404:
+        return False
+    try:
+        payload = response.json()
+    except ValueError:
+        return False
+    if not isinstance(payload, dict):
+        return False
+    fields = (payload.get("error"), payload.get("message"), payload.get("code"))
+    for field in fields:
+        if not isinstance(field, str):
+            continue
+        normalised = "".join(character for character in field.casefold() if character.isalnum())
+        if normalised == "nosuchbucket" or "bucketnotfound" in normalised:
+            return True
+    return False
 
 
 def _object_key(original_name: str) -> str:
@@ -219,7 +246,9 @@ async def store_image(
     try:
         response = await http.post(endpoint, content=image.data, headers=headers)
     except httpx.HTTPError as exc:
-        logger.warning("storage_upload_failed", error=str(exc)[:200])
+        # Do not log exception strings: HTTP client exceptions may include the
+        # request URL or transport details. The type is enough for triage.
+        logger.warning("storage_upload_failed", error_type=type(exc).__name__, bucket=bucket)
         raise UnavailableError(
             "The image could not be uploaded right now. Try again in a moment.",
             code="image_upload_unavailable",
@@ -229,12 +258,20 @@ async def store_image(
             await http.aclose()
 
     if response.status_code not in {200, 201}:
-        logger.warning(
-            "storage_rejected_upload", status=response.status_code, body=response.text[:200]
-        )
-        raise ConflictError(
-            "Storage refused that image.",
-            code="image_upload_failed",
+        if _response_means_bucket_missing(response):
+            logger.error("storage_bucket_missing", status=response.status_code, bucket=bucket)
+            raise UnavailableError(
+                f"Image storage bucket '{bucket}' was not found. Create a public-read Supabase "
+                f"Storage bucket with this exact name in the project configured by SUPABASE_URL, "
+                f"then set SUPABASE_STORAGE_BUCKET to '{bucket}'. Keep writes backend-only.",
+                code="storage_bucket_not_found",
+                details={"bucket": bucket},
+            )
+        logger.warning("storage_rejected_upload", status=response.status_code, bucket=bucket)
+        raise UnavailableError(
+            "Storage could not accept that image. Check the API's Supabase Storage setup "
+            "and try again.",
+            code="image_upload_unavailable",
             details={"status": response.status_code},
         )
     return public_url(base, bucket, key)

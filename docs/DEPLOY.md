@@ -56,13 +56,20 @@ supabase --version
      URL and these two callback URLs are configured; refresh JWT expiry is 3600
      seconds, refresh-token rotation is on, and inactivity/timebox limits are
      unset (no idle-session expiry configured).
-7. **Storage**: create a bucket named `catalog`, **public read**, no public write.
-   Uploads happen only through the backend with the service-role key. Set
-   `SUPABASE_STORAGE_BUCKET=catalog` (the default) on the API host. Without
-   `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` the upload endpoint answers
-   `503 image_upload_unavailable` — the shop still works, images can be pasted as
-   URLs. Uploaded photos are re-encoded to WebP before they are stored, so the
-   bucket only ever holds images this backend produced.
+7. **Storage**: in the *same Supabase project whose API URL is configured as
+   `SUPABASE_URL` on the backend host, create an existing bucket named exactly
+   `catalog`. The API's `SUPABASE_STORAGE_BUCKET` setting defaults to `catalog`;
+   the Render and Fly deployment templates set `SUPABASE_STORAGE_BUCKET=catalog`
+   explicitly, and other API hosts should do the same. This bucket must be **public read**
+   because product URLs use Supabase's public-object route. Allow anonymous
+   downloads only; do not grant public insert/update/delete. Uploads use the
+   backend-only `SUPABASE_SERVICE_ROLE_KEY`. No Alembic migration or application
+   startup task creates this external Storage bucket, so provisioning it in
+   Supabase Storage is a separate deploy prerequisite. If it is missing, uploads
+   return `503 storage_bucket_not_found` with the bucket name and corrective
+   instructions; if the service-role configuration itself is absent, the API
+   returns `503 storage_not_configured`. The storefront still works, and images
+   can be pasted as URLs. Uploaded photos are re-encoded to WebP before storage.
 8. **Backups**: note what your plan gives you. Free = daily, no PITR. Pro = PITR.
    Record it in §9 below.
 
