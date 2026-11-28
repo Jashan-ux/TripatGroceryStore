@@ -17,7 +17,7 @@ import re
 import unicodedata
 import uuid
 
-from sqlalchemy import update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ConflictError, NotFoundError, ValidationError
@@ -186,6 +186,11 @@ async def create_product(
     category = await _require_category(session, payload.category_id)
     brand = await _require_brand(session, payload.brand_id) if payload.brand_id else None
     _check_prices(payload.mrp_paise, payload.price_paise)
+    # Append new products after the existing catalogue by default. Starting each
+    # at zero makes newly added items collide with a merchant's explicit shelf
+    # order and can place an unfeatured item between the products they reordered.
+    max_sort_order = await session.scalar(select(func.max(Product.sort_order)))
+    next_sort_order = (max_sort_order if max_sort_order is not None else -1) + 1
 
     product = Product(
         name=payload.name.strip(),
@@ -202,7 +207,7 @@ async def create_product(
         tags=payload.tags,
         is_active=payload.is_active,
         is_featured=payload.is_featured,
-        sort_order=0,
+        sort_order=next_sort_order,
         variants=_variant_rows(payload.variants),
     )
     product.category = category
