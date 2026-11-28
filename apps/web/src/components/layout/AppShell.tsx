@@ -52,10 +52,15 @@ export function AppShell() {
   // Admins work in the same storefront page customers see, with editing tools
   // layered over it; there is no separate read-only preview mode.
   const adminStoreMode = isAdmin;
+  const offline = typeof navigator !== 'undefined' && !navigator.onLine;
 
-  // Wait for the API-owned role before showing either experience; this prevents
-  // a signed-in admin from seeing a flash of the customer storefront at startup.
-  if (status === 'loading' || (status === 'authenticated' && !profile && !profileError)) {
+  // Keep the public storefront available from the app shell offline. No admin
+  // tools are shown until the API confirms the role; the separate /admin route
+  // remains gated while identity is unresolved.
+  if (
+    !offline &&
+    (status === 'loading' || (status === 'authenticated' && !profile && !profileError))
+  ) {
     return (
       <div className="container space-y-3 py-8" role="status" aria-live="polite">
         <span className="sr-only">Checking your account</span>
@@ -64,7 +69,7 @@ export function AppShell() {
       </div>
     );
   }
-  if (status === 'authenticated' && !profile) {
+  if (!offline && status === 'authenticated' && !profile) {
     return (
       <div className="container max-w-lg py-10" role="alert">
         <p className="font-semibold">We could not load your account.</p>
