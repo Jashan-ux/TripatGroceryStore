@@ -130,7 +130,15 @@ async def reorder_products(
 ) -> list[ProductAdminOut]:
     products = await service.reorder_products(session, user.profile, payload)
     await session.commit()
-    return [service.product_out(product) for product in products]
+    # SQLAlchemy may expire server-updated timestamps during the flush. Reload
+    # each row with its eager relationships before shaping the response so the
+    # async endpoint never triggers an implicit lazy refresh (MissingGreenlet).
+    refreshed: list[ProductAdminOut] = []
+    for product in products:
+        fresh = await repo.get_product_admin(session, product.id)
+        assert fresh is not None
+        refreshed.append(service.product_out(fresh))
+    return refreshed
 
 
 @router.patch(
