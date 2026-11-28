@@ -1,9 +1,20 @@
-import { ArrowUpRight, PackageX, Receipt, TrendingUp, Users, Wallet } from 'lucide-react';
+import {
+  ArrowUpRight,
+  Boxes,
+  ClipboardList,
+  PackageX,
+  Receipt,
+  TrendingUp,
+  Users,
+  Wallet,
+  Warehouse,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AdminDashboardProducts } from '@/admin/AdminDashboardProducts';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   useAnalyticsOrders,
@@ -67,13 +78,56 @@ export function AdminAnalyticsPage() {
   const peak = Math.max(1, ...(series.data?.points ?? []).map((point) => point.revenue_paise));
 
   return (
-    <div className="container max-w-4xl space-y-4 py-5 pb-nav-safe md:pb-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="text-xl font-extrabold tracking-tight">Dashboard</h1>
-        <p className="text-xs text-muted-foreground">
-          {data ? `${data.range.from_date} → ${data.range.to_date}` : 'Loading…'}
+    <div className="container max-w-6xl space-y-5 py-5 pb-nav-safe md:pb-8">
+      <div className="flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-border bg-gradient-to-br from-card via-card to-primary/5 p-4 shadow-elev1 sm:p-5">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+            Merchant workspace
+          </p>
+          <h1 className="mt-1 text-2xl font-extrabold tracking-tight">Dashboard</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Orders, products and today&rsquo;s store pulse in one place.
+          </p>
+        </div>
+        <p className="text-xs font-semibold text-muted-foreground">
+          {data ? `${data.range.from_date} → ${data.range.to_date}` : 'Preparing your overview…'}
         </p>
       </div>
+
+      <div className="grid gap-2 sm:grid-cols-3" aria-label="Merchant shortcuts">
+        <Link
+          to="/admin/orders"
+          className="flex min-h-[4.5rem] items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-bold shadow-elev1 transition hover:border-primary/40 hover:bg-primary/5"
+        >
+          <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
+            <ClipboardList className="size-5" aria-hidden="true" />
+          </span>
+          <span>Manage orders</span>
+          <ArrowUpRight className="ml-auto size-4 text-muted-foreground" aria-hidden="true" />
+        </Link>
+        <Link
+          to="/admin/products"
+          className="flex min-h-[4.5rem] items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-bold shadow-elev1 transition hover:border-primary/40 hover:bg-primary/5"
+        >
+          <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
+            <Boxes className="size-5" aria-hidden="true" />
+          </span>
+          <span>Catalogue tools</span>
+          <ArrowUpRight className="ml-auto size-4 text-muted-foreground" aria-hidden="true" />
+        </Link>
+        <Link
+          to="/admin/inventory"
+          className="flex min-h-[4.5rem] items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-bold shadow-elev1 transition hover:border-primary/40 hover:bg-primary/5"
+        >
+          <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
+            <Warehouse className="size-5" aria-hidden="true" />
+          </span>
+          <span>Adjust inventory</span>
+          <ArrowUpRight className="ml-auto size-4 text-muted-foreground" aria-hidden="true" />
+        </Link>
+      </div>
+
+      <AdminDashboardProducts />
 
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="Date range">
         {RANGES.map((option) => (

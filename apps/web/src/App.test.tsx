@@ -75,6 +75,9 @@ function mockFetch() {
     const url = String(input);
     if (url.includes('/api/v1/config')) return json(configResponse);
     if (url.includes('/healthz')) return json(healthResponse);
+    if (url.includes('/api/v1/admin/catalogue/products')) {
+      return json({ items: [], total: 0, page: 1, page_size: 20, total_pages: 0 });
+    }
     if (url.includes('/api/v1/products')) return json(emptyPage);
     if (url.includes('/api/v1/categories')) return json([]);
     if (url.includes('/api/v1/brands')) return json([]);
@@ -149,7 +152,10 @@ describe('App shell', () => {
       'href',
       '/?preview=1',
     );
-    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+    expect(screen.getByRole('searchbox', { name: 'Find a product to edit' })).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('navigation', { name: 'Merchant navigation' }).length,
+    ).toBeGreaterThan(0);
     expect(screen.queryByText(/All rights reserved/i)).not.toBeInTheDocument();
   });
 
