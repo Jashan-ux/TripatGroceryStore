@@ -86,6 +86,7 @@ export type ProductCreateIn = Schemas['ProductCreateIn'];
 export type ProductDeleteOut = Schemas['ProductDeleteOut'];
 export type ProductDetailOut = Schemas['ProductDetailOut'];
 export type ProductListOut = Schemas['ProductListOut'];
+export type ProductOrderIn = Schemas['ProductOrderIn'];
 export type ProductSalesListOut = Schemas['ProductSalesListOut'];
 export type ProductSalesOut = Schemas['ProductSalesOut'];
 export type ProductUpdateIn = Schemas['ProductUpdateIn'];

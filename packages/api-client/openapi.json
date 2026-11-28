@@ -3745,6 +3745,11 @@
             "title": "Is Active",
             "type": "boolean"
           },
+          "is_featured": {
+            "default": true,
+            "title": "Is Featured",
+            "type": "boolean"
+          },
           "low_stock_threshold": {
             "title": "Low Stock Threshold",
             "type": "integer"
@@ -3966,6 +3971,11 @@
           "is_active": {
             "default": true,
             "title": "Is Active",
+            "type": "boolean"
+          },
+          "is_featured": {
+            "default": true,
+            "title": "Is Featured",
             "type": "boolean"
           },
           "low_stock_threshold": {
@@ -4250,6 +4260,27 @@
         "title": "ProductListOut",
         "type": "object"
       },
+      "ProductOrderIn": {
+        "additionalProperties": false,
+        "description": "The ordered product IDs in one storefront rail, from first to last.",
+        "properties": {
+          "product_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Product Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "product_ids"
+        ],
+        "title": "ProductOrderIn",
+        "type": "object"
+      },
       "ProductSalesListOut": {
         "additionalProperties": false,
         "properties": {
@@ -4382,6 +4413,17 @@
               }
             ],
             "title": "Is Active"
+          },
+          "is_featured": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Featured"
           },
           "low_stock_threshold": {
             "anyOf": [
@@ -8724,6 +8766,106 @@
           }
         ],
         "summary": "Add many products from a CSV, all or nothing",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/catalogue/products/order": {
+      "put": {
+        "operationId": "reorder_products_api_v1_admin_catalogue_products_order_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductOrderIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProductAdminOut"
+                  },
+                  "title": "Response Reorder Products Api V1 Admin Catalogue Products Order Put",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authenticated but not allowed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found or not owned by caller."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unexpected server error."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reorder a storefront rail",
         "tags": [
           "admin"
         ]

@@ -144,29 +144,34 @@ describe('App shell', () => {
     expect(screen.getByRole('link', { name: /back to home/i })).toHaveAttribute('href', '/');
   });
 
-  it('keeps the customer cart out of the admin shell and lazy-loads admin', async () => {
+  it('opens the customer storefront as the single admin workspace with editing actions', async () => {
     renderAsRole('admin');
-    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Cart' })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Preview storefront as a customer' })).toHaveAttribute(
-      'href',
-      '/?preview=1',
-    );
-    expect(screen.getByRole('searchbox', { name: 'Find a product to edit' })).toBeInTheDocument();
     expect(
-      screen.getAllByRole('navigation', { name: 'Merchant navigation' }).length,
-    ).toBeGreaterThan(0);
-    expect(screen.queryByText(/All rights reserved/i)).not.toBeInTheDocument();
+      await screen.findByRole('heading', { name: /Your family deserves the best/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Cart' })).not.toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Add product' })).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Orders' }).length).toBeGreaterThan(0);
+    expect(
+      screen
+        .getAllByRole('link', { name: 'Orders' })
+        .every((link) => link.getAttribute('href') === '/admin/orders'),
+    ).toBe(true);
+    expect(screen.getByRole('link', { name: 'Bulk add' })).toHaveAttribute(
+      'href',
+      '/admin/products?bulk=1',
+    );
   });
 
-  it('provides a read-only preview with an exit back to the console', async () => {
-    const user = userEvent.setup();
+  it('does not switch modes when an old preview link is opened', async () => {
     renderAsRole('admin', '/?preview=1');
 
-    expect(await screen.findByText('Preview mode')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Cart' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Exit' }));
-    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: /Your family deserves the best/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Preview mode')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Exit' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add product' })).toBeInTheDocument();
   });
 
   it('keeps signed-in customers out of the admin console', async () => {

@@ -268,6 +268,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/catalogue/products/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reorder a storefront rail */
+        put: operations["reorder_products_api_v1_admin_catalogue_products_order_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/catalogue/products/{product_id}": {
         parameters: {
             query?: never;
@@ -2883,6 +2900,11 @@ export interface components {
             images?: string[];
             /** Is Active */
             is_active: boolean;
+            /**
+             * Is Featured
+             * @default true
+             */
+            is_featured: boolean;
             /** Low Stock Threshold */
             low_stock_threshold: number;
             /** Mrp Paise */
@@ -2980,6 +3002,11 @@ export interface components {
              * @default true
              */
             is_active: boolean;
+            /**
+             * Is Featured
+             * @default true
+             */
+            is_featured: boolean;
             /**
              * Low Stock Threshold
              * @default 10
@@ -3094,6 +3121,14 @@ export interface components {
             /** Total Pages */
             total_pages: number;
         };
+        /**
+         * ProductOrderIn
+         * @description The ordered product IDs in one storefront rail, from first to last.
+         */
+        ProductOrderIn: {
+            /** Product Ids */
+            product_ids: string[];
+        };
         /** ProductSalesListOut */
         ProductSalesListOut: {
             /** Items */
@@ -3138,6 +3173,8 @@ export interface components {
             images?: string[] | null;
             /** Is Active */
             is_active?: boolean | null;
+            /** Is Featured */
+            is_featured?: boolean | null;
             /** Low Stock Threshold */
             low_stock_threshold?: number | null;
             /** Mrp Paise */
@@ -5547,6 +5584,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BulkResultOut"];
+                };
+            };
+            /** @description Missing, expired or invalid token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated but not allowed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found or not owned by caller. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reorder_products_api_v1_admin_catalogue_products_order_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductOrderIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductAdminOut"][];
                 };
             };
             /** @description Missing, expired or invalid token. */

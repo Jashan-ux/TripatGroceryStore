@@ -1,7 +1,6 @@
 import { AdminActivityPage } from '@/admin/AdminActivityPage';
 import { AdminBrandsPage } from '@/admin/AdminBrandsPage';
 import { AdminCategoriesPage } from '@/admin/AdminCategoriesPage';
-import { AdminAnalyticsPage } from '@/admin/AdminAnalyticsPage';
 import { AdminCustomerProfilePage } from '@/admin/AdminCustomerProfilePage';
 import { AdminCustomersPage } from '@/admin/AdminCustomersPage';
 import { AdminFeedbackPage } from '@/admin/AdminFeedbackPage';
@@ -13,7 +12,7 @@ import { AdminProductsPage } from '@/admin/AdminProductsPage';
 import { AdminReturnsPage } from '@/admin/AdminReturnsPage';
 import { AdminSettingsPage } from '@/admin/AdminSettingsPage';
 import NotFoundPage from '@/pages/NotFoundPage';
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 
 /**
  * Entry point of the lazily-loaded admin bundle. Nothing in this module graph is
@@ -24,7 +23,7 @@ export default function AdminRoutes() {
   return (
     <Routes>
       <Route element={<AdminLayout />}>
-        <Route index element={<AdminAnalyticsPage />} />
+        <Route index element={<Navigate to="/" replace />} />
         <Route path="orders" element={<AdminOrdersPage />} />
         <Route path="returns" element={<AdminReturnsPage />} />
         <Route path="products" element={<AdminProductsPage />} />

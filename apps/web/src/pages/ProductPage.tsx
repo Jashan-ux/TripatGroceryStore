@@ -1,5 +1,5 @@
 import type { VariantOut } from '@tripat/api-client';
-import { Check, ChevronLeft, Phone, ShieldCheck, Star, Truck } from 'lucide-react';
+import { Check, ChevronLeft, Pencil, Phone, ShieldCheck, Star, Truck } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
@@ -8,10 +8,12 @@ import { CallStoreButton } from '@/components/common/CallStoreButton';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ProductThumb } from '@/components/catalogue/ProductCard';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProduct } from '@/features/catalogue/queries';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useStoreConfig } from '@/hooks/useStoreConfig';
+import { useStorefrontAdmin } from '@/features/store/StorefrontAdminContext';
 import { cn, discountPercent, formatPaise } from '@/lib/utils';
 import { t } from '@/i18n';
 
@@ -27,6 +29,7 @@ export default function ProductPage() {
   usePageTitle(undefined, product.data?.name ?? 'Product');
 
   const config = useStoreConfig();
+  const storefrontAdmin = useStorefrontAdmin();
   const [variantId, setVariantId] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
 
@@ -69,13 +72,20 @@ export default function ProductPage() {
 
   return (
     <div className="container py-5">
-      <Link
-        to={`/categories/${item.category_slug}`}
-        className="mb-3 inline-flex min-h-touch items-center gap-1 text-sm font-medium text-muted-foreground hover:text-primary-700"
-      >
-        <ChevronLeft className="size-4" aria-hidden="true" />
-        {item.category_name || t('catalogue.backToCategory')}
-      </Link>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <Link
+          to={`/categories/${item.category_slug}`}
+          className="inline-flex min-h-touch items-center gap-1 text-sm font-medium text-muted-foreground hover:text-primary-700"
+        >
+          <ChevronLeft className="size-4" aria-hidden="true" />
+          {item.category_name || t('catalogue.backToCategory')}
+        </Link>
+        {storefrontAdmin && (
+          <Button size="sm" variant="outline" onClick={() => storefrontAdmin.editProduct(item.id)}>
+            <Pencil aria-hidden="true" /> Edit product
+          </Button>
+        )}
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div>

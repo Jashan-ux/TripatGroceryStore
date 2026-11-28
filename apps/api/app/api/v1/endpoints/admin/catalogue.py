@@ -36,6 +36,7 @@ from app.schemas.admin_catalogue import (
     ProductAdminOut,
     ProductCreateIn,
     ProductDeleteOut,
+    ProductOrderIn,
     ProductUpdateIn,
 )
 from app.services import admin_catalogue as service
@@ -119,6 +120,17 @@ async def update_product(
     fresh = await repo.get_product_admin(session, product.id)
     assert fresh is not None
     return service.product_out(fresh)
+
+
+@router.put(
+    "/products/order", response_model=list[ProductAdminOut], summary="Reorder a storefront rail"
+)
+async def reorder_products(
+    user: AdminUserDep, session: SessionDep, payload: ProductOrderIn
+) -> list[ProductAdminOut]:
+    products = await service.reorder_products(session, user.profile, payload)
+    await session.commit()
+    return [service.product_out(product) for product in products]
 
 
 @router.patch(

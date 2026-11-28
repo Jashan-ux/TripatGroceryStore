@@ -317,7 +317,7 @@ export const hi: Dictionary = {
   },
   admin: {
     title: 'प्रशासन',
-    analytics: 'डैशबोर्ड',
+    analytics: 'स्टोरफ्रंट',
     orders: 'ऑर्डर',
     products: 'उत्पाद',
     inventory: 'इन्वेंटरी',

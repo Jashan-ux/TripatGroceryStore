@@ -34,6 +34,7 @@ from app.schemas.admin_catalogue import (
     InventoryStockPatchIn,
     ProductAdminOut,
     ProductCreateIn,
+    ProductOrderIn,
     ProductUpdateIn,
     VariantIn,
 )
@@ -160,6 +161,8 @@ def snapshot(product: Product) -> dict[str, object]:
         "unit_label": product.unit_label,
         "description": product.description,
         "is_active": product.is_active,
+        "is_featured": product.is_featured,
+        "sort_order": product.sort_order,
         "images": list(product.images or []),
         "tags": list(product.tags or []),
         "variants": [
@@ -198,6 +201,8 @@ async def create_product(
         images=payload.images,
         tags=payload.tags,
         is_active=payload.is_active,
+        is_featured=payload.is_featured,
+        sort_order=0,
         variants=_variant_rows(payload.variants),
     )
     product.category = category
@@ -258,6 +263,8 @@ async def update_product(
         product.tags = [entry.strip() for entry in payload.tags if entry.strip()]
     if payload.is_active is not None:
         product.is_active = payload.is_active
+    if payload.is_featured is not None:
+        product.is_featured = payload.is_featured
     if payload.variants is not None:
         # Replace the option list wholesale: the shop is showing exactly these
         # packs on the product page, so a deleted variant must disappear.
@@ -281,6 +288,45 @@ async def update_product(
         after=after,
     )
     return product
+
+
+async def reorder_products(
+    session: AsyncSession, actor: Profile, payload: ProductOrderIn
+) -> list[Product]:
+    """Persist one visible rail's order as a single admin action."""
+    if len(set(payload.product_ids)) != len(payload.product_ids):
+        raise ValidationError(
+            "A product can only appear once in this order.", code="duplicate_product"
+        )
+
+    locked: dict[uuid.UUID, Product] = {}
+    for product_id in sorted(payload.product_ids, key=str):
+        product = await repo.get_product_admin(session, product_id, for_update=True)
+        if product is None:
+            raise NotFoundError(
+                "A product in this order no longer exists.", code="product_not_found"
+            )
+        locked[product_id] = product
+
+    products: list[Product] = []
+    for order, product_id in enumerate(payload.product_ids):
+        product = locked[product_id]
+        before = snapshot(product)
+        product.sort_order = order
+        await session.flush()
+        await audit.record(
+            session,
+            actor=actor,
+            action="product.reordered",
+            entity="product",
+            entity_id=product.id,
+            summary=product.name,
+            before=before,
+            after=snapshot(product),
+        )
+        products.append(product)
+    await session.flush()
+    return products
 
 
 async def adjust_product_stock(
@@ -419,6 +465,7 @@ def product_out(product: Product) -> ProductAdminOut:
         tags=list(product.tags or []),
         rating=float(product.rating or 0),
         is_active=product.is_active,
+        is_featured=product.is_featured,
         variants=[
             AdminVariantOut(
                 id=variant.id,

@@ -319,7 +319,7 @@ export const en = {
   },
   admin: {
     title: 'Admin',
-    analytics: 'Dashboard',
+    analytics: 'Storefront',
     orders: 'Orders',
     products: 'Products',
     inventory: 'Inventory',

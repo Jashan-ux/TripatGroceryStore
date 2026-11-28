@@ -82,6 +82,7 @@ async def test_the_catalogue_tools_are_owner_only(
         ("get", "/api/v1/admin/catalogue/brands"),
         ("post", "/api/v1/admin/catalogue/products"),
         ("post", "/api/v1/admin/catalogue/products/bulk"),
+        ("put", "/api/v1/admin/catalogue/products/order"),
         ("post", "/api/v1/admin/catalogue/categories"),
     ]
     for method, path in forbidden:
@@ -133,6 +134,48 @@ async def test_a_product_added_inline_appears_on_the_storefront(
     assert listing.status_code == 200
     slugs = [item["slug"] for item in listing.json()["items"]]
     assert created["slug"] in slugs
+
+
+async def test_merchant_can_reorder_a_shelf_and_choose_homepage_products(
+    async_client: AsyncClient, admin: dict[str, Any], catalogue: dict[str, Any]
+) -> None:
+    category_id = await _category_id(async_client, admin, catalogue["child_slug"])
+    first = await _add_product(
+        async_client, admin, name=f"Shelf First {uuid.uuid4().hex[:6]}", category_id=category_id
+    )
+    second = await _add_product(
+        async_client, admin, name=f"Shelf Second {uuid.uuid4().hex[:6]}", category_id=category_id
+    )
+    hidden_from_home = await _add_product(
+        async_client,
+        admin,
+        name=f"Shelf Not Featured {uuid.uuid4().hex[:6]}",
+        category_id=category_id,
+        is_featured=False,
+    )
+
+    reordered = await async_client.put(
+        "/api/v1/admin/catalogue/products/order",
+        json={"product_ids": [second["id"], first["id"]]},
+        headers=admin["headers"],
+    )
+    assert reordered.status_code == 200, reordered.text
+    assert [row["id"] for row in reordered.json()] == [second["id"], first["id"]]
+
+    shelf = await async_client.get(
+        "/api/v1/products", params={"category": catalogue["child_slug"], "sort": "popular"}
+    )
+    assert shelf.status_code == 200, shelf.text
+    shelf_ids = [row["id"] for row in shelf.json()["items"]]
+    assert shelf_ids[:2] == [second["id"], first["id"]]
+    assert hidden_from_home["id"] in shelf_ids
+
+    home = await async_client.get("/api/v1/home")
+    assert home.status_code == 200, home.text
+    home_ids = {item["id"] for rail in home.json()["rails"] for item in rail["products"]}
+    assert first["id"] in home_ids
+    assert second["id"] in home_ids
+    assert hidden_from_home["id"] not in home_ids
 
 
 async def test_two_products_may_share_a_name_but_never_a_url(

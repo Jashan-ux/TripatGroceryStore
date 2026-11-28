@@ -10,7 +10,7 @@ import { t } from '@/i18n';
 import { cn } from '@/lib/utils';
 
 const SIDEBAR_GROUPS = [
-  { label: 'Daily work', routes: ['/admin', '/admin/orders'] },
+  { label: 'Daily work', routes: ['/', '/admin/orders'] },
   {
     label: 'Products & stock',
     routes: ['/admin/products', '/admin/inventory', '/admin/categories', '/admin/brands'],
@@ -20,7 +20,7 @@ const SIDEBAR_GROUPS = [
 ] as const;
 
 const MOBILE_ROUTES = new Set([
-  '/admin',
+  '/',
   '/admin/orders',
   '/admin/products',
   '/admin/inventory',
@@ -53,12 +53,12 @@ export function AdminLayout() {
             <LanguageSelector />
             <Button asChild variant="outline" size="sm" className="px-2.5 sm:px-3">
               <NavLink
-                to="/?preview=1"
-                aria-label="Preview storefront as a customer"
+                to="/"
+                aria-label="Open storefront"
                 className="inline-flex items-center gap-2"
               >
                 <Store className="size-4" aria-hidden="true" />
-                <span className="hidden sm:inline">Preview store</span>
+                <span className="hidden sm:inline">Storefront</span>
                 <ArrowUpRight className="hidden size-3.5 sm:inline" aria-hidden="true" />
               </NavLink>
             </Button>

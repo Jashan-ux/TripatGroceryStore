@@ -83,7 +83,7 @@ async def product_by_slug(session: AsyncSession, slug: str) -> Product:
 
 
 async def home_rails(
-    session: AsyncSession, *, per_category: int = 8
+    session: AsyncSession, *, per_category: int = 24
 ) -> list[tuple[Category, list[Product]]]:
     """Top-level categories that actually have products, each with a short rail."""
     nodes = await category_tree(session)

@@ -1,4 +1,4 @@
-import { Menu, Search, ShoppingCart, User } from 'lucide-react';
+import { Boxes, ClipboardList, Menu, Search, ShoppingCart, User } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -8,7 +8,7 @@ import { NotificationBell } from '@/components/layout/NotificationBell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/features/auth/useAuth';
-import { useStorePreview } from '@/features/store/StorePreviewContext';
+import { useAdminStoreView } from '@/features/store/StorePreviewContext';
 import { useCart } from '@/features/cart/useCart';
 import { t } from '@/i18n';
 
@@ -22,7 +22,7 @@ export function SiteHeader() {
   const [term, setTerm] = useState('');
   const { status, profile } = useAuth();
   const { itemCount } = useCart();
-  const previewMode = useStorePreview();
+  const adminStoreMode = useAdminStoreView();
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
@@ -35,7 +35,13 @@ export function SiteHeader() {
 
         <nav aria-label={t('nav.primary')} className="ml-auto flex items-center gap-0.5">
           <LanguageSelector />
-          {!previewMode && (
+          {adminStoreMode ? (
+            <Button asChild variant="ghost" size="icon" aria-label="Orders">
+              <Link to="/admin/orders">
+                <ClipboardList aria-hidden="true" />
+              </Link>
+            </Button>
+          ) : (
             <>
               <NotificationBell />
               <Button
@@ -53,7 +59,7 @@ export function SiteHeader() {
             </>
           )}
           {/* Cart is in the bottom nav on phones: keeping both would overflow 360px. */}
-          {!previewMode && (
+          {!adminStoreMode && (
             <Button
               asChild
               variant="ghost"
@@ -74,11 +80,19 @@ export function SiteHeader() {
               </Link>
             </Button>
           )}
-          <Button asChild variant="ghost" size="icon" aria-label={t('nav.menu')}>
-            <Link to="/menu">
-              <Menu aria-hidden="true" />
-            </Link>
-          </Button>
+          {adminStoreMode ? (
+            <Button asChild variant="ghost" size="icon" aria-label="Products">
+              <Link to="/admin/products">
+                <Boxes aria-hidden="true" />
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild variant="ghost" size="icon" aria-label={t('nav.menu')}>
+              <Link to="/menu">
+                <Menu aria-hidden="true" />
+              </Link>
+            </Button>
+          )}
         </nav>
       </div>
 

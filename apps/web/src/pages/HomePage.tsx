@@ -120,7 +120,7 @@ export default function HomePage() {
       ) : (
         <>
           <CategoryGrid categories={home.data.categories} />
-          {home.data.rails.slice(0, 4).map((rail) => (
+          {home.data.rails.map((rail) => (
             <ProductRail
               key={rail.category.id}
               title={`${rail.category.emoji ?? ''} ${rail.category.name}`.trim()}

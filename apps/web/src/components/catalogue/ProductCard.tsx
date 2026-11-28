@@ -9,12 +9,13 @@
  */
 import type { ProductCardOut } from '@tripat/api-client';
 import { useState } from 'react';
-import { Star } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Pencil, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { AddToCart } from '@/components/cart/AddToCart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useStorefrontAdmin } from '@/features/store/StorefrontAdminContext';
 import { cn, discountPercent, formatPaise } from '@/lib/utils';
 import { t } from '@/i18n';
 
@@ -84,10 +85,17 @@ export function ProductThumb({
 export function ProductCard({
   product,
   priority = false,
+  onMoveLeft,
+  onMoveRight,
+  moving = false,
 }: {
   product: ProductCardOut;
   priority?: boolean;
+  onMoveLeft?: () => void;
+  onMoveRight?: () => void;
+  moving?: boolean;
 }) {
+  const admin = useStorefrontAdmin();
   const off = product.discount_percent || discountPercent(product.mrp_paise, product.price_paise);
   const soldOut = !product.in_stock;
   const lowStock = product.in_stock && product.stock <= 5;
@@ -99,6 +107,46 @@ export function ProductCard({
         soldOut && 'opacity-80',
       )}
     >
+      {admin && (
+        <div className="absolute right-2 top-2 z-10 flex gap-1">
+          {onMoveLeft && (
+            <Button
+              type="button"
+              size="icon"
+              variant="secondary"
+              className="size-9 rounded-full shadow"
+              aria-label={`Move ${product.name} earlier in this shelf`}
+              disabled={moving}
+              onClick={onMoveLeft}
+            >
+              <ArrowLeft aria-hidden="true" />
+            </Button>
+          )}
+          {onMoveRight && (
+            <Button
+              type="button"
+              size="icon"
+              variant="secondary"
+              className="size-9 rounded-full shadow"
+              aria-label={`Move ${product.name} later in this shelf`}
+              disabled={moving}
+              onClick={onMoveRight}
+            >
+              <ArrowRight aria-hidden="true" />
+            </Button>
+          )}
+          <Button
+            type="button"
+            size="icon"
+            variant="secondary"
+            className="size-9 rounded-full shadow"
+            aria-label={`Edit ${product.name}`}
+            onClick={() => admin.editProduct(product.id)}
+          >
+            <Pencil aria-hidden="true" />
+          </Button>
+        </div>
+      )}
       <Link
         to={`/products/${product.slug}`}
         className="relative block aspect-square overflow-hidden bg-secondary"

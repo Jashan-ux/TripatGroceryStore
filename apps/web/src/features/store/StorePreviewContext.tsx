@@ -1,10 +1,10 @@
 /* eslint-disable react-refresh/only-export-components -- context and hook belong together. */
 import { createContext, useContext } from 'react';
 
-const StorePreviewContext = createContext(false);
+const AdminStoreViewContext = createContext(false);
 
-export const StorePreviewProvider = StorePreviewContext.Provider;
+export const AdminStoreViewProvider = AdminStoreViewContext.Provider;
 
-export function useStorePreview(): boolean {
-  return useContext(StorePreviewContext);
+export function useAdminStoreView(): boolean {
+  return useContext(AdminStoreViewContext);
 }

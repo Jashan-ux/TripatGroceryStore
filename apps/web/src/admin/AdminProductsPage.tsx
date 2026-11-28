@@ -82,9 +82,23 @@ export function AdminProductsPage() {
   const [editing, setEditing] = useState<ProductAdminOut | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [bulkOpen, setBulkOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const editProductId = searchParams.get('edit');
+  const bulkOpen = searchParams.get('bulk') === '1';
+
+  const openBulk = () => {
+    const next = new URLSearchParams(searchParams);
+    next.set('bulk', '1');
+    setSearchParams(next);
+  };
+
+  const closeBulk = () => {
+    if (searchParams.has('bulk')) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('bulk');
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   const deepLinkedProduct = useAdminProduct(editProductId);
   const activeEditing = editProductId ? (deepLinkedProduct.data ?? null) : editing;
@@ -197,7 +211,7 @@ export function AdminProductsPage() {
           />
           Low stock only
         </label>
-        <Button variant="outline" onClick={() => setBulkOpen(true)}>
+        <Button variant="outline" onClick={openBulk}>
           <Upload aria-hidden="true" /> Bulk add
         </Button>
       </div>
@@ -494,7 +508,7 @@ export function AdminProductsPage() {
         upload={upload}
       />
 
-      <BulkDialog open={bulkOpen} onClose={() => setBulkOpen(false)} />
+      <BulkDialog open={bulkOpen} onClose={closeBulk} />
     </div>
   );
 }

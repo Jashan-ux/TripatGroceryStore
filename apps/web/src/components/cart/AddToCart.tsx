@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { useStorePreview } from '@/features/store/StorePreviewContext';
+import { useAdminStoreView } from '@/features/store/StorePreviewContext';
 import { useStoreConfig } from '@/hooks/useStoreConfig';
 import { useCart } from '@/features/cart/useCart';
 import { t } from '@/i18n';
@@ -26,10 +26,26 @@ export interface AddToCartProps {
 export function AddToCart({ line, label, size = 'sm', className, disabledReason }: AddToCartProps) {
   const cart = useCart();
   const quantity = cart.quantityOf(line.productId, line.variantId);
-  const previewMode = useStorePreview();
+  const adminStoreMode = useAdminStoreView();
   const config = useStoreConfig();
 
-  if (previewMode) return null;
+  if (adminStoreMode) {
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        size={size}
+        className={cn(
+          'w-full border-primary bg-primary-50 font-extrabold text-primary-800',
+          className,
+        )}
+        disabled
+        title="Ordering is disabled in the admin store view."
+      >
+        {label ?? t('catalogue.addToCart')}
+      </Button>
+    );
+  }
 
   if (config.data?.store_open === false) {
     return (

@@ -54,6 +54,7 @@ class ProductCreateIn(APIModel):
     images: list[str] = Field(default_factory=list, max_length=8)
     tags: list[str] = Field(default_factory=list, max_length=20)
     is_active: bool = True
+    is_featured: bool = True
     variants: list[VariantIn] = Field(default_factory=list, max_length=20)
     #: Optional: the slug is derived from the name when the shop does not care.
     slug: str | None = Field(default=None, max_length=220)
@@ -79,8 +80,15 @@ class ProductUpdateIn(APIModel):
     images: list[str] | None = Field(default=None, max_length=8)
     tags: list[str] | None = Field(default=None, max_length=20)
     is_active: bool | None = None
+    is_featured: bool | None = None
     #: Sent as a whole list: the storefront shows exactly these options.
     variants: list[VariantIn] | None = Field(default=None, max_length=20)
+
+
+class ProductOrderIn(APIModel):
+    """The ordered product IDs in one storefront rail, from first to last."""
+
+    product_ids: list[uuid.UUID] = Field(min_length=1, max_length=100)
 
 
 class InventoryStockPatchIn(APIModel):
@@ -108,6 +116,7 @@ class ProductAdminOut(APIModel):
     rating: float = 0
     is_active: bool
     variants: list[AdminVariantOut] = Field(default_factory=list)
+    is_featured: bool = True
     #: Stock the storefront will offer: the sum of active variants when there are any.
     available_stock: int = 0
     created_at: datetime

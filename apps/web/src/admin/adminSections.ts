@@ -15,7 +15,7 @@ import {
 
 /** Top tab strip (tablet/desktop) and bottom nav (mobile) share this list. */
 export const adminSections = [
-  { to: '/admin', labelKey: 'admin.analytics', icon: BarChart3, end: true, mobile: true },
+  { to: '/', labelKey: 'admin.analytics', icon: BarChart3, end: true, mobile: true },
   { to: '/admin/orders', labelKey: 'admin.orders', icon: ReceiptText, end: false, mobile: true },
   { to: '/admin/products', labelKey: 'admin.products', icon: Boxes, end: false, mobile: true },
   {
